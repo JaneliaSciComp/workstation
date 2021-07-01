@@ -372,43 +372,43 @@ public class ColorDepthHud extends ModalDialog {
                 // Pack to get panel sizes
                 pack();
 
-                log.info("headPanel.getPreferredSize().height: "+headPanel.getPreferredSize().height);
-
+                // Get size of the screen
                 Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
                 Insets scnMax = Toolkit.getDefaultToolkit().getScreenInsets(getGraphicsConfiguration());
                 log.trace("Got screen insets: {}", scnMax);
-                // Available size of the screen
                 int width = screenSize.width - scnMax.left - scnMax.right;
                 int height = screenSize.height - scnMax.bottom - scnMax.top;
 
-                // Use less than available, just in case there are borders or padding
-                width = (int)Math.round((double)width * 0.95);
-                height = (int)Math.round((double)height * 0.95);
-                log.info("Got screen size: {}x{}", width, height);
+                // Use less than available, just in case. On Windows, sizing the dialog larger than the screen can
+                // result in the panel not rendering after it's toggled off and on.
+                width = (int)Math.round((double)width * 0.98);
+                height = (int)Math.round((double)height * 0.98);
+                log.info("Available screen size: {}x{}", width, height);
 
-                int desiredWidth = 2 * (imageWidth) + 8;
-                log.info("Desired width: {}", desiredWidth);
-
-                int windowTitleHeight = 50;
-                int desiredHeight = imageHeight + windowTitleHeight
-                        + headPanel.getPreferredSize().height
-                        + checkboxPanel1.getPreferredSize().height;
+                int padding = 8;
+                int windowTitleHeight = 35;
+                log.info("Image size: {}x{}", imageWidth, imageHeight);
                 log.info("  imageHeight: {}", imageHeight);
                 log.info("  windowTitleHeight: {}", windowTitleHeight);
                 log.info("  headPanel height: {}", headPanel.getPreferredSize().height);
                 log.info("  checkboxPanel1.height: {}", checkboxPanel1.getPreferredSize().height);
-                log.info("Desired height: {}", desiredHeight);
 
-                width = Math.min(desiredWidth, width);
-                height = Math.min(desiredHeight, height);
+                int availableWidth = width/2 - padding;
+                int availableHeight = height - padding - windowTitleHeight
+                        - headPanel.getPreferredSize().height -  checkboxPanel1.getPreferredSize().height;
+                log.info("Available image size: {}x{}", availableWidth, availableHeight);
 
-                Dimension currentSize = getPreferredSize();
-                if (currentSize.width != width || currentSize.height != height) {
+                int scrollPaneWidth = Math.min(imageWidth + padding, availableWidth);
+                int scrollPaneHeight = Math.min(imageHeight + padding, availableHeight);
+
+                Dimension currentSize = scrollPane1.getPreferredSize();
+                if (currentSize.width != scrollPaneWidth || currentSize.height != scrollPaneHeight) {
                     resetPosition = true;
                 }
 
-                log.info("Setting content pane size: {}x{}", width, height);
-                setPreferredSize(new Dimension(width, height));
+                log.info("Setting scroll pane size: {}x{}", scrollPaneWidth, scrollPaneHeight);
+                scrollPane1.setPreferredSize(new Dimension(scrollPaneWidth, scrollPaneHeight));
+                scrollPane2.setPreferredSize(new Dimension(scrollPaneWidth, scrollPaneHeight));
 
                 if (toggle) {
                     toggleDialog();

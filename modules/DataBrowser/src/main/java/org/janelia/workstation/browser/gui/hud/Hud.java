@@ -445,31 +445,30 @@ public class Hud extends ModalDialog {
                     int height = screenSize.height - scnMax.bottom - scnMax.top;
 
                     // Use less than available, just in case there are borders or padding
-                    width = (int)Math.round((double)width * 0.99);
-                    height = (int)Math.round((double)height * 0.99);
-                    log.info("Got screen size: {}x{}", width, height);
+                    width = (int)Math.round((double)width * 0.98);
+                    height = (int)Math.round((double)height * 0.98);
+                    log.info("Available screen size: {}x{}", width, height);
 
-                    int desiredWidth = imageWidth + 8;
-                    log.info("Desired width: {}", desiredWidth);
-
-                    int windowTitleHeight = 50;
-                    int desiredHeight = imageHeight + windowTitleHeight
-                                    + menuLikePanel.getPreferredSize().height;
-                    log.info("  imageHeight: {}", imageHeight);
+                    int padding = 8;
+                    int windowTitleHeight = 35;
+                    log.info("Image size: {}x{}", imageWidth, imageHeight);
                     log.info("  windowTitleHeight: {}", windowTitleHeight);
                     log.info("  menuLikePanel height: {}", menuLikePanel.getPreferredSize().height);
-                    log.info("Desired height: {}", desiredHeight);
 
-                    width = Math.min(desiredWidth, width);
-                    height = Math.min(desiredHeight, height);
+                    int availableWidth = width - padding;
+                    int availableHeight = height - padding - windowTitleHeight - menuLikePanel.getPreferredSize().height;
+                    log.info("Available image size: {}x{}", availableWidth, availableHeight);
 
-                    Dimension currentSize = getPreferredSize();
-                    if (currentSize.width != width || currentSize.height != height) {
+                    int scrollPaneWidth = Math.min(imageWidth + padding, availableWidth);
+                    int scrollPaneHeight = Math.min(imageHeight + padding, availableHeight);
+
+                    Dimension currentSize = scrollPane.getPreferredSize();
+                    if (currentSize.width != scrollPaneWidth || currentSize.height != scrollPaneHeight) {
                         resetPosition = true;
                     }
 
-                    log.info("Setting content pane size: {}x{}", width, height);
-                    setPreferredSize(new Dimension(width, height));
+                    log.info("Setting scroll pane size: {}x{}", scrollPaneWidth, scrollPaneHeight);
+                    scrollPane.setPreferredSize(new Dimension(scrollPaneWidth, scrollPaneHeight));
 
                     if (toggle) {
                         toggleDialog();
