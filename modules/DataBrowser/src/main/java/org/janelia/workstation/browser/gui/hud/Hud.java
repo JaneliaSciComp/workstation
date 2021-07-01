@@ -1,40 +1,6 @@
 package org.janelia.workstation.browser.gui.hud;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
-
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.filecacheutils.FileProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
@@ -56,10 +22,17 @@ import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.util.ImageCache;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.gui.viewer3d.Mip3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 
 /**
@@ -72,8 +45,6 @@ public class Hud extends ModalDialog {
 
     private static final Logger log = LoggerFactory.getLogger(Hud.class);
 
-    public static final String THREE_D_CONTROL = "3D";
-
     // Input Handling
     private final Cursor defCursor = Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR);
     private final Cursor hndCursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR);
@@ -81,31 +52,20 @@ public class Hud extends ModalDialog {
     private KeyListener keyListener;
     
     // GUI
-    private boolean dirtyEntityFor3D;
     private final JScrollPane scrollPane;
     private final JLabel previewLabel;
     private final ResultSelectionButton resultButton;
     private final ImageTypeSelectionButton typeButton;
     private final JButton colorDepthMaskButton;
-    private final JMenu rgbMenu = new JMenu("RGB Controls");
     private final JPanel menuLikePanel;
-    private JCheckBox render3DCheckbox;
-    private Mip3d mip3d;
-    private Hud3DController hud3DController;
 
     // Current state
-    private boolean firstShowing = true;
+    private boolean resetPosition = true;
     private DomainObject domainObject;
     private HasFiles fileProvider;
     private String title;
     private FileType imageType;
-    
-    public enum COLOR_CHANNEL {
-        RED,
-        GREEN,
-        BLUE
-    }
-    
+
     public static boolean isInitialized() {
         return instance != null;
     }
@@ -119,9 +79,7 @@ public class Hud extends ModalDialog {
     }
     
     private Hud() {
-        
-        dirtyEntityFor3D = true;
-        
+
         setModalityType(ModalityType.MODELESS);
         setLayout(new BorderLayout());
         setVisible(false);
@@ -233,14 +191,6 @@ public class Hud extends ModalDialog {
                 }
             }
         });
-
-        // KR: This is disabled for now because the data we have is not consistent, and doesn't usually include movies anymore
-        // We need an implementation which reads H5J files instead.
-        //init3dGui();
-
-        if (mip3d != null) {
-            mip3d.setDoubleBuffered(true);
-        }
     }
 
     public void toggleDialog() {
@@ -253,17 +203,26 @@ public class Hud extends ModalDialog {
         }
     }
 
-    public void showDialog() {
-        log.debug("showDialog");
-        if (shouldRender3D()) {
-            renderIn3D();
-        }
-        packAndShow();
-    }
-    
     public void hideDialog() {
         log.debug("hideDialog");
         setVisible(false);
+    }
+
+    public void showDialog() {
+        log.debug("showDialog");
+        packAndShow();
+    }
+
+    @Override
+    protected void packAndShow() {
+        SwingUtilities.updateComponentTreeUI(this);
+        pack();
+        if (resetPosition) {
+            log.info("Resetting HUD location");
+            setLocationRelativeTo(getParent());
+            resetPosition = false;
+        }
+        setVisible(true);
     }
     
     /**
@@ -279,7 +238,6 @@ public class Hud extends ModalDialog {
         
         this.domainObject = domainObject;
         if (domainObject == null) {
-            dirtyEntityFor3D = false;
             if (toggle) {
                 toggleDialog();
             }
@@ -366,24 +324,24 @@ public class Hud extends ModalDialog {
 
     /**
      * Display just an image with no UI.
-     * @param imagePath
+     * @param filepath
      * @param toggle
      * @param overrideSettings
      */
-    public void setFilepathAndToggleDialog(String imagePath, String title, final boolean toggle, boolean overrideSettings) {
-        log.info("setObjectAndToggleDialog({},title,toggle={},overrideSettings={})",imagePath,title,toggle,overrideSettings);
+    public void setFilepathAndToggleDialog(String filepath, String title, final boolean toggle, boolean overrideSettings) {
+        log.info("setObjectAndToggleDialog({},title,toggle={},overrideSettings={})",filepath,title,toggle,overrideSettings);
         if (title!=null) {
             this.title = title;
         }
-        else if (imagePath!=null) {
-            this.title = new File(imagePath).getName();
+        else if (filepath!=null) {
+            this.title = new File(filepath).getName();
         }
         else {
             this.title = "";
         }
         resultButton.setVisible(false);
         typeButton.setVisible(false);
-        setObjectAndToggleDialog(imagePath, toggle, overrideSettings);
+        setObjectAndToggleDialog(filepath, toggle, overrideSettings);
     }
     
     private void setObjectAndToggleDialog(String filepath, final boolean toggle, boolean overrideSettings) {
@@ -393,12 +351,6 @@ public class Hud extends ModalDialog {
             log.info("No image path for {} ({})", title, typeButton.getImageTypeName());
             previewLabel.setIcon(new MissingIcon());
 
-            if (render3DCheckbox != null) {
-                render3DCheckbox.setEnabled(false);
-                render3DCheckbox.setSelected(false);
-            }
-
-            setAllColorsOn();
             setTitle(title);
 
             if (toggle) {
@@ -409,9 +361,6 @@ public class Hud extends ModalDialog {
             }
         }
         else {
-            log.info("fast3dFile={}", getFast3dFile());
-            set3dModeEnabled(getFast3dFile()!=null);
-            
             SimpleWorker worker = new SimpleWorker() {
 
                 private BufferedImage image = null;
@@ -450,29 +399,63 @@ public class Hud extends ModalDialog {
                 @Override
                 protected void hadSuccess() {
                     setTitle(title);
+
+                    int imageWidth, imageHeight;
                     if (image != null) {
                         previewLabel.setIcon(new ImageIcon(image));
-                        dirtyEntityFor3D = true;
-                        if (render3DCheckbox != null) {
-                            render3DCheckbox.setSelected(false);
-                            handleRenderSelection();
-                        }
-                        setAllColorsOn();
-                        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-                        int width = (int)Math.round((double)screenSize.width*0.9);
-                        int height = (int)Math.round((double)screenSize.height*0.9);
-                        width = Math.min(image.getWidth()+5, width);
-                        height = Math.min(image.getHeight()+5, height);
-                        scrollPane.setSize(new Dimension(width, height));
+                        imageWidth = image.getWidth();
+                        imageHeight = image.getHeight();
                     }
                     else {
-                        previewLabel.setIcon(new MissingIcon());
+                        MissingIcon icon = new MissingIcon();
+                        previewLabel.setIcon(icon);
+                        imageWidth = icon.getIconWidth();
+                        imageHeight = icon.getIconHeight();
                     }
+
+                    // Pack to get sizes
+                    pack();
+
+                    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                    Insets scnMax = Toolkit.getDefaultToolkit().getScreenInsets(getGraphicsConfiguration());
+                    log.trace("Got screen insets: {}", scnMax);
+                    // Available size of the screen
+                    int width = screenSize.width - scnMax.left - scnMax.right;
+                    int height = screenSize.height - scnMax.bottom - scnMax.top;
+
+                    // Use less than available, just in case there are borders or padding
+                    width = (int)Math.round((double)width * 0.98);
+                    height = (int)Math.round((double)height * 0.98);
+                    log.info("Available screen size: {}x{}", width, height);
+
+                    int padding = 8;
+                    int windowTitleHeight = 35;
+                    log.info("Image size: {}x{}", imageWidth, imageHeight);
+                    log.debug("  windowTitleHeight: {}", windowTitleHeight);
+                    log.debug("  menuLikePanel height: {}", menuLikePanel.getPreferredSize().height);
+
+                    int availableWidth = width - padding;
+                    int availableHeight = height - padding - windowTitleHeight - menuLikePanel.getPreferredSize().height;
+                    log.debug("Available image size: {}x{}", availableWidth, availableHeight);
+
+                    int scrollPaneWidth = Math.min(imageWidth + padding, availableWidth);
+                    int scrollPaneHeight = Math.min(imageHeight + padding, availableHeight);
+
+                    Dimension currentSize = scrollPane.getPreferredSize();
+                    if (currentSize.width != scrollPaneWidth || currentSize.height != scrollPaneHeight) {
+                        resetPosition = true;
+                    }
+
+                    log.info("Setting scroll pane size: {}x{}", scrollPaneWidth, scrollPaneHeight);
+                    scrollPane.setPreferredSize(new Dimension(scrollPaneWidth, scrollPaneHeight));
+
                     if (toggle) {
                         toggleDialog();
                     }
                     else {
                         pack();
+                        revalidate();
+                        repaint();
                     }
                 }
 
@@ -484,47 +467,6 @@ public class Hud extends ModalDialog {
                     
             worker.execute();
         }
-        if (mip3d!=null) mip3d.repaint();
-    }
-    
-    String getFast3dFile() {
-        
-        FileType type = null;
-        if (imageType==FileType.AllMip) {
-            type = FileType.AllMovie;
-        }
-        else if (imageType==FileType.SignalMip) {
-            type = FileType.SignalMovie;
-        }
-        else if (imageType==FileType.ReferenceMip) {
-            type = FileType.ReferenceMovie;
-        }
-        else if (imageType==FileType.Signal1Mip || imageType==FileType.Signal2Mip || imageType==FileType.Signal3Mip) {
-            type = FileType.SignalMovie;
-        }
-        else if (imageType==FileType.RefSignal1Mip || imageType==FileType.RefSignal2Mip || imageType==FileType.RefSignal3Mip) {
-            type = FileType.AllMovie;
-        }
-        
-        // Try the preferred movie
-        String fastFile = type==null ? null : DomainUtils.getFilepath(fileProvider, type);
-        if (fastFile==null) {
-            // Try some other options
-            fastFile = DomainUtils.getFilepath(fileProvider, FileType.AllMovie);
-            if (fastFile==null) {
-                fastFile = DomainUtils.getFilepath(fileProvider, FileType.FastStack);
-            }
-            else {
-                // AllMovie sometimes contains an older file which has this bug:
-                // Encountered MPEG file {...}_movie.mp4, which has 'dead planes' in Z.  Expected Z was 650.  Number of planes read 0.
-                if (fastFile.endsWith("_movie.mp4")) {
-                    // Hack to prevent this older data from loading and breaking the HUD
-                    fastFile = null;
-                }
-            }
-        }
-        
-        return fastFile;
     }
     
     /**
@@ -540,186 +482,6 @@ public class Hud extends ModalDialog {
         }
         if (keyListener!=null) {
             addKeyListener(keyListener);
-        }
-    }
-
-    /**
-     * This is a controller-callback method to allow or disallow the user from attempting to switch
-     * to 3D mode.
-     *
-     * @param flag T=allow; F=disallow
-     */
-    public void set3dModeEnabled(boolean flag) {
-        if (render3DCheckbox != null) {
-            render3DCheckbox.setEnabled(flag);
-        }
-    }
-
-    public void handleRenderSelection() {
-        boolean is3D = shouldRender3D();
-        if (is3D) {
-            renderIn3D();
-        }
-        else {
-            if (mip3d!=null) this.remove(mip3d);
-            this.add(scrollPane, BorderLayout.CENTER);
-        }
-        rgbMenu.setEnabled(is3D);
-        this.validate();
-        this.repaint();
-    }
-    
-    @Override
-    protected void packAndShow() {
-        SwingUtilities.updateComponentTreeUI(this);
-        pack();
-        if (firstShowing) {
-            setLocationRelativeTo(getParent());
-            firstShowing = false;
-        }
-        setVisible(true);
-    }
-    
-    private void renderIn3D() {
-        this.remove(scrollPane);
-        if (dirtyEntityFor3D) {
-            try {
-                if (hud3DController != null) {
-                    hud3DController.setUiBusyMode();
-                    hud3DController.load3d();
-                    dirtyEntityFor3D = hud3DController.isDirty();
-                }
-            }
-            catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Failed to load 3D image.");
-                log.error("Failed to load 3D image", ex);
-                set3dModeEnabled(false);
-                handleRenderSelection();
-            }
-        }
-        else {
-            if (hud3DController != null) {
-                hud3DController.set3dWidget();
-            }
-        }
-    }
-
-    private void setAllColorsOn() {
-        for (Component component : rgbMenu.getMenuComponents()) {
-            ((JCheckBoxMenuItem) component).setSelected(true);
-        }
-        if (mip3d!=null) {
-            mip3d.toggleRGBValue(COLOR_CHANNEL.RED.ordinal(), true);
-            mip3d.toggleRGBValue(COLOR_CHANNEL.GREEN.ordinal(), true);
-            mip3d.toggleRGBValue(COLOR_CHANNEL.BLUE.ordinal(), true);
-        }
-    }
-
-    private void init3dGui() {
-
-        SimpleWorker worker = new SimpleWorker() {
-
-            private boolean allow3d = false;
-            
-            @Override
-            protected void doStuff() throws Exception { 
-                // The isAvailable() check actually takes a second or two, so that's why we do it in a background thread.
-                if (!Mip3d.isAvailable()) {
-                    log.error("Cannot initialize 3D HUD because 3D MIP viewer is not available");
-                    return;
-                }
-                mip3d = new Mip3d();
-                mip3d.setResetFirstRedraw(true);
-                hud3DController = new Hud3DController(Hud.this, mip3d);
-                allow3d = true;
-            }
-            
-            @Override
-            protected void hadSuccess() {
-                
-                if (!allow3d) return;
-                
-                rgbMenu.setFocusable(false);
-                rgbMenu.setRequestFocusEnabled(false);
-                JMenuBar menuBar = new JMenuBar();
-                menuBar.setFocusable(false);
-                menuBar.setRequestFocusEnabled(false);
-                JCheckBoxMenuItem redButton = new JCheckBoxMenuItem("Red");
-                redButton.setSelected(true);
-                redButton.setFocusable(false);
-                redButton.setRequestFocusEnabled(false);
-                redButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.RED));
-                rgbMenu.add(redButton);
-                JCheckBoxMenuItem blueButton = new JCheckBoxMenuItem("Blue");
-                blueButton.setSelected(true);
-                blueButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.BLUE));
-                blueButton.setFocusable(false);
-                blueButton.setRequestFocusEnabled(false);
-                rgbMenu.add(blueButton);
-                JCheckBoxMenuItem greenButton = new JCheckBoxMenuItem("Green");
-                greenButton.setSelected(true);
-                greenButton.addActionListener(new MyButtonActionListener(COLOR_CHANNEL.GREEN));
-                greenButton.setFocusable(false);
-                greenButton.setRequestFocusEnabled(false);
-                rgbMenu.add(greenButton);
-                rgbMenu.setEnabled(false);
-                menuBar.add(rgbMenu);
-                
-                JPanel rightSidePanel = new JPanel();
-                rightSidePanel.setLayout(new FlowLayout());
-                rightSidePanel.setFocusable(false);
-                rightSidePanel.setRequestFocusEnabled(false);
-                rightSidePanel.add(menuBar);
-                
-                render3DCheckbox = new JCheckBox(THREE_D_CONTROL);
-                render3DCheckbox.setSelected(false); // Always startup as false.
-                render3DCheckbox.addActionListener(hud3DController);
-                render3DCheckbox.setFont(render3DCheckbox.getFont().deriveFont(9.0f));
-                render3DCheckbox.setBorderPainted(false);
-                render3DCheckbox.setActionCommand(THREE_D_CONTROL);
-                render3DCheckbox.setFocusable(false);
-                render3DCheckbox.setRequestFocusEnabled(false);
-                rightSidePanel.add(render3DCheckbox);
-                
-                menuLikePanel.add(rightSidePanel, BorderLayout.EAST);
-                menuLikePanel.validate();
-                menuLikePanel.repaint();
-            }
-            
-            @Override
-            protected void hadError(Throwable ex) {
-                // Turn off the 3d capability if exception.
-                render3DCheckbox = null;
-                log.error("Error initializing 3D HUD", ex);
-            }
-        };
-        worker.execute();
-    }
-
-    private boolean shouldRender3D() {
-        boolean rtnVal = render3DCheckbox != null && render3DCheckbox.isEnabled() && render3DCheckbox.isSelected();
-        if (!rtnVal) {
-            if (hud3DController != null && hud3DController.is3DReady() && (this.previewLabel.getIcon() == null)) {
-                rtnVal = true;
-            }
-        }
-        return rtnVal;
-    }
-
-    private class MyButtonActionListener implements ActionListener {
-
-        private COLOR_CHANNEL myChannel;
-
-        public MyButtonActionListener(COLOR_CHANNEL channel) {
-            myChannel = channel;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent actionEvent) {
-            if (mip3d!=null) {
-                mip3d.toggleRGBValue(myChannel.ordinal(), ((JCheckBoxMenuItem) actionEvent.getSource()).isSelected());
-                mip3d.repaint();
-            }
         }
     }
 }

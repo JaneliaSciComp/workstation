@@ -1,21 +1,5 @@
 package org.janelia.workstation.browser.gui.colordepth;
 
-import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
-import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.List;
-
-import javax.swing.*;
-import javax.swing.plaf.LayerUI;
-
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.model.domain.enums.SplitHalfType;
@@ -34,6 +18,17 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.plaf.LayerUI;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.geom.AffineTransform;
+import java.awt.image.AffineTransformOp;
+import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * Special heads-up display for viewing color depth search results alongside the search mask.
@@ -65,6 +60,10 @@ public class ColorDepthHud extends ModalDialog {
 
     // GUI
     private final JPanel headPanel;
+    private final JPanel imagePanel1;
+    private final JPanel imagePanel2;
+    private final JPanel checkboxPanel1;
+    private final JPanel checkboxPanel2;
     private final JCheckBox mirrorCheckbox1;
     private final JCheckBox mirrorCheckbox2;
     private final JScrollPane scrollPane1;
@@ -77,7 +76,7 @@ public class ColorDepthHud extends ModalDialog {
     private BufferedImage image2;
 
     // Current state
-    private boolean firstShowing = true;
+    private boolean resetPosition = true;
     private Point point;
 
     class MouseCursorLayerUI extends LayerUI<JScrollPane> {
@@ -184,14 +183,22 @@ public class ColorDepthHud extends ModalDialog {
         mirrorCheckbox2.setFocusable(false);
         mirrorCheckbox2.addItemListener((e) -> updateResultImage());
 
-        JPanel imagePanel1 = new JPanel();
+        checkboxPanel1 = new JPanel();
+        checkboxPanel1.setLayout(new BorderLayout());
+        checkboxPanel1.add(mirrorCheckbox1, BorderLayout.WEST);
+
+        checkboxPanel2 = new JPanel();
+        checkboxPanel2.setLayout(new BorderLayout());
+        checkboxPanel2.add(mirrorCheckbox2, BorderLayout.WEST);
+
+        imagePanel1 = new JPanel();
         imagePanel1.setLayout(new BorderLayout());
-        imagePanel1.add(mirrorCheckbox1, BorderLayout.NORTH);
+        imagePanel1.add(checkboxPanel1, BorderLayout.NORTH);
         imagePanel1.add(scrollLayer1, BorderLayout.CENTER);
 
-        JPanel imagePanel2 = new JPanel();
+        imagePanel2 = new JPanel();
         imagePanel2.setLayout(new BorderLayout());
-        imagePanel2.add(mirrorCheckbox2, BorderLayout.NORTH);
+        imagePanel2.add(checkboxPanel2, BorderLayout.NORTH);
         imagePanel2.add(scrollLayer2, BorderLayout.CENTER);
 
         JPanel mainPanel = new JPanel();
@@ -248,23 +255,24 @@ public class ColorDepthHud extends ModalDialog {
         }
     }
 
-    public void showDialog() {
-        log.debug("showDialog");
-        packAndShow();
-    }
-
     public void hideDialog() {
         log.debug("hideDialog");
         setVisible(false);
+    }
+
+    public void showDialog() {
+        log.debug("showDialog");
+        packAndShow();
     }
 
     @Override
     protected void packAndShow() {
         SwingUtilities.updateComponentTreeUI(this);
         pack();
-        if (firstShowing) {
+        if (resetPosition) {
+            log.info("Resetting HUD location");
             setLocationRelativeTo(getParent());
-            firstShowing = false;
+            resetPosition = false;
         }
         setVisible(true);
     }
@@ -301,13 +309,13 @@ public class ColorDepthHud extends ModalDialog {
                     image1 = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(mask.getFilepath()));
                 }
                 catch (FileNotFoundException e) {
-                    log.warn("Mask image not found: ", mask.getFilepath());
+                    log.warn("Mask image not found: {}", mask.getFilepath());
                 }
                 try (InputStream imageStream = FileMgr.getFileMgr().openFileInputStream(image.getFilepath(), false)) {
                     image2 = Utils.readImageFromInputStream(imageStream, FilenameUtils.getExtension(image.getFilepath()));
                 }
                 catch (FileNotFoundException e) {
-                    log.warn("Result image not found: ", image.getFilepath());
+                    log.warn("Result image not found: {}", image.getFilepath());
                 }
             }
 
@@ -342,21 +350,68 @@ public class ColorDepthHud extends ModalDialog {
                 updateMaskImage();
                 updateResultImage();
 
-                if (toggle) {
-                    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-                    int width = (int)Math.round((double)screenSize.width*0.9);
-                    int height = (int)Math.round((double)screenSize.height*0.9);
-                    log.debug("Got screen size: {}x{}", width, height);
-                    width = Math.min(image1.getWidth()+12, width);
-                    height = Math.min(image1.getHeight()+12, height);
-                    log.debug("Setting scroll pane size: {}x{}", width, height);
-
-                    scrollPane1.setPreferredSize(new Dimension(width, height));
-                    scrollPane2.setPreferredSize(new Dimension(width, height));
-
-                    toggleDialog();
+                int imageWidth, imageHeight;
+                if (image1 != null) {
+                    imageWidth = image1.getWidth();
+                    imageHeight = image1.getHeight();
+                }
+                else if (image2 != null) {
+                    imageWidth = image2.getWidth();
+                    imageHeight = image2.getHeight();
+                }
+                else {
+                    imageWidth = imageHeight = 100;
                 }
 
+                // Pack to get panel sizes
+                pack();
+
+                // Get size of the screen
+                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                Insets scnMax = Toolkit.getDefaultToolkit().getScreenInsets(getGraphicsConfiguration());
+                log.trace("Got screen insets: {}", scnMax);
+                int width = screenSize.width - scnMax.left - scnMax.right;
+                int height = screenSize.height - scnMax.bottom - scnMax.top;
+
+                // Use less than available, just in case. On Windows, sizing the dialog larger than the screen can
+                // result in the panel not rendering after it's toggled off and on.
+                width = (int)Math.round((double)width * 0.98);
+                height = (int)Math.round((double)height * 0.98);
+                log.info("Available screen size: {}x{}", width, height);
+
+                int padding = 8;
+                int windowTitleHeight = 35;
+                log.info("Image size: {}x{}", imageWidth, imageHeight);
+                log.debug("  imageHeight: {}", imageHeight);
+                log.debug("  windowTitleHeight: {}", windowTitleHeight);
+                log.debug("  headPanel height: {}", headPanel.getPreferredSize().height);
+                log.debug("  checkboxPanel1.height: {}", checkboxPanel1.getPreferredSize().height);
+
+                int availableWidth = width/2 - padding;
+                int availableHeight = height - padding - windowTitleHeight
+                        - headPanel.getPreferredSize().height -  checkboxPanel1.getPreferredSize().height;
+                log.debug("Available image size: {}x{}", availableWidth, availableHeight);
+
+                int scrollPaneWidth = Math.min(imageWidth + padding, availableWidth);
+                int scrollPaneHeight = Math.min(imageHeight + padding, availableHeight);
+
+                Dimension currentSize = scrollPane1.getPreferredSize();
+                if (currentSize.width != scrollPaneWidth || currentSize.height != scrollPaneHeight) {
+                    resetPosition = true;
+                }
+
+                log.info("Setting scroll pane size: {}x{}", scrollPaneWidth, scrollPaneHeight);
+                scrollPane1.setPreferredSize(new Dimension(scrollPaneWidth, scrollPaneHeight));
+                scrollPane2.setPreferredSize(new Dimension(scrollPaneWidth, scrollPaneHeight));
+
+                if (toggle) {
+                    toggleDialog();
+                }
+                else {
+                    pack();
+                    revalidate();
+                    repaint();
+                }
             }
 
             @Override
