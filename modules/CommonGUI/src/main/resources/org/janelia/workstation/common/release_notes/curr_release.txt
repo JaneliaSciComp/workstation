@@ -2,6 +2,7 @@
 
 Data Browser
 * Added "View Line Releases" right-click option for Samples
+* Fixed bug where only the first color depth MIP would download when selecting the "Color Depth MIPs" download option
 
 Ontology Explorer
 * Improved YAML export format for editability
