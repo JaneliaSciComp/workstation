@@ -49,9 +49,11 @@ import org.slf4j.LoggerFactory;
 public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
     private static final Logger log = LoggerFactory.getLogger(AnnotationTablePanel.class);
-    
-    private static final String COLUMN_KEY = "Annotation Term";
-    private static final String COLUMN_VALUE = "Annotation Value";
+
+    private static final String COLUMN_OWNER = "Owner";
+    private static final String COLUMN_KEY = "Annotation";
+    private static final String COLUMN_VALUE = "Value";
+    private static final String COLUMN_CREATION_DATE = "Creation Date";
 
     private DynamicTable dynamicTable;
     private JLabel summaryLabel;
@@ -126,11 +128,17 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
                 Annotation annotation = (Annotation) userObject;
                 if (null != annotation) {
-                    if (column.getName().equals(COLUMN_KEY)) {
+                    if (column.getName().equals(COLUMN_OWNER)) {
+                        return annotation.getOwnerName();
+                    }
+                    else if (column.getName().equals(COLUMN_KEY)) {
                         return annotation.getKey();
                     }
-                    if (column.getName().equals(COLUMN_VALUE)) {
+                    else if (column.getName().equals(COLUMN_VALUE)) {
                         return annotation.getValue();
+                    }
+                    else if (column.getName().equals(COLUMN_CREATION_DATE)) {
+                        return annotation.getCreationDate();
                     }
                 }
                 return null;
@@ -162,8 +170,10 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
         dynamicTable.getTable().addMouseListener(new MouseForwarder(this, "DynamicTable->AnnotationTablePanel"));
 
+        dynamicTable.addColumn(COLUMN_OWNER, COLUMN_OWNER, true, false, false, true);
         dynamicTable.addColumn(COLUMN_KEY, COLUMN_KEY, true, false, false, true);
         dynamicTable.addColumn(COLUMN_VALUE, COLUMN_VALUE, true, false, false, true);
+        dynamicTable.addColumn(COLUMN_CREATION_DATE, COLUMN_CREATION_DATE, true, false, false, true);
 
         for (Annotation annotation : annotations) {
             dynamicTable.addRow(annotation);

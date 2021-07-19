@@ -346,7 +346,7 @@ public class DomainInspectorPanel extends JPanel {
         
         showAttributesLoadingIndicator();
 
-        List<DomainObjectAttribute> searchAttrs = DomainUtils.getDisplayAttributes(Arrays.asList(domainObject));
+        List<DomainObjectAttribute> searchAttrs = DomainUtils.getDisplayAttributes(Collections.singletonList(domainObject));
         
         DynamicDomainObjectProxy proxy = new DynamicDomainObjectProxy(domainObject);
         
