@@ -1,15 +1,5 @@
-// 9.6
+// 9.7
 
 Data Browser
-* Added "View Line Releases" right-click option for Samples
-* Fixed bug where only the first color depth MIP would download when selecting the "Color Depth MIPs" download option
-* Fixed bug affecting lightbox on Windows where it would not render in certain cases
-
-Ontology Explorer
-* Improved YAML export format for editability
-* Renamed "Import Ontology Here" to "Add from YAML"
-* Rename "Export Ontology" to "Export as YAML"
-* Added "Replace from YAML"
-
-Color Depth Search
-* Fixed bug which causes empty results to show up when "Rerun all masks" was not checked
+* Fixed bug with staging certain samples for release
+* Added more details about annotations in the Data Inspector
