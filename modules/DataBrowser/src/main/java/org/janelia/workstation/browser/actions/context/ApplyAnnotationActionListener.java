@@ -181,7 +181,9 @@ public class ApplyAnnotationActionListener implements ActionListener {
                         }
 
                         for (Annotation annotation : annotations) {
-                            if (annotation.getKeyTerm().getOntologyTermId().equals(keyTerm.getId())) {
+                            if (annotation.getKeyTerm()!=null
+                                    && annotation.getKeyTerm().getOntologyTermId() != null
+                                    && annotation.getKeyTerm().getOntologyTermId().equals(keyTerm.getId())) {
                                 existingAnnotation = annotation;
                                 break;
                             }

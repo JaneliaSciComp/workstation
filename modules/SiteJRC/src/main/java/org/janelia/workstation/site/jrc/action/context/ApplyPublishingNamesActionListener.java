@@ -129,7 +129,9 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
             log.info("Checking for existing publishing names...");
             DomainModel model = DomainMgr.getDomainMgr().getModel();
             for (Annotation annotation : model.getAnnotations(DomainUtils.getReferences(samples))) {
-                if (annotation.getKeyTerm().getOntologyTermId().equals(publishingNameTerm.getId())) {
+                if (annotation.getKeyTerm()!=null
+                        && annotation.getKeyTerm().getOntologyTermId() != null
+                        && annotation.getKeyTerm().getOntologyTermId().equals(publishingNameTerm.getId())) {
                     hasPublishingName.add(annotation.getTarget().getTargetId());
                 }
             }
