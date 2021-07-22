@@ -78,8 +78,12 @@ public class SplitNeuronBetweenVerticesAction extends AbstractAction {
         // can't split a root if it has multiple children (ambiguous):
         final TmGeoAnnotation annotation = neuronManager.getGeoAnnotationFromID(neuronID, vertexID);
         if (annotation.isRoot() && annotation.getChildIds().size() != 1) {
-            FrameworkAccess.handleException(new Throwable(
-                    "Cannot split root annotation with multiple children (ambiguous)!"));
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Cannot split root annotation with multiple children (ambiguous)!",
+                    "Can't split!",
+                    JOptionPane.ERROR_MESSAGE
+            );
             return;
         }
 
@@ -96,8 +100,14 @@ public class SplitNeuronBetweenVerticesAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Split error: " + error.getMessage(),
+                        "Error during split!",
+                        JOptionPane.ERROR_MESSAGE
+                );
                 FrameworkAccess.handleException(new Throwable(
-                        "Could not split anchor!"));
+                        "Split error: " + error.getMessage()));
             }
         };
         splitter.execute();

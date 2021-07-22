@@ -75,8 +75,12 @@ public class SplitNeuronAtVertexAction extends AbstractAction {
         // if it's already the root, can't split
         final TmGeoAnnotation annotation = manager.getGeoAnnotationFromID(neuronID, newRootAnnotationID);
         if (annotation.isRoot()) {
-            FrameworkAccess.handleException(new Throwable(
-                    "Cannot split neurite at its root annotation!"));
+            JOptionPane.showMessageDialog(
+                    null,
+                    "Cannot split neurite at its root annotation!",
+                    "Can't split!",
+                    JOptionPane.ERROR_MESSAGE
+                    );
             return;
         }
 
@@ -93,8 +97,14 @@ public class SplitNeuronAtVertexAction extends AbstractAction {
 
             @Override
             protected void hadError(Throwable error) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "Split error: " + error.getMessage(),
+                        "Error during split!",
+                        JOptionPane.ERROR_MESSAGE
+                );
                 FrameworkAccess.handleException(new Throwable(
-                        "Could not split neurite!"));
+                        "Split error: " + error.getMessage()));
             }
         };
         splitter.execute();
