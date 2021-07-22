@@ -63,9 +63,13 @@ public class WorkspaceInfoPanel extends JPanel {
      * update the labels that display data about the workspace
      */
     private void updateMetaData(final TmWorkspace workspace) {
-        if (workspace==null && TmModelManager.getInstance().getCurrentSample()==null)
+        if (TmModelManager.getInstance().getCurrentSample() == null) {
+            setSampleName("(no sample");
+            setWorkspaceName("(no workspace)");
             return;
-        setSampleName(TmModelManager.getInstance().getCurrentSample().getName());
+        } else {
+            setSampleName(TmModelManager.getInstance().getCurrentSample().getName());
+        }
         if (workspace == null) {
             setWorkspaceName("(no workspace)");
         }
