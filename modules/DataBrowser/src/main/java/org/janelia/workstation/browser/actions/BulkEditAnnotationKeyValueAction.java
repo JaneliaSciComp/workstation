@@ -78,12 +78,7 @@ public class BulkEditAnnotationKeyValueAction extends AbstractAction {
             }
 
             private void setAnnotationValue(Annotation annotation, String newValue) throws Exception {
-                annotation.setValue(newValue);
-                String tmpName = annotation.getName();
-                // TODO: move this business logic to the DAO
-                String namePrefix = tmpName.substring(0, tmpName.indexOf("=") + 2);
-                annotation.setName(namePrefix + newValue);
-                model.save(annotation);
+                model.updateAnnotation(annotation, newValue);
             }
 
             @Override

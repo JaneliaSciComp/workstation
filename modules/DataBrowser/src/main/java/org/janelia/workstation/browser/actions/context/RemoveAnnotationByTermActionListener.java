@@ -70,7 +70,7 @@ public class RemoveAnnotationByTermActionListener implements ActionListener {
                 int i = 1;
                 for(Annotation annotation : toRemove) {
                     log.info("Removing {} - {}", i, annotation);
-                    model.remove(annotation);
+                    model.removeAnnotation(annotation);
                     setProgress(i++, toRemove.size());
                 }
             }

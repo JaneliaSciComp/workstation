@@ -74,13 +74,7 @@ public class PasteAnnotationTermAction extends BaseContextualNodeAction {
                 int i = 1;
                 for (DomainObject domainObject : domainObjects) {
                     Annotation baseAnnotation = StateMgr.getStateMgr().getCurrentSelectedOntologyAnnotation();
-                    Annotation annotation = new Annotation(baseAnnotation);
-                    // We may be copying an annotation we don't own. Don't copy the ownership.
-                    annotation.setOwnerKey(null);
-                    annotation.setReaders(Collections.emptySet());
-                    annotation.setWriters(Collections.emptySet());
-                    annotation.setTarget(Reference.createFor(domainObject));
-                    model.create(annotation);
+                    model.createAnnotation(Reference.createFor(domainObject), baseAnnotation.getKeyTerm(), baseAnnotation.getValue());
                     setProgress(i++, domainObjects.size());
                 }
             }

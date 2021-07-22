@@ -675,6 +675,7 @@
                         <publicPackage>org.janelia.model.domain.compartments</publicPackage>
                         <publicPackage>org.janelia.model.domain.compute</publicPackage>
                         <publicPackage>org.janelia.model.domain.dto</publicPackage>
+                        <publicPackage>org.janelia.model.domain.dto.annotation</publicPackage>
                         <publicPackage>org.janelia.model.domain.enums</publicPackage>
                         <publicPackage>org.janelia.model.domain.enums.algorithms</publicPackage>
                         <publicPackage>org.janelia.model.domain.flyem</publicPackage>

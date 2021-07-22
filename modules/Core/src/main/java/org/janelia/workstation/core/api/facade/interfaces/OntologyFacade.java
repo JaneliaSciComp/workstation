@@ -84,29 +84,21 @@ public interface OntologyFacade {
      * @return
      * @throws Exception
      */
-    Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, Object value) throws Exception;
-    
-    /**
-     * Create and return a new annotation.
-     * @param annotation annotation to create, with null GUID
-     * @return the saved annotation
-     * @throws Exception something went wrong
-     */
-    Annotation create(Annotation annotation) throws Exception;
+    Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, String value) throws Exception;
 
     /**
-     * Update and return the given annotation. 
-     * @param annotation the new annotation, with an existing GUID
-     * @return the updated annotation
-     * @throws Exception something went wrong
+     * Update the value for the given annotation.
+     * @param annotation annotation to change
+     * @param newValue new value to set
+     * @return
      */
-    Annotation update(Annotation annotation) throws Exception;
+    Annotation updateAnnotation(Annotation annotation, String newValue) throws Exception;
+
 
     /**
      * Remove the given annotation.
      * @param annotation annotation to remove
      * @throws Exception something went wrong
      */
-    void remove(Annotation annotation) throws Exception;
-    
+    void removeAnnotation(Annotation annotation) throws Exception;
 }

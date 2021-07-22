@@ -1,18 +1,11 @@
 package org.janelia.workstation.core.api.facade.impl.rest;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
-
-import org.janelia.model.domain.dto.DomainQuery;
 import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.dto.DomainQuery;
+import org.janelia.model.domain.dto.annotation.CreateAnnotationParams;
+import org.janelia.model.domain.dto.annotation.RemoveAnnotationParams;
+import org.janelia.model.domain.dto.annotation.UpdateAnnotationParams;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
 import org.janelia.model.domain.ontology.OntologyTerm;
@@ -21,9 +14,17 @@ import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.facade.interfaces.OntologyFacade;
 import org.janelia.workstation.core.api.http.RESTClientBase;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade {
 
@@ -53,7 +54,7 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
     }
 
     @Override
-    public Ontology create(Ontology ontology) throws Exception {
+    public Ontology create(Ontology ontology) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(ontology);
@@ -66,7 +67,7 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
     }
 
     @Override
-    public void removeOntology(Long ontologyId) throws Exception {
+    public void removeOntology(Long ontologyId) {
         WebTarget target = service.path("data/ontology")
                 .queryParam("ontologyId", ontologyId)
                 .queryParam("subjectKey", AccessManager.getSubjectKey());
@@ -77,7 +78,7 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
     }
 
     @Override
-    public Ontology addTerms(Long ontologyId, Long parentTermId, Collection<OntologyTerm> terms, Integer index) throws Exception {
+    public Ontology addTerms(Long ontologyId, Long parentTermId, Collection<OntologyTerm> terms, Integer index) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         List<Long> objectIds = new ArrayList<>();
@@ -97,7 +98,7 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
     }
 
     @Override
-    public Ontology removeTerm(Long ontologyId, Long parentTermId, Long termId) throws Exception {
+    public Ontology removeTerm(Long ontologyId, Long parentTermId, Long termId) {
         WebTarget target = service.path("data/ontology/terms")
                 .queryParam("ontologyId", ontologyId)
                 .queryParam("parentTermId", parentTermId)
@@ -111,7 +112,7 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
     }
 
     @Override
-    public Ontology reorderTerms(Long ontologyId, Long parentTermId, int[] order) throws Exception {
+    public Ontology reorderTerms(Long ontologyId, Long parentTermId, int[] order) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         List<Long> objectIds = new ArrayList<>();
@@ -132,58 +133,58 @@ public class OntologyFacadeImpl extends RESTClientBase implements OntologyFacade
     }
     
     @Override
-    public List<Annotation> getAnnotations(Collection<Reference> references) throws Exception {
+    public List<Annotation> getAnnotations(Collection<Reference> references) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setReferences(new ArrayList<>(references));
-        WebTarget target = service.path("data/annotation/details");
+        WebTarget target = service.path("data/annotations/query");
         Response response = target
                 .request("application/json")
                 .post(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<Annotation>>() {});
     }
-    
+
     @Override
-    public Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, Object value) throws Exception {
-        // TODO: implement
-        throw new UnsupportedOperationException("This is not yet implemented in the web service");
-    }
-    
-    @Override
-    public Annotation create(Annotation annotation) throws Exception {
-        DomainQuery query = new DomainQuery();
-        query.setSubjectKey(AccessManager.getSubjectKey());
-        query.setDomainObject(annotation);
-        WebTarget target = service.path("data/annotation");
+    public Annotation createAnnotation(Reference targetObject, OntologyTermReference ontologyTermReference, String value) {
+        CreateAnnotationParams params = new CreateAnnotationParams();
+        params.setSubjectKey(AccessManager.getSubjectKey());
+        params.setOntologyTermReference(ontologyTermReference);
+        params.setTarget(targetObject);
+        params.setValue(value);
+        WebTarget target = service.path("data/annotations");
         Response response = target
                 .request("application/json")
-                .put(Entity.json(query));
+                .put(Entity.json(params));
         checkBadResponse(target, response);
         return response.readEntity(Annotation.class);
     }
 
     @Override
-    public Annotation update(Annotation annotation) throws Exception {
-        DomainQuery query = new DomainQuery();
-        query.setSubjectKey(AccessManager.getSubjectKey());
-        query.setDomainObject(annotation);
-        WebTarget target = service.path("data/annotation");
+    public Annotation updateAnnotation(Annotation annotation, String newValue) {
+        UpdateAnnotationParams params = new UpdateAnnotationParams();
+        params.setSubjectKey(AccessManager.getSubjectKey());
+        params.setAnnotationId(annotation.getId());
+        params.setValue(newValue);
+        WebTarget target = service.path("data/annotations/value");
         Response response = target
                 .request("application/json")
-                .post(Entity.json(query));
+                .post(Entity.json(params));
         checkBadResponse(target, response);
         return response.readEntity(Annotation.class);
     }
 
     @Override
-    public void remove(Annotation annotation) throws Exception {
-        WebTarget target = service.path("data/annotation")
+    public void removeAnnotation(Annotation annotation) {
+        RemoveAnnotationParams params = new RemoveAnnotationParams();
+        params.setSubjectKey(AccessManager.getSubjectKey());
+        params.setAnnotationId(annotation.getId());
+        WebTarget target = service.path("data/annotations/remove")
                 .queryParam("annotationId", annotation.getId())
                 .queryParam("subjectKey", AccessManager.getSubjectKey());
         Response response = target
                 .request("application/json")
-                .delete();
+                .put(Entity.json(params));
         checkBadResponse(target, response);
     }
 

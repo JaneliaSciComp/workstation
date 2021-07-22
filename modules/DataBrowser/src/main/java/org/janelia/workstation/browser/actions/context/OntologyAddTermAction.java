@@ -14,6 +14,7 @@ import org.janelia.workstation.browser.nodes.OntologyNode;
 import org.janelia.workstation.browser.nodes.OntologyTermNode;
 import org.janelia.workstation.common.actions.BaseContextualPopupAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -90,6 +91,12 @@ public class OntologyAddTermAction extends BaseContextualPopupAction {
                     FrameworkAccess.handleException(ex);
                 }
             }
+
+            if (AccessManager.getAccessManager().isAdmin()) {
+                JMenuItem smi = new JMenuItem(new Json().getTypeName());
+                smi.addActionListener(e -> createTerm(term, Json.class));
+                items.add(smi);
+            }
         }
 
         return items;
@@ -141,15 +148,16 @@ public class OntologyAddTermAction extends BaseContextualPopupAction {
             OntologyTerm chosenTerm = chosenEnumNode.getOntologyTerm();
 
             if (!(chosenTerm instanceof org.janelia.model.domain.ontology.Enum)) {
-                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You must choosen an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "You must choose an enumeration", "Error", JOptionPane.ERROR_MESSAGE);
             }
 
-            try {
-                ((EnumText) ontologyTerm).init(chosenTerm.getId());
-            }
-            catch (Exception ex) {
-                FrameworkAccess.handleException(ex);
-            }
+            ((EnumText) ontologyTerm).init(chosenTerm.getId());
+        }
+        else if (ontologyTerm instanceof Json) {
+
+            final String className = (String) JOptionPane.showInputDialog(FrameworkAccess.getMainFrame(), "JSON Class:\n",
+                    "Adding to " + parentTerm.getName(), JOptionPane.PLAIN_MESSAGE, null, null, null);
+            ((Json) ontologyTerm).init(className);
         }
 
         SimpleWorker worker = new SimpleWorker() {

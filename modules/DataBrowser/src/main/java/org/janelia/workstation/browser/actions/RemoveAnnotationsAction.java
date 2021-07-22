@@ -10,7 +10,6 @@ import javax.swing.ProgressMonitor;
 
 import org.apache.commons.lang.StringUtils;
 import org.janelia.model.domain.DomainUtils;
-import org.janelia.workstation.browser.actions.context.RemoveAnnotationByTermActionListener;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -76,7 +75,7 @@ public class RemoveAnnotationsAction extends AbstractAction {
             protected void doStuff() throws Exception {
 
                 if (selectedObjects.size()==1 && matchIdOrName) {
-                    model.remove(annotation);
+                    model.removeAnnotation(annotation);
                     return;
                 }
                 
@@ -96,7 +95,7 @@ public class RemoveAnnotationsAction extends AbstractAction {
                 int i = 1;
                 for(Annotation annotation : toRemove) {
                     log.info("Removing {} - {}", i, annotation);
-                    model.remove(annotation);    
+                    model.removeAnnotation(annotation);
                     setProgress(i++, toRemove.size());
                 }
                         

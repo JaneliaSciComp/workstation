@@ -946,7 +946,7 @@ public class DomainModel {
         notifyDomainObjectRemoved(dataSet);
     }
 
-    public Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, Object value) throws Exception {
+    public Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, String value) throws Exception {
         Annotation canonicalObject;
         synchronized (modelLock) {
             canonicalObject = putOrUpdate(ontologyFacade.createAnnotation(target, ontologyTermReference, value));
@@ -955,26 +955,17 @@ public class DomainModel {
         return canonicalObject;
     }
 
-    public Annotation create(Annotation annotation) throws Exception {
+    public Annotation updateAnnotation(Annotation annotation, String newValue) throws Exception {
         Annotation canonicalObject;
         synchronized (modelLock) {
-            canonicalObject = putOrUpdate(ontologyFacade.create(annotation));
+            canonicalObject = putOrUpdate(ontologyFacade.updateAnnotation(annotation, newValue));
         }
         notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
         return canonicalObject;
     }
 
-    public Annotation save(Annotation annotation) throws Exception {
-        Annotation canonicalObject;
-        synchronized (modelLock) {
-            canonicalObject = putOrUpdate(annotation.getId() == null ? ontologyFacade.create(annotation) : ontologyFacade.update(annotation));
-        }
-        notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
-        return canonicalObject;
-    }
-
-    public void remove(Annotation annotation) throws Exception {
-        ontologyFacade.remove(annotation);
+    public void removeAnnotation(Annotation annotation) throws Exception {
+        ontologyFacade.removeAnnotation(annotation);
         notifyAnnotationsChanged(getDomainObject(annotation.getTarget()));
     }
 

@@ -144,17 +144,13 @@ public class ApplyAnnotationActionListener implements ActionListener {
         return worker.executeWithFuture();
     }
 
-    public List<Annotation> setReferenceAnnotations(List<Reference> targetIds, OntologyTerm ontologyTerm, Object value) throws Exception {
-        return setReferenceAnnotations(targetIds, ontologyTerm, value, null);
-    }
-
-    public List<Annotation> setReferenceAnnotations(List<Reference> targetIds, OntologyTerm ontologyTerm, Object value, Progress progress) throws Exception {
+    public List<Annotation> setReferenceAnnotations(List<Reference> targetIds, OntologyTerm ontologyTerm, String value, Progress progress) throws Exception {
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         List<DomainObject> domainObjects = model.getDomainObjects(targetIds);
         return setObjectAnnotations(domainObjects, ontologyTerm, value, progress);
     }
 
-    public List<Annotation> setObjectAnnotations(List<? extends DomainObject> domainObjects, OntologyTerm ontologyTerm, Object value, Progress progress) throws Exception {
+    public List<Annotation> setObjectAnnotations(List<? extends DomainObject> domainObjects, OntologyTerm ontologyTerm, String value, Progress progress) throws Exception {
 
         DomainModel model = DomainMgr.getDomainMgr().getModel();
         try {
@@ -218,52 +214,14 @@ public class ApplyAnnotationActionListener implements ActionListener {
         }
     }
 
-    public Annotation addAnnotation(DomainObject target, OntologyTerm ontologyTerm, Object value) throws Exception {
+    public Annotation addAnnotation(DomainObject target, OntologyTerm ontologyTerm, String value) throws Exception {
         return doAnnotation(target, null, ontologyTerm, value);
     }
 
-    private Annotation doAnnotation(DomainObject target, Annotation existingAnnotation, OntologyTerm ontologyTerm, Object value) throws Exception {
-
-        // TODO: after domainModel.createAnnotation is implemented in the web service, we can use it instead, like this:
-//        DomainModel model = DomainMgr.getDomainMgr().getModel();
-//        model.createAnnotation(Reference.createFor(target), OntologyTermReference.createFor(ontologyTerm), value);
-
-        Ontology ontology = ontologyTerm.getOntology();
-
-        // Save the annotation
-        OntologyTerm keyTerm = ontologyTerm;
-        OntologyTerm valueTerm = null;
-        String keyString = keyTerm.getName();
-        String valueString = value == null ? null : value.toString();
-
-        if (keyTerm instanceof EnumItem) {
-            keyTerm = ontologyTerm.getParent();
-            valueTerm = ontologyTerm;
-            keyString = keyTerm.getName();
-            valueString = valueTerm.getName();
-        }
-
-        final Annotation annotation = existingAnnotation == null? new Annotation() : existingAnnotation;
-        annotation.setKey(keyString);
-        annotation.setValue(valueString);
-        annotation.setTarget(Reference.createFor(target));
-
-        annotation.setKeyTerm(new OntologyTermReference(ontology, keyTerm));
-        if (valueTerm!=null) {
-            annotation.setValueTerm(new OntologyTermReference(ontology, valueTerm));
-        }
-
-        String tag = (annotation.getValue()==null ? annotation.getKey() :
-                annotation.getKey() + " = " + annotation.getValue());
-        annotation.setName(tag);
-
-        return createAndShareAnnotation(annotation);
-    }
-
-    private Annotation createAndShareAnnotation(Annotation annotation) throws Exception {
+    private Annotation doAnnotation(DomainObject target, Annotation existingAnnotation, OntologyTerm ontologyTerm, String value) throws Exception {
 
         DomainModel model = DomainMgr.getDomainMgr().getModel();
-        Annotation savedAnnotation = model.save(annotation);
+        Annotation savedAnnotation = model.createAnnotation(Reference.createFor(target), OntologyTermReference.createFor(ontologyTerm), value);
         log.info("Saved annotation: " + savedAnnotation);
 
         PermissionTemplate template = DataBrowserMgr.getDataBrowserMgr().getAutoShareTemplate();
@@ -274,4 +232,5 @@ public class ApplyAnnotationActionListener implements ActionListener {
 
         return savedAnnotation;
     }
+
 }

@@ -10,6 +10,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -21,6 +23,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.table.TableCellEditor;
 
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
 import org.janelia.workstation.browser.gui.options.BrowserOptions;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.browser.gui.dialogs.AnnotationBuilderDialog;
@@ -195,7 +199,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
             @Override
             protected void doStuff() throws Exception {
-                DomainMgr.getDomainMgr().getModel().remove(toDelete);
+                DomainMgr.getDomainMgr().getModel().removeAnnotation(toDelete);
             }
 
             @Override
@@ -223,7 +227,7 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
             @Override
             protected void doStuff() throws Exception {
                 for (Annotation toDelete : toDeleteList) {
-                    DomainMgr.getDomainMgr().getModel().remove(toDelete);
+                    DomainMgr.getDomainMgr().getModel().removeAnnotation(toDelete);
                 }
             }
 
@@ -277,50 +281,34 @@ public class AnnotationTablePanel extends JPanel implements AnnotationView {
 
             if (ClientDomainUtils.hasWriteAccess(annotation)) {
                 JMenuItem deleteItem = new JMenuItem("Delete Annotation");
-                deleteItem.addActionListener(new ActionListener() {
-                @Override
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        deleteAnnotation(annotation);
-                    }
-                });
+                deleteItem.addActionListener(actionEvent -> deleteAnnotation(annotation));
                 popupMenu.add(deleteItem);
             }
 
             if (annotation.getValue() != null) {
                 JMenuItem editItem = new JMenuItem("Edit Annotation");
-                editItem.addActionListener(new ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
-                        dialog.setAnnotationValue(annotation.getValue());
-                        dialog.setVisible(true);
-                        String value = dialog.getAnnotationValue();
-                        if (null == value) {
-                            value = "";
-                        }
-                        annotation.setValue(value);
-                        String tmpName = annotation.getName();
-                        String namePrefix = tmpName.substring(0, tmpName.indexOf("=") + 2);
-                        annotation.setName(namePrefix + value);
+                editItem.addActionListener(e12 -> {
+                    AnnotationBuilderDialog dialog = new AnnotationBuilderDialog();
+                    dialog.setAnnotationValue(annotation.getValue());
+                    dialog.setVisible(true);
+                    String value = dialog.getAnnotationValue();
+                    String newValue = value == null ? "" : value;
+                    SimpleWorker.runInBackground(() -> {
                         try {
-                            model.save(annotation);
+                            model.updateAnnotation(annotation, newValue);
+                        } catch (Exception ex) {
+                            FrameworkAccess.handleException(ex);
                         }
-                        catch (Exception e1) {
-                            FrameworkAccess.handleException(e1);
-                        }
-                    }
+                    });
                 });
 
                 popupMenu.add(editItem);
             }
 
             JMenuItem detailsItem = new JMenuItem("View Details");
-            detailsItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent actionEvent) {
-                    ActivityLogHelper.logUserAction("AnnotationTablePanel.viewDetails", annotation);
-                    new DomainDetailsDialog().showForDomainObject(annotation);
-                }
+            detailsItem.addActionListener(actionEvent -> {
+                ActivityLogHelper.logUserAction("AnnotationTablePanel.viewDetails", annotation);
+                new DomainDetailsDialog().showForDomainObject(annotation);
             });
             popupMenu.add(detailsItem);
 
