@@ -327,6 +327,15 @@ public class SliderPanel extends JPanel {
     public void saveColorModel(ImportExportColorModelAction.MODE saveMode) {
         Long projectId = null;
         TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+        // panel doesn't know if it's a sample instead of a workspace, or a workspace has closed;
+        //  so bail out here if there is no workspace
+        if (workspace == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Can't save color model!  No workspace!",
+                    "Can't save",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         TmSample sample = TmModelManager.getInstance().getCurrentSample();
         projectId=(workspace==null)?sample.getId():workspace.getId();
         ImageColorModel imageColorModel = colorWidgets[0].getImageColorModel();
