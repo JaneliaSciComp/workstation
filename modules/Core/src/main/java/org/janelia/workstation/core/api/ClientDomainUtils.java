@@ -2,6 +2,7 @@ package org.janelia.workstation.core.api;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -115,6 +116,6 @@ public class ClientDomainUtils {
         if (imageModel==null) {
             throw new IllegalArgumentException("Argument imageModel cannot be null");
         }
-        return ids.stream().map(imageModel::getImageByUniqueId).collect(Collectors.toList());
+        return ids.stream().map(imageModel::getImageByUniqueId).filter(Objects::nonNull).collect(Collectors.toList());
     }
 }

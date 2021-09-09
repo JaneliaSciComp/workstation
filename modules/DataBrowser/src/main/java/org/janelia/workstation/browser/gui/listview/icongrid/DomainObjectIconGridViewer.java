@@ -131,6 +131,7 @@ public class DomainObjectIconGridViewer
 
         @Override
         public DomainObject getImageByUniqueId(Reference id) {
+            if (domainObjectList==null) return null;
             return domainObjectList.getObjectById(id);
         }
     };
