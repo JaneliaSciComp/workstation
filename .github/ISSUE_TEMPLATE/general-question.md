@@ -1,7 +1,7 @@
 ---
 name: General question
 about: Help with Workstation installation and usage
-title: 'Question: <short description>'
+title: ''
 labels: ''
 assignees: ''
 
