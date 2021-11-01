@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -24,15 +25,34 @@ import javax.swing.*;
 )
 public class NeuronRenameAction extends EditAction {
 
+    private TmNeuronMetadata targetNeuron;
+
     public NeuronRenameAction() {
+        this(null);
+    }
+
+    public NeuronRenameAction(TmNeuronMetadata targetNeuron) {
         super("Rename");
+        this.targetNeuron = targetNeuron;
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         NeuronManager annotationModel = NeuronManager.getInstance();
-        TmNeuronMetadata neuron = TmSelectionState.getInstance().getCurrentNeuron();
-        final String neuronName = promptForNeuronName(neuron.getName());
+
+        if (targetNeuron == null) {
+            targetNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
+            if (targetNeuron == null) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "No selected neuron!",
+                        "No neuron to delete!",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        }
+
+        final String neuronName = promptForNeuronName(targetNeuron.getName());
         if (neuronName == null) {
             return;
         }

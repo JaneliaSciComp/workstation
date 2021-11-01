@@ -23,24 +23,42 @@ import javax.swing.*;
 )
 public class NeuronDeleteAction extends EditAction {
 
+    private TmNeuronMetadata targetNeuron;
+
     public NeuronDeleteAction() {
+        this(null);
+    }
+
+    public NeuronDeleteAction(TmNeuronMetadata targetNeuron) {
         super("Delete");
+        this.targetNeuron = targetNeuron;
     }
     
     @Override
     public void actionPerformed(ActionEvent e) {
-        TmNeuronMetadata currNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
-        if (!currNeuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
+        if (targetNeuron == null) {
+            targetNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
+            if (targetNeuron == null) {
+                JOptionPane.showMessageDialog(
+                        null,
+                        "No selected neuron!",
+                        "No neuron to delete!",
+                        JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+        }
+
+        if (!targetNeuron.getOwnerKey().equals(AccessManager.getSubjectKey())) {
             JOptionPane.showMessageDialog(null,
                     String.format("Unable to delete this neuron"),
                     "Can't Delete Non-owned Neuron",
                     JOptionPane.OK_OPTION);
             return;
         }
-        int nAnnotations = currNeuron.getGeoAnnotationMap().size();
+        int nAnnotations = targetNeuron.getGeoAnnotationMap().size();
         int ans = JOptionPane.showConfirmDialog(
                 null,
-                String.format("%s has %d nodes; delete?", currNeuron.getName(), nAnnotations),
+                String.format("%s has %d nodes; delete?", targetNeuron.getName(), nAnnotations),
                 "Delete neuron?",
                 JOptionPane.OK_CANCEL_OPTION);
         if (ans == JOptionPane.OK_OPTION) {

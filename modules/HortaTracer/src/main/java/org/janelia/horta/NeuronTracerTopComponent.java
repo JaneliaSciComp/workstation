@@ -1766,7 +1766,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                     // Change Neuron Name
                     if (!TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) {
-                        topMenu.add(new NeuronRenameAction());
+                        topMenu.add(new NeuronRenameAction(indicatedNeuron));
                     }
 
                     if (interactorContext.canMergeNeurite()) {
@@ -1782,7 +1782,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     if (interactorContext.canDeleteNeuron()) {
                         // Extra separator due to danger...
                         topMenu.add(new JPopupMenu.Separator());
-                        topMenu.add(new NeuronDeleteAction());
+                        topMenu.add(new NeuronDeleteAction(indicatedNeuron));
                     }
                 }
 
