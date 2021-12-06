@@ -1,6 +1,7 @@
 // 9.7
 
 Data Browser
-* Fixed bug with staging certain samples for release
 * Added more details about annotations in the Data Inspector
 * Added "Cross Project" and "Cross Wish List Number" to LSMs and Samples
+* Fixed bug with staging certain samples for release
+* Other minor bug fixes
