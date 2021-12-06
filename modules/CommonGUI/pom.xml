@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>9.6</version>
+        <version>9.7</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>CommonGUI</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>common-gui</artifactId>
-    <version>9.6</version>
+    <version>9.7</version>
     <packaging>nbm</packaging>
 
     <dependencies>
