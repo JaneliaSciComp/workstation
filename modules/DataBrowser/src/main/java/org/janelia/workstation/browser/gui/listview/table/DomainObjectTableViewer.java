@@ -118,6 +118,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         @Override
         public DomainObject getImageByUniqueId(Reference id) {
+            if (domainObjectList==null) return null;
             return domainObjectList.getObjectById(id);
         }
     };
