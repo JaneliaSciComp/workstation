@@ -67,18 +67,10 @@ public final class ViewLineReleasesAction extends BaseContextualPopupAction {
         List<JComponent> items = new ArrayList<>();
 
         if (sample != null) {
-            Reference sampleRef = Reference.createFor(sample);
             try {
                 DomainModel model = DomainMgr.getDomainMgr().getModel();
                 if (model != null) {
-                    List<LineRelease> lineReleases = model.getLineReleases();
-
-                    // Find which releases these samples belong to
-                    List<LineRelease> sampleLineReleases = model.getLineReleases()
-                            .stream()
-                            .filter(r -> r.getChildren().stream().anyMatch(sampleRef::equals))
-                            .sorted(Comparator.comparing(AbstractDomainObject::getName))
-                            .collect(Collectors.toList());
+                    List<LineRelease> sampleLineReleases = model.getLineReleases(sample);
 
                     // Add all those releases to the menu
                     for (LineRelease lineRelease : sampleLineReleases) {

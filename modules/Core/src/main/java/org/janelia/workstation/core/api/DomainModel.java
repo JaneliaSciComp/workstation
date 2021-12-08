@@ -36,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implements a unified domain model for client-side operations. All changes to the model should go through this class, as well as any domain object accesses
@@ -1037,6 +1038,16 @@ public class DomainModel {
             values = releaseCache.values();
         }
         return new ArrayList<>(values);
+    }
+
+    public List<LineRelease> getLineReleases(Sample sample) throws Exception {
+        // Find which releases these samples belong to
+        Reference sampleRef = Reference.createFor(sample);
+        return getLineReleases()
+                .stream()
+                .filter(r -> r.getChildren().stream().anyMatch(sampleRef::equals))
+                .sorted(Comparator.comparing(AbstractDomainObject::getName))
+                .collect(Collectors.toList());
     }
 
     public LineRelease createLineRelease(String name) throws Exception {

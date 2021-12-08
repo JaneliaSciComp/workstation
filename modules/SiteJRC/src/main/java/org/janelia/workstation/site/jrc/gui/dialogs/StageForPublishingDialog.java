@@ -2,6 +2,7 @@ package org.janelia.workstation.site.jrc.gui.dialogs;
 
 import net.miginfocom.swing.MigLayout;
 import org.apache.commons.lang3.StringUtils;
+import org.janelia.model.domain.AbstractDomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.ontology.Ontology;
@@ -39,6 +40,8 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.List;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A dialog for staging samples for publishing.
@@ -157,8 +160,25 @@ public class StageForPublishingDialog extends ModalDialog {
     public void showForSamples(Collection<Sample> samples) {
 
         this.samples = samples;
+
+        List<LineRelease> sampleLineReleases = samples.stream().filter(Sample::isSamplePublishedToStaging).flatMap(s -> {
+            try {
+                return DomainMgr.getDomainMgr().getModel().getLineReleases(s).stream();
+            } catch (Exception e) {
+                log.error("Error getting line releases for sample "+s, e);
+                return Stream.empty();
+            }
+        }).distinct().collect(Collectors.toList());
+
+        if (!sampleLineReleases.isEmpty()) {
+            String sampleCsv = StringUtils.joinWith(", ", sampleLineReleases.stream().map(AbstractDomainObject::getName).toArray());
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                    "One of the selected samples is already published as part of a Fly Line Release ("+sampleCsv+"). Samples cannot be added to more than one release.",
+                    "Cannot stage samples for publishing", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         setTitle("Stage "+samples.size()+" Samples for Publishing");
-        Component mainFrame = FrameworkAccess.getMainFrame();
 
         ActivityLogHelper.logUserAction("StageForPublishingDialog.showForSamples");
 
@@ -388,7 +408,6 @@ public class StageForPublishingDialog extends ModalDialog {
 
             @Override
             protected void hadError(Throwable error) {
-                setVisible(false);
                 FrameworkAccess.handleException(error);
             }
         };
