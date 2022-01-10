@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 ;
 
 @ActionID(
-        category = "actions",
+        category = "Horta",
         id = "SplitNeuronAtVertexAction"
 )
 @ActionRegistration(

@@ -1,8 +1,4 @@
-// 9.7
+// 9.8
 
-Data Browser
-* Added more details about annotations in the Data Inspector
-* Added "Cross Project" and "Cross Wish List Number" to LSMs and Samples
-* Added error message when released sample is added to another release
-* Fixed bug with staging certain samples for release
-* Other minor bug fixes
+Horta
+* "Go to ..." button can now be assigned a keyboard shortcut

@@ -19,7 +19,7 @@ import java.awt.event.ActionEvent;
 import java.util.Map;
 
 @ActionID(
-        category = "actions",
+        category = "Horta",
         id = "NeuronSetRadiusAction"
 )
 @ActionRegistration(
