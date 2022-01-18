@@ -7,8 +7,6 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 import org.slf4j.Logger;
@@ -16,8 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-
-;
 
 @ActionID(
         category = "actions",
@@ -27,9 +23,6 @@ import java.awt.event.ActionEvent;
         displayName = "#CTL_SplitNeuronBetweenVerticesAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/Actions/Large Volume", position = 1510, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_SplitNeuronBetweenVerticesAction=Split Neuron Between Vertices")
 /**
  * place a new annotation near the annotation with the input ID; place it

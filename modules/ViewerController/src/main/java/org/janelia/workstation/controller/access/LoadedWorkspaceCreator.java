@@ -50,7 +50,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Large Volume", position = 1540)
+        @ActionReference(path = "Menu/Actions/Horta", position = 1540)
 })
 @NbBundle.Messages("CTL_LoadedWorkspaceCreator=Load Linux SWC Folder into New Workspace on Sample")
 public class LoadedWorkspaceCreator extends BaseContextualNodeAction {

@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * Launches the Data Viewer from a context-menu.
  */
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "OpenTmSampleOrWorkspaceAction"
 )
 @ActionRegistration(
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Large Volume", position = 1510)
+        @ActionReference(path = "Menu/Actions/Horta", position = 1510, separatorBefore = 1499)
 })
 @NbBundle.Messages("CTL_OpenTmSampleOrWorkspaceAction=Open in Horta")
 public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {

@@ -7,8 +7,6 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.geom.Vec3;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 
@@ -23,12 +21,7 @@ import java.awt.event.ActionEvent;
         displayName = "#CTL_GoToLocation",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/Actions/Horta", position = 1512, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_GoToLocation=Go to...")
-
-
 public class GoToLocationAction extends AbstractAction {
 
     public GoToLocationAction() {

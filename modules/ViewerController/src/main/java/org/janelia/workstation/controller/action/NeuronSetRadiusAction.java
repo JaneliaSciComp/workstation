@@ -7,8 +7,6 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 import org.slf4j.Logger;
@@ -26,9 +24,6 @@ import java.util.Map;
         displayName = "#CTL_NeuronSetRadiusAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/Actions/Horta", position = 1510, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_NeuronSetRadiusAction=Set Neuron Radius")
 
 public class NeuronSetRadiusAction extends AbstractAction {

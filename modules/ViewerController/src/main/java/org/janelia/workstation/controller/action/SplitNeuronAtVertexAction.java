@@ -7,20 +7,11 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-;
 
 @ActionID(
         category = "Horta",
@@ -30,13 +21,9 @@ import java.util.regex.Pattern;
         displayName = "#CTL_SplitNeuronAtVertexAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/Actions/Large Volume", position = 1510, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_SplitNeuronAtVertexAction=Split Neuron At Vertex")
 
 public class SplitNeuronAtVertexAction extends AbstractAction {
-    private static final Logger log = LoggerFactory.getLogger(SplitNeuronAtVertexAction.class);
 
     public SplitNeuronAtVertexAction() {
         super("Split neuron at vertex");

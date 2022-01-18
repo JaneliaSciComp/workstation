@@ -7,8 +7,6 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 import org.slf4j.Logger;
@@ -16,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.util.Map;
 
 @ActionID(
         category = "Horta",
@@ -26,9 +23,6 @@ import java.util.Map;
         displayName = "#CTL_AnnotationSetRadiusAction",
         lazy = false
 )
-@ActionReferences({
-        @ActionReference(path = "Menu/Actions/Horta", position = 1511, separatorBefore = 1499)
-})
 @NbBundle.Messages("CTL_AnnotationSetRadiusAction=Set Vertex Radius")
 
 public class AnnotationSetRadiusAction extends AbstractAction {

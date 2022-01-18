@@ -25,6 +25,9 @@ import org.slf4j.LoggerFactory;
  * You should not use the NodeAction API to do things like check isEnabled(). Instead, use ContextualActionUtils
  * where possible, as this will produce results that are compatible with both APIs.
  *
+ * This base class expects the @ActionRegistration's displayName to be set to "#CTL_<CLASSNAME>" and CTL_<CLASSNAME>
+ * to be defined in NbBundle.Messages. Look at subclasses to get a sense of how it should be annotated.
+ *
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public abstract class BaseContextualNodeAction
@@ -33,7 +36,6 @@ public abstract class BaseContextualNodeAction
 
     private static final Logger log = LoggerFactory.getLogger(BaseContextualNodeAction.class);
 
-    private String name;
     private boolean visible = true;
     private ViewerContext viewerContext;
     private NodeContext nodeContext;

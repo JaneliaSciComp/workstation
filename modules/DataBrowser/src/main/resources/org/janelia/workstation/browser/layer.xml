@@ -32,7 +32,7 @@
             <folder name="Ontology">
                 <attr name="position" intvalue="600"/>
             </folder>
-            <folder name="Large Volume">
+            <folder name="Horta">
                 <attr name="position" intvalue="700"/>
             </folder>
         </folder>

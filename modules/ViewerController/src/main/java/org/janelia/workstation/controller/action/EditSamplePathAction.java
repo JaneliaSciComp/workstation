@@ -11,7 +11,7 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 
 @ActionID(
-        category = "Actions",
+        category = "actions",
         id = "EditSamplePathAction"
 )
 @ActionRegistration(
@@ -19,7 +19,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions/Large Volume", position = 1520)
+        @ActionReference(path = "Menu/Actions/Horta", position = 1530)
 })
 @NbBundle.Messages("CTL_EditSamplePathAction=Edit Sample Paths")
 /**

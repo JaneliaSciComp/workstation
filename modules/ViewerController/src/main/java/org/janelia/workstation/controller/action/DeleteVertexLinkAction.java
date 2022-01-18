@@ -9,8 +9,6 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 import org.slf4j.Logger;
@@ -72,11 +70,11 @@ public class DeleteVertexLinkAction extends AbstractAction {
         // verify it's a link and not a root or branch:
         NeuronManager manager = NeuronManager.getInstance();
         final TmGeoAnnotation annotation = manager.getGeoAnnotationFromID(neuronID, annotationID);
-        final TmGeoAnnotation parentAnnotation = manager.getGeoAnnotationFromID(neuronID, annotation.getParentId());
         if (annotation == null) {
             showError("Error", "No annotation to delete.");
             return;
         }
+        final TmGeoAnnotation parentAnnotation = manager.getGeoAnnotationFromID(neuronID, annotation.getParentId());
 
         if (!TmModelManager.getInstance().checkOwnership(neuronID))
             return;
