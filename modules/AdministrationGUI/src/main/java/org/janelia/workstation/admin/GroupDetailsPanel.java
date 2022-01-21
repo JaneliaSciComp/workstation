@@ -1,6 +1,20 @@
 package org.janelia.workstation.admin;
 
-import java.awt.BorderLayout;
+import com.google.common.collect.Lists;
+import org.janelia.model.security.GroupRole;
+import org.janelia.model.security.Subject;
+import org.janelia.model.security.User;
+import org.janelia.model.security.UserGroupRole;
+import org.janelia.model.security.util.SubjectUtils;
+import org.janelia.workstation.common.gui.support.SubjectComboBox;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.util.Refreshable;
+import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -9,38 +23,17 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-
-import org.janelia.model.security.GroupRole;
-import org.janelia.model.security.Subject;
-import org.janelia.model.security.User;
-import org.janelia.model.security.UserGroupRole;
-import org.janelia.model.security.util.SubjectUtils;
-import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.util.Refreshable;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 /**
  *
  * @author schauderd
  */
 public class GroupDetailsPanel extends JPanel implements Refreshable {
-    private static final Logger log = LoggerFactory.getLogger(GroupDetailsPanel.class);
 
     private AdministrationTopComponent parent;
     private String groupKey;
     private GroupRolesModel groupRolesModel;
     private JTable groupRolesTable;
-    private JComboBox<Subject> addUserBox;
+    private SubjectComboBox addUserBox;
     private int COLUMN_NAME = 0;
     private int COLUMN_ROLE = 1;
 
@@ -72,10 +65,7 @@ public class GroupDetailsPanel extends JPanel implements Refreshable {
         JScrollPane groupRolesScroll = new JScrollPane(groupRolesTable);
         add(groupRolesScroll, BorderLayout.CENTER);
         
-        addUserBox = new JComboBox<>();
-        SubjectComboBoxRenderer renderer = new SubjectComboBoxRenderer();
-        addUserBox.setRenderer(renderer);
-        addUserBox.setMaximumRowCount(20);
+        addUserBox = new SubjectComboBox();
 
         JButton newUserButton = new JButton("Add User");
         newUserButton.addActionListener(event -> addUser());
@@ -111,14 +101,16 @@ public class GroupDetailsPanel extends JPanel implements Refreshable {
             protected void hadSuccess() {
                 Set<String> currentUsers = userList.stream().map(Subject::getKey).collect(Collectors.toSet());
                 groupRolesModel.loadGroupRoles(groupKey, userList);
+                List<Subject> users = Lists.newArrayList();
                 for (Subject subject : subjectList) {
                     if (subject instanceof User) {
                         User user = (User) subject;
                         if (!currentUsers.contains(user.getKey())) {
-                            addUserBox.addItem(user);
+                            users.add(user);
                         }
                     }
                 }
+                addUserBox.setItems(users);
                 revalidate();
             }
 
@@ -185,9 +177,7 @@ public class GroupDetailsPanel extends JPanel implements Refreshable {
 
         @Override
         public boolean isCellEditable(int row, int col) {
-            if (col!=COLUMN_NAME)
-                return true;
-            return false;
+            return col != COLUMN_NAME;
         }
 
         public void loadGroupRoles(String group, List<User> users) {
@@ -222,7 +212,7 @@ public class GroupDetailsPanel extends JPanel implements Refreshable {
                 return user.getFullName()+" ("+user.getName()+")";
             }
             else {
-                JComboBox roleSelection = new JComboBox<>(roleOptions);
+                JComboBox<String> roleSelection = new JComboBox<>(roleOptions);
                 roleSelection.addActionListener(this);
                 roleSelection.putClientProperty("row", row);
                 if (user.getUserGroupRole(group)!=null) {
@@ -242,7 +232,7 @@ public class GroupDetailsPanel extends JPanel implements Refreshable {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            JComboBox role = (JComboBox)e.getSource();
+            JComboBox<String> role = (JComboBox)e.getSource();
             int row = (Integer)role.getClientProperty("row");
             User user = getUserAtRow(row);
             if (user!=null) {

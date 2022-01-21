@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.google.common.eventbus.Subscribe;
@@ -160,14 +161,17 @@ public class DomainMgr {
 
     /**
      * Returns a list of subjects sorted by groups then users, alphabetical by full name.
-     * This method runs a remote query and thus should be run in a background thread.
+     * This method can run a remote query and thus should be run in a background thread.
      *
      * @return sorted list of all subjects
      */
-    public List<Subject> getSubjects() throws Exception {
-        List<Subject> subjects = subjectFacade.getSubjects();
-        DomainUtils.sortSubjects(subjects);
-        return subjects;
+    public List<Subject> getSubjects() {
+        return model.getSubjects();
+    }
+
+    public Map<String, Subject> getSubjectsByKey() {
+        return getSubjects()
+                .stream().collect(Collectors.toMap(Subject::getKey, Function.identity()));
     }
 
     /**
@@ -178,7 +182,7 @@ public class DomainMgr {
      * @return list of users in the given group
      * @throws Exception
      */
-    public List<User> getUsersInGroup(String groupKey) throws Exception {
+    public List<User> getUsersInGroup(String groupKey) {
         return DomainMgr.getDomainMgr().getSubjects().stream()
                 .filter(s -> SubjectUtils.subjectIsInGroup(s, groupKey))
                 .filter(s -> s instanceof User)

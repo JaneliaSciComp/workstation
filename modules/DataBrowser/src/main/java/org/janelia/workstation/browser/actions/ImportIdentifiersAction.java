@@ -6,9 +6,6 @@ import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent
 import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.browser.gui.dialogs.identifiers.IdentifiersWizardIterator;
 import org.janelia.workstation.browser.gui.dialogs.identifiers.IdentifiersWizardState;
-import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.DialogDisplayer;
 import org.openide.WizardDescriptor;
 import org.openide.awt.ActionID;

@@ -1,37 +1,20 @@
 package org.janelia.workstation.controller.dialog;
 
-import java.awt.BorderLayout;
-import java.awt.HeadlessException;
+import net.miginfocom.swing.MigLayout;
+import org.apache.commons.lang3.StringUtils;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.security.Subject;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.common.gui.support.SubjectComboBox;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
+import org.janelia.workstation.core.api.AccessManager;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.JTextField;
-import javax.swing.SwingConstants;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
-
-import org.apache.commons.lang3.StringUtils;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
-
-import net.miginfocom.swing.MigLayout;
-import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
-import org.janelia.model.security.Subject;
 
 /**
  * A dialog for editing the name for a Workspace, based on a pre-determined naming pattern.
@@ -49,7 +32,7 @@ public class EditWorkspaceNameDialog extends ModalDialog {
     private JTextField suffixField;
     private JCheckBox overrideCheckbox;
     private JTextField nameField;
-    private JComboBox subjectComboBox;
+    private SubjectComboBox subjectComboBox;
     private JCheckBox assignNeuronOwnerCheckbox;
     private boolean save = false;
     private String name;
@@ -66,21 +49,11 @@ public class EditWorkspaceNameDialog extends ModalDialog {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
+        cancelButton.addActionListener(e -> setVisible(false));
 
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveAndClose();
-            }
-        });
+        okButton.addActionListener(e -> saveAndClose());
         
         getRootPane().setDefaultButton(okButton);
         
@@ -149,13 +122,8 @@ public class EditWorkspaceNameDialog extends ModalDialog {
             }
         });  
         attrPanel.add(assignNeuronOwnerCheckbox, "span 4");
-        
-        subjectComboBox = new JComboBox();
-        subjectComboBox.setEnabled(false);
 
-        SubjectComboBoxRenderer renderer = new SubjectComboBoxRenderer();
-        subjectComboBox.setRenderer(renderer);
-        subjectComboBox.setMaximumRowCount(20);
+        subjectComboBox = new SubjectComboBox();
         attrPanel.add(subjectComboBox, "span 4");
         
         CommonDialogItems.updateOwnerList((DefaultComboBoxModel)subjectComboBox.getModel(), ChangeNeuronOwnerDialog.UserFilter.ACTIVE_TRACERS);

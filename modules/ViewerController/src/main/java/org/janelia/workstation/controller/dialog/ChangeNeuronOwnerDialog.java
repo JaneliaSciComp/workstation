@@ -1,26 +1,14 @@
 package org.janelia.workstation.controller.dialog;
 
 import org.janelia.model.security.Subject;
+import org.janelia.workstation.common.gui.support.SubjectComboBox;
 import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.KeyStroke;
-import java.awt.Frame;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 
 /**
@@ -32,7 +20,7 @@ public class ChangeNeuronOwnerDialog extends JDialog {
     public enum UserFilter {NONE, TRACERS, ACTIVE_TRACERS};
     UserFilter userFilter;
 
-    JComboBox subjectCombobox;
+    SubjectComboBox subjectCombobox;
     JCheckBox filterUserListCheckbox;
 
     private boolean success = false;
@@ -53,14 +41,8 @@ public class ChangeNeuronOwnerDialog extends JDialog {
         add(new JLabel("Choose new owner for neuron:"), constraints);
 
         constraints.gridy = GridBagConstraints.RELATIVE;
-        subjectCombobox = new JComboBox();
-        subjectCombobox.setEditable(false);
+        subjectCombobox = new SubjectComboBox();
         add(subjectCombobox, constraints);
-
-        SubjectComboBoxRenderer renderer = new SubjectComboBoxRenderer();
-        subjectCombobox.setRenderer(renderer);
-        subjectCombobox.setMaximumRowCount(20);
-
 
         // this check box's presence and text depends on whether particular
         //  groups exist; the group names are stored as properties

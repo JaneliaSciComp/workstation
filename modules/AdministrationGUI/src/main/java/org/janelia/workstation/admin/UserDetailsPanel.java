@@ -2,6 +2,7 @@ package org.janelia.workstation.admin;
 
 import org.janelia.model.security.*;
 import org.janelia.model.security.util.SubjectUtils;
+import org.janelia.workstation.common.gui.support.SubjectComboBox;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.util.Refreshable;
@@ -21,7 +22,9 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -32,7 +35,7 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
     private static final Logger log = LoggerFactory.getLogger(UserDetailsPanel.class);
 
     private AdministrationTopComponent parent;
-    private JComboBox newGroupSelector;
+    private SubjectComboBox newGroupSelector;
     private JButton saveUserButton;
     private JButton removeGroupButton;
     private JButton newGroupButton;
@@ -100,7 +103,7 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
         add(mainPanel, BorderLayout.CENTER);
 
         // add groups pulldown selection for groups this person is a member of
-        newGroupSelector = new JComboBox();
+        newGroupSelector = new SubjectComboBox();
         newGroupButton = new JButton("Add Group");
         newGroupButton.addActionListener(event -> addNewGroup());
 
@@ -171,8 +174,7 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
 
     private void refreshUserGroupsToAdd() {
         // load up the new groups available to add to this user
-        newGroupSelector.removeAllItems();
-        groupSelectionSource().forEach(g -> newGroupSelector.addItem(g));
+        newGroupSelector.setItems(getAvailableGroups().collect(Collectors.toList()));
         if (newGroupSelector.getItemCount() == 0) {
             // no groups to add
             newGroupButton.setEnabled(false);
@@ -180,32 +182,40 @@ public class UserDetailsPanel extends JPanel implements Refreshable {
             newGroupButton.setEnabled(true);
     }
 
-    private Stream<String> groupSelectionSource() {
-        Stream<String> selectionSource;
+    private Stream<Subject> getAvailableGroups() {
+        Stream<Subject> selectionSource;
         if (AccessManager.getAccessManager().isAdmin()) {
             try {
                 selectionSource = DomainMgr.getDomainMgr().getSubjects()
                         .stream()
-                        .filter(s -> s instanceof Group)
-                        .map(s -> s.getKey());
+                        .filter(s -> s instanceof Group);
             } catch (Exception e) {
                 log.error("Error retrieving group subjects for setting user groups", e);
                 selectionSource = Stream.of();
             }
         } else {
-            log.debug("Populate user groups from the current list");
-            selectionSource = currentUser.getUserGroupRoles().stream()
-                    .map(ug -> ug.getGroupKey());
+            try {
+                Map<String, Subject> subjectByKey = DomainMgr.getDomainMgr().getSubjectsByKey();
+                log.debug("Populate user groups from the current list");
+                selectionSource = currentUser.getUserGroupRoles().stream()
+                        .map(ug -> subjectByKey.get(ug.getGroupKey()));
+            }
+            catch (Exception e) {
+                log.error("Error retrieving group subjects for setting user groups", e);
+                selectionSource = Stream.of();
+            }
         }
 
         return selectionSource
-                .filter(g -> currentUser.getRole(g) == null);
+                .filter(g -> currentUser.getRole(g.getKey()) == null);
     }
 
     // adds the user to a new group   
     private void addNewGroup() {
-        String groupKey = (String)newGroupSelector.getSelectedItem();
-        groupRolesModel.addNewGroup(groupKey);
+        Subject group = newGroupSelector.getSelectedItem();
+        if (group!=null) {
+            groupRolesModel.addNewGroup(group.getKey());
+        }
     }
 
     // removes the user from a group

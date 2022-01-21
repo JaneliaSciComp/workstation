@@ -5,26 +5,13 @@ import org.janelia.model.security.Subject;
 import org.janelia.model.security.util.PermissionTemplate;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
+import org.janelia.workstation.common.gui.support.SubjectComboBox;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
 
 /**
@@ -38,7 +25,7 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
     private static final Font separatorFont = new Font("Sans Serif", Font.BOLD, 12);
     
     private final JPanel attrPanel;
-    private final JComboBox<Subject> subjectCombobox;
+    private final SubjectComboBox subjectCombobox;
     private final JCheckBox readCheckbox;
     private final JCheckBox writeCheckbox;
     
@@ -55,14 +42,7 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
 
         addSeparator(attrPanel, "User");
 
-        subjectCombobox = new JComboBox<>();
-        subjectCombobox.setEditable(false);
-        subjectCombobox.setToolTipText("Choose a user or group");
-
-        SubjectComboBoxRenderer renderer = new SubjectComboBoxRenderer();
-        subjectCombobox.setRenderer(renderer);
-        subjectCombobox.setMaximumRowCount(20);
-
+        subjectCombobox = new SubjectComboBox();
         attrPanel.add(subjectCombobox, "gap para, span 2");
 
         addSeparator(attrPanel, "Permissions");
@@ -77,21 +57,13 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cancelAndClose();
-            }
-        });
+        cancelButton.addActionListener(e -> cancelAndClose());
 
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                pressedOk = true;
-                saveAndClose();
-            }
+        okButton.addActionListener(e -> {
+            pressedOk = true;
+            saveAndClose();
         });
 
         JPanel buttonPane = new JPanel();
@@ -119,23 +91,16 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
         try {
             DomainMgr mgr = DomainMgr.getDomainMgr();
             List<Subject> subjects = mgr.getSubjects();
-            
-            DefaultComboBoxModel<Subject> model = (DefaultComboBoxModel<Subject>) subjectCombobox.getModel();
-            model.removeAllElements();
-            
+
             Subject currSubject = null;
             for (Subject subject : subjects) {
-                model.addElement(subject);
                 if (template!=null && template.getSubjectKey().equals(subject.getKey())) {
                     currSubject = subject;
                 }
             }
+            subjectCombobox.setItems(subjects, currSubject);
             
             if (template!=null) {
-                if (currSubject != null) {
-                    model.setSelectedItem(currSubject);
-                }
-
                 String permissions = template.getPermissions();
                 if (permissions!=null) {
                     readCheckbox.setSelected(permissions.contains("r"));
@@ -164,7 +129,7 @@ public class AutoAnnotationPermissionDialog extends ModalDialog {
             template = new PermissionTemplate();
         }
         
-        final Subject subject = (Subject) subjectCombobox.getSelectedItem();
+        final Subject subject = subjectCombobox.getSelectedItem();
         template.setSubjectKey(subject.getKey());
         
         final boolean read = readCheckbox.isSelected();

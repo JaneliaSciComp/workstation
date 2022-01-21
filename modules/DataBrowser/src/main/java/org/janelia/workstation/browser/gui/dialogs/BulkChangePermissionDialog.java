@@ -6,7 +6,7 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.security.Subject;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
+import org.janelia.workstation.common.gui.support.SubjectComboBox;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -43,7 +43,7 @@ public class BulkChangePermissionDialog extends ModalDialog {
     
     private final JPanel attrPanel;
     private final JLabel informationalMessage;
-    private final JComboBox<Subject> subjectCombobox;
+    private final SubjectComboBox subjectCombobox;
     private final JCheckBox readCheckbox;
     private final JCheckBox writeCheckbox;
 
@@ -62,14 +62,7 @@ public class BulkChangePermissionDialog extends ModalDialog {
 
         addSeparator(attrPanel, "User");
 
-        subjectCombobox = new JComboBox<>();
-        subjectCombobox.setEditable(false);
-        subjectCombobox.setToolTipText("Choose a user or group");
-
-        SubjectComboBoxRenderer renderer = new SubjectComboBoxRenderer();
-        subjectCombobox.setRenderer(renderer);
-        subjectCombobox.setMaximumRowCount(20);
-
+        subjectCombobox = new SubjectComboBox();
         attrPanel.add(subjectCombobox, "gap para, span 2");
 
         addSeparator(attrPanel, "Permissions");
@@ -118,11 +111,7 @@ public class BulkChangePermissionDialog extends ModalDialog {
         try {
             DomainMgr mgr = DomainMgr.getDomainMgr();
             List<Subject> subjects = mgr.getSubjects();
-            DefaultComboBoxModel<Subject> model = (DefaultComboBoxModel<Subject>) subjectCombobox.getModel();
-            model.removeAllElements();
-            for (Subject subject : subjects) {
-                model.addElement(subject);
-            }
+            subjectCombobox.setItems(subjects);
 
             ActivityLogHelper.logUserAction("BulkChangePermissionDialog.showForSelectedDomainObjects");
             packAndShow();

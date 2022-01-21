@@ -35,7 +35,7 @@ public interface SubjectFacade {
      * @return
      * @throws Exception
      */
-    public User createUser(User user) throws Exception;
+    User createUser(User user) throws Exception;
 
     /**
      * Returns the User for the current authenticated user.

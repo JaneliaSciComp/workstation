@@ -2,6 +2,7 @@ package org.janelia.workstation.core.api;
 
 import com.google.common.cache.*;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.ImmutableList;
 import org.janelia.it.jacs.model.entity.json.JsonTask;
 import org.janelia.model.access.domain.search.DocumentSearchParams;
 import org.janelia.model.access.domain.search.DocumentSearchResults;
@@ -79,6 +80,7 @@ public class DomainModel {
     private Map<Reference, Ontology> ontologyCache;
     private Map<Reference, LineRelease> releaseCache;
     private Map<Reference, ContainerizedService> containerCache;
+    private List<Subject> sortedSubjectCache;
 
     private final LoadingCache<DocumentSearchParams, DocumentSearchResults> cachedSearchResults = CacheBuilder.newBuilder()
             .maximumSize(20)
@@ -259,6 +261,7 @@ public class DomainModel {
             this.ontologyCache = null;
             this.releaseCache = null;
             this.containerCache = null;
+            this.sortedSubjectCache = null;
             objectCache.invalidateAll();
             cachedSearchResults.invalidateAll();;
         }
@@ -1110,6 +1113,24 @@ public class DomainModel {
         }
         notifyDomainObjectChanged(canonicalObject);
         return canonicalObject;
+    }
+
+    public List<Subject> getSubjects() {
+        synchronized (modelLock) {
+            if (sortedSubjectCache == null) {
+                log.info("Getting subjects from database");
+                StopWatch w = TIMER ? new LoggingStopWatch() : null;
+                try {
+                    this.sortedSubjectCache = new ArrayList<>(subjectFacade.getSubjects());
+                    DomainUtils.sortSubjects(sortedSubjectCache);
+                }
+                catch (Exception e) {
+                    throw new RuntimeException("Could not retrieve subjects", e);
+                }
+                if (TIMER) w.stop("getSubjects");
+            }
+        }
+        return ImmutableList.copyOf(sortedSubjectCache);
     }
 
     public Subject getSubjectByNameOrKey(String subjectKey) throws Exception {

@@ -1,5 +1,6 @@
 package org.janelia.workstation.browser.gui.dialogs;
 
+import com.google.common.collect.Lists;
 import net.miginfocom.swing.MigLayout;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
@@ -8,7 +9,7 @@ import org.janelia.model.security.Subject;
 import org.janelia.model.security.util.SubjectUtils;
 import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.common.gui.support.SubjectComboBoxRenderer;
+import org.janelia.workstation.common.gui.support.SubjectComboBox;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -19,22 +20,9 @@ import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.DefaultComboBoxModel;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.SwingConstants;
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.swing.*;
+import java.awt.*;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -48,7 +36,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
     private final DomainInspectorPanel parent;
     private final JPanel attrPanel;
-    private final JComboBox<Subject> subjectCombobox;
+    private final SubjectComboBox subjectCombobox;
     private final JCheckBox readCheckbox;
     private final JCheckBox writeCheckbox;
 
@@ -67,14 +55,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
         addSeparator(attrPanel, "User");
 
-        subjectCombobox = new JComboBox<>();
-        subjectCombobox.setEditable(false);
-        subjectCombobox.setToolTipText("Choose a user or group");
-
-        SubjectComboBoxRenderer renderer = new SubjectComboBoxRenderer();
-        subjectCombobox.setRenderer(renderer);
-        subjectCombobox.setMaximumRowCount(20);
-
+        subjectCombobox = new SubjectComboBox();
         attrPanel.add(subjectCombobox, "gap para, span 2");
 
         addSeparator(attrPanel, "Permissions");
@@ -88,21 +69,11 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
         JButton cancelButton = new JButton("Cancel");
         cancelButton.setToolTipText("Close without saving changes");
-        cancelButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                setVisible(false);
-            }
-        });
+        cancelButton.addActionListener(e -> setVisible(false));
 
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
-        okButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveAndClose();
-            }
-        });
+        okButton.addActionListener(e -> saveAndClose());
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
@@ -135,23 +106,19 @@ public class DomainObjectPermissionDialog extends ModalDialog {
     
     private void showDialog() {
 
-        DefaultComboBoxModel<Subject> model = (DefaultComboBoxModel<Subject>) subjectCombobox.getModel();
-        model.removeAllElements();
-
+        List<Subject> subjects = Lists.newArrayList();
         String currSubjectKey = dop==null?null:dop.getSubjectKey();
         Subject currSubject = null;
         for (Subject subject : parent.getUnusedSubjects(currSubjectKey)) {
             if (domainObject != null && !domainObject.getOwnerKey().equals(subject.getKey())) {
-                model.addElement(subject);
+                subjects.add(subject);
             }
             if (dop != null && dop.getSubjectKey().equals(subject.getKey())) {
                 currSubject = subject;
             }
         }
 
-        if (currSubject != null) {
-            model.setSelectedItem(currSubject);
-        }
+        subjectCombobox.setItems(subjects, currSubject);
 
         readCheckbox.setSelected(dop == null || dop.isRead());
         writeCheckbox.setSelected(dop != null && dop.isWrite());
@@ -164,7 +131,7 @@ public class DomainObjectPermissionDialog extends ModalDialog {
 
         UIUtils.setWaitingCursor(parent);
 
-        final Subject subject = (Subject) subjectCombobox.getSelectedItem();
+        final Subject subject = subjectCombobox.getSelectedItem();
         final Set<String> granteeSet = SubjectUtils.getReaderSet(subject);
         final DomainModel model = DomainMgr.getDomainMgr().getModel();
         
