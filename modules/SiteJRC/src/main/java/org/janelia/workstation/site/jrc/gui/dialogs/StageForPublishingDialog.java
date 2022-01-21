@@ -10,27 +10,18 @@ import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.actions.context.ApplyAnnotationActionListener;
-import org.janelia.workstation.browser.gui.components.DomainExplorerTopComponent;
-import org.janelia.workstation.browser.gui.components.DomainListViewManager;
-import org.janelia.workstation.browser.gui.components.DomainListViewTopComponent;
-import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
-import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.model.PreferenceConstants;
-import org.janelia.workstation.core.nodes.IdentifiableNode;
-import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.site.jrc.action.context.ApplyPublishingNamesActionListener;
-import org.janelia.workstation.site.jrc.nodes.FlyLineReleasesNode;
 import org.janelia.workstation.site.jrc.util.SiteUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +48,6 @@ public class StageForPublishingDialog extends ModalDialog {
     private static final String ANNOTATION_PUBLISH_OBJECTIVE = "Publish%sToWeb";
 
     private final JLabel loadingLabel = new JLabel(Icons.getLoadingIcon());
-    private final GroupedKeyValuePanel attrPanel;
     private final JPanel addPanel;
     private final JRadioButton existingReleaseRadioButton;
     private final JLabel existingReleaseLabel;
@@ -72,8 +62,6 @@ public class StageForPublishingDialog extends ModalDialog {
 
     public StageForPublishingDialog() {
         setLayout(new BorderLayout());
-
-        this.attrPanel = new GroupedKeyValuePanel();
 
         ButtonGroup group = new ButtonGroup();
 
