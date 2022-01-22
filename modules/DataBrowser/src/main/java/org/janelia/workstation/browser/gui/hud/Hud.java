@@ -4,13 +4,9 @@ import org.apache.commons.io.FilenameUtils;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.gui.cdmip.ColorDepthImage;
-import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.api.state.DataBrowserMgr;
-import org.janelia.workstation.browser.gui.colordepth.CreateMaskFromImageAction;
-import org.janelia.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
@@ -56,7 +52,7 @@ public class Hud extends ModalDialog {
     private final JLabel previewLabel;
     private final ResultSelectionButton resultButton;
     private final ImageTypeSelectionButton typeButton;
-    private final JButton colorDepthMaskButton;
+    //private final JButton colorDepthMaskButton;
     private final JPanel menuLikePanel;
 
     // Current state
@@ -98,30 +94,32 @@ public class Hud extends ModalDialog {
             }
         };
 
-        colorDepthMaskButton = new JButton("Create Mask for Color Depth Search");
-        colorDepthMaskButton.setVisible(false);
-        colorDepthMaskButton.setFocusable(false);
-        colorDepthMaskButton.setRequestFocusEnabled(false);
-        colorDepthMaskButton.addActionListener(e -> {
-            if (domainObject instanceof Sample) {
-                CreateMaskFromSampleAction action = new CreateMaskFromSampleAction((Sample) domainObject, resultButton.getResultDescriptor(), imageType.name());
-                hideDialog();
-                action.actionPerformed(e);
-            }
-            else if (domainObject instanceof ColorDepthImage) {
-                CreateMaskFromImageAction action = new CreateMaskFromImageAction((ColorDepthImage) domainObject);
-                hideDialog();
-                action.actionPerformed(e);
-            }
-            else if (domainObject instanceof ColorDepthMask) {
-                CreateMaskFromImageAction action = new CreateMaskFromImageAction((ColorDepthMask) domainObject);
-                hideDialog();
-                action.actionPerformed(e);
-            }
-            else {
-                throw new IllegalStateException("Cannot extract color depth MIP from "+domainObject);
-            }
-        });
+        // TODO: This button won't work with the new color depth module, it needs a plugin architecture.
+        //       When fixing this, make sure to search this file for other occurences of "colorDepthMaskButton"
+//        colorDepthMaskButton = new JButton("Create Mask for Color Depth Search");
+//        colorDepthMaskButton.setVisible(false);
+//        colorDepthMaskButton.setFocusable(false);
+//        colorDepthMaskButton.setRequestFocusEnabled(false);
+//        colorDepthMaskButton.addActionListener(e -> {
+//            if (domainObject instanceof Sample) {
+//                CreateMaskFromSampleAction action = new CreateMaskFromSampleAction((Sample) domainObject, resultButton.getResultDescriptor(), imageType.name());
+//                hideDialog();
+//                action.actionPerformed(e);
+//            }
+//            else if (domainObject instanceof ColorDepthImage) {
+//                CreateMaskFromImageAction action = new CreateMaskFromImageAction((ColorDepthImage) domainObject);
+//                hideDialog();
+//                action.actionPerformed(e);
+//            }
+//            else if (domainObject instanceof ColorDepthMask) {
+//                CreateMaskFromImageAction action = new CreateMaskFromImageAction((ColorDepthMask) domainObject);
+//                hideDialog();
+//                action.actionPerformed(e);
+//            }
+//            else {
+//                throw new IllegalStateException("Cannot extract color depth MIP from "+domainObject);
+//            }
+//        });
 
         JPanel leftSidePanel = new JPanel();
         leftSidePanel.setLayout(new FlowLayout());
@@ -129,7 +127,7 @@ public class Hud extends ModalDialog {
         leftSidePanel.setRequestFocusEnabled(false);
         leftSidePanel.add(resultButton);
         leftSidePanel.add(typeButton);
-        leftSidePanel.add(colorDepthMaskButton);
+        //leftSidePanel.add(colorDepthMaskButton);
 
         menuLikePanel = new JPanel();
         menuLikePanel.setFocusable(false);
@@ -272,15 +270,15 @@ public class Hud extends ModalDialog {
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
             fileProvider = DescriptorUtils.getResult(sample, resultButton.getResultDescriptor());
-            colorDepthMaskButton.setVisible(
-                               imageType == FileType.ColorDepthMip1
-                            || imageType == FileType.ColorDepthMip2
-                            || imageType == FileType.ColorDepthMip3
-                            || imageType == FileType.ColorDepthMip4);
+//            colorDepthMaskButton.setVisible(
+//                               imageType == FileType.ColorDepthMip1
+//                            || imageType == FileType.ColorDepthMip2
+//                            || imageType == FileType.ColorDepthMip3
+//                            || imageType == FileType.ColorDepthMip4);
         }
         else if (domainObject instanceof HasFiles) {
             fileProvider = (HasFiles)domainObject;
-            colorDepthMaskButton.setVisible(domainObject instanceof ColorDepthImage || domainObject instanceof ColorDepthMask);
+//            colorDepthMaskButton.setVisible(domainObject instanceof ColorDepthImage || domainObject instanceof ColorDepthMask);
         }
 
         log.info("Using file provider: {}", fileProvider);

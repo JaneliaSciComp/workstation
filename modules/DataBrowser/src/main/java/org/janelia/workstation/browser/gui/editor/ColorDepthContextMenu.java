@@ -1,25 +1,21 @@
 package org.janelia.workstation.browser.gui.editor;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Collections;
-
-import javax.swing.JMenuItem;
-
 import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.ObjectiveSample;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SampleAlignmentResult;
-import org.janelia.workstation.browser.gui.colordepth.CreateMaskFromSampleAction;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.common.actions.PopupLabelAction;
 import org.janelia.workstation.common.gui.support.PopupContextMenu;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
-import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Collections;
 
 /**
  * Right-click context menu for color depth images presented in the Sample Editor. 
@@ -81,15 +77,17 @@ public class ColorDepthContextMenu extends PopupContextMenu {
     }
 
     protected JMenuItem getCreateColorDepthMaskItem() {
-    
-        JMenuItem menuItem = getNamedActionItem(new CreateMaskFromSampleAction(sample, resultDescriptor, fileType.name()));
 
-        HasFiles fileProvider = DescriptorUtils.getResult(sample, resultDescriptor);
-        if (fileProvider==null) {
-            menuItem.setEnabled(false);
-        }
-        
-        return menuItem;
+        // TODO: need to define a plugin infrastructure for this
+//        JMenuItem menuItem = getNamedActionItem(new CreateMaskFromSampleAction(sample, resultDescriptor, fileType.name()));
+//
+//        HasFiles fileProvider = DescriptorUtils.getResult(sample, resultDescriptor);
+//        if (fileProvider==null) {
+//            menuItem.setEnabled(false);
+//        }
+//
+//        return menuItem;
+        return null;
     }
 
     protected JMenuItem getHudMenuItem() {
