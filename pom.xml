@@ -1098,12 +1098,24 @@
             </properties>
         </profile>
 
+        <profile>
+            <id>janeliaws</id>
+            <modules>
+                <module>modules/application</module>
+            </modules>
+        </profile>
+
+        <profile>
+            <id>horta</id>
+            <modules>
+                <module>modules/application_horta</module>
+            </modules>
+        </profile>
+
     </profiles>
     
     <modules>
         <module>modules/AdministrationGUI</module>
-        <module>modules/application</module>
-        <module>modules/branding</module>
         <module>modules/CommonLibraries</module>
         <module>modules/IntegrationAPIs</module>
         <module>modules/Core</module>
@@ -1121,6 +1133,7 @@
         <module>modules/Jogl213Lib</module>
         <module>modules/Jogl224Lib</module>
         <module>modules/SiteJRC</module>
+        <module>modules/branding</module>
     </modules>
 
 </project>

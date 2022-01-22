@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.janelia</groupId>
+        <artifactId>workstation</artifactId>
+        <version>9.7.1</version>
+        <relativePath>../..</relativePath>
+    </parent>
+
+    <name>Horta</name>
+    <groupId>org.janelia.workstation</groupId>
+    <artifactId>application_horta</artifactId>
+    <version>9.7.1</version>
+    <packaging>nbm-application</packaging>
+
+    <properties>
+        <jarGoalPhase>package</jarGoalPhase>
+        <brandingToken>horta</brandingToken>
+    </properties>
+
+    <!-- Dependencies -->
+    <dependencies>
+        
+        <!-- Branding -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>branding</artifactId>
+        </dependency>
+        
+        <!-- Darcula Look and Feel --> 
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>darcula</artifactId>
+        </dependency>
+
+        <!-- Administration GUI -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>adminstration</artifactId>
+        </dependency>
+
+        <!-- CommonGUI -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-gui</artifactId>
+        </dependency>
+
+        <!-- Core -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+
+        <!-- Data Browser -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>browser</artifactId>
+        </dependency>
+
+        <!-- Viewer Controller -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>viewercontroller</artifactId>
+        </dependency>
+
+        <!-- Viewer Info Panel -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>infopanel</artifactId>
+        </dependency>
+
+        <!-- Large Volume Viewer --> 
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>large_volume_viewer</artifactId>
+        </dependency>
+ 
+        <!-- Horta --> 
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>horta</artifactId>
+        </dependency>
+
+        <!-- NetBeans Platform --> 
+        <dependency>
+            <groupId>org.netbeans.cluster</groupId>
+            <artifactId>platform</artifactId>
+            <type>pom</type>
+            <exclusions>
+                <exclusion>
+                    <artifactId>org-jdesktop-layout</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-api-templates</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-api-search</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-api-visual</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-core-execution</artifactId>
+                    <groupId>org.netbeans.modules</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-core-netigso</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-core-osgi</artifactId>
+                    <groupId>org.netbeans.modules</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-libs-osgi</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-libs-felix</artifactId>
+                    <groupId>org.netbeans.modules</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-libs-jsr223</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-libs-testng</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-libs-junit4</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-modules-core-kit</artifactId>
+                    <groupId>org.netbeans.modules</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-modules-netbinox</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-openide-compat</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-openide-options</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-openide-util-enumerations</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-modules-editor-mimelookup-impl</artifactId>
+                    <groupId>org.netbeans.modules</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-modules-print</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-modules-favorites</artifactId>
+                    <groupId>org.netbeans.modules</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-modules-javahelp</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-modules-spi-actions</artifactId>
+                    <groupId>org.netbeans.modules</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-modules-junitlib</artifactId>
+                    <groupId>org.netbeans.modules</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-api-htmlui</artifactId>
+                    <groupId>org.netbeans.api</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-modules-templates</artifactId>
+                    <groupId>org.netbeans.modules</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>org-netbeans-modules-templatesui</artifactId>
+                    <groupId>org.netbeans.modules</groupId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.netbeans.external</groupId>
+                    <artifactId>net-java-html</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.netbeans.external</groupId>
+                    <artifactId>net-java-html-boot</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.netbeans.external</groupId>
+                    <artifactId>net-java-html-boot-fx</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.netbeans.external</groupId>
+                    <artifactId>net-java-html-boot-script</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.netbeans.external</groupId>
+                    <artifactId>net-java-html-geo</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.netbeans.external</groupId>
+                    <artifactId>net-java-html-json</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.netbeans.external</groupId>
+                    <artifactId>net-java-html-sound</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.netbeans.external</groupId>
+                    <artifactId>org-netbeans-html-ko4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.netbeans.external</groupId>
+                    <artifactId>org-netbeans-html-xhr4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-netbeans-modules-nbjunit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        
+    </dependencies>
+    
+    <build>
+        <plugins>
+            <!-- Build jar only when not in deployment mode so install does not fail due to no attached artifacts -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration combine.self="override">
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>${jarGoalPhase}</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Disable the ZIP goal. Also set up the location of the ${brandingToken}.conf -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <configuration>
+                    <finalName>${clusterName}</finalName>
+                    <installersFilePrefix>${clusterName}</installersFilePrefix>
+                    <debugAdditionalArguments>${janeliaws.debug.args}</debugAdditionalArguments>
+                    <etcConfFile>${basedir}/target/${brandingToken}.conf</etcConfFile>
+                    <!-- Override ANT-based installer builder -->
+                    <templateFile>${basedir}/src/main/app-resources/template.xml</templateFile>
+                    <!--
+                        Disable Pack200 because it adds a lot of time to the build and install,
+                        and the Workstation is typically distributed over LANs so the size isn't as important
+                    -->
+                    <installerPack200Enable>false</installerPack200Enable>
+                    <userSettings>
+                        <suite.props.app.title>${project.name.capitalized}</suite.props.app.title>
+                        <nbi.install.dir>${clusterName}</nbi.install.dir>
+                        <nbi.stub.buildfile>${basedir}/src/main/app-resources/build.xml</nbi.stub.buildfile>
+                        <nbi.icon.file>${basedir}/src/main/app-resources/janeliaws48.png</nbi.icon.file>
+                        <nbi.dock.icon.file>${basedir}/src/main/app-resources/janeliaws.icns</nbi.dock.icon.file>
+                        <nbi.instleftcorner.file>${basedir}/src/main/app-resources/janeliaws48.png</nbi.instleftcorner.file>
+                        <configuration.logic.file>${basedir}/src/main/app-resources/ConfigurationLogic.java</configuration.logic.file>
+                        <unix.launcher.prop.file>${basedir}/src/main/app-resources/unix.launcher.properties</unix.launcher.prop.file>
+                        <windows.launcher.prop.file>${basedir}/src/main/app-resources/windows.launcher.properties</windows.launcher.prop.file>
+                    </userSettings>
+                </configuration>
+
+                <!-- disable ZIP goal, because it needs to be run after replace-mac-executable -->
+                <executions>
+                    <execution>
+                        <id>default-standalone-zip</id>
+                        <phase>none</phase>
+                    </execution>
+                </executions>
+
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>replace-executables</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target name="replaceExecutables" description="Replace executables with custom versions">
+                                <!-- Customized to find correct JDK, and to fix app title on Mac-->
+                                <echo message="Replacing Mac/Linux launcher executable"/>
+                                <copy file="src/main/app-resources/bin/${brandingToken}" overwrite="true"
+                                      tofile="${project.build.directory}/${brandingToken}/bin/${brandingToken}"/>
+                                <!-- Customized to add the Workstation icon to the exes-->
+                                <echo message="Replacing Windows launcher executables"/>
+                                <copy file="src/main/app-resources/bin/${brandingToken}.exe" overwrite="true"
+                                      tofile="${project.build.directory}/${brandingToken}/bin/${brandingToken}.exe"/>
+                                <copy file="src/main/app-resources/bin/${brandingToken}64.exe" overwrite="true"
+                                      tofile="${project.build.directory}/${brandingToken}/bin/${brandingToken}64.exe"/>
+                                <!-- Customized to disable cached splash due to a bug on Linux -->
+                                <copy file="src/main/app-resources/nbexec" overwrite="true"
+                                      tofile="${project.build.directory}/${brandingToken}/platform/lib/nbexec"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Copy resources with filtering (e.g. replacing 'project.version' by the actual version) -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>generate-app-config-file</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/${brandingToken}/${clusterName}/config</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <includes>
+                                        <include>${brandingToken}.conf</include>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                            <escapeString>\</escapeString>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>generate-app-conf-file</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/target/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/resources</directory>
+                                    <includes>
+                                        <include>${brandingToken}.conf</include>
+                                        <include>Info.plist</include>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                            <escapeString>\</escapeString>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        
+        <!-- The deployment profile is built for daily releases.
+             It builds the standalone zip, the installers, and the update site.-->
+        <profile>
+            <id>deployment</id>
+
+            <properties>
+                <jarGoalPhase>none</jarGoalPhase>
+            </properties>
+
+            <build>
+                <plugins>
+                    <!-- Permits NbModuleSuite to be run in integration-test phase -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <systemPropertyVariables>
+                                <all.clusters>${all.clusters}</all.clusters>
+                                <branding.token>${brandingToken}</branding.token>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>nbm-maven-plugin</artifactId>
+
+                        <executions>
+
+                            <!-- Disable this so that we don't override the customizations we made -->
+                            <execution>
+                                <id>default-cluster-app</id>
+                                <phase>none</phase>
+                            </execution>
+
+                            <!-- Create the zip file, which will be used to create the installers -->
+                            <execution>
+                                <id>default-standalone-zip</id>
+                                <phase>package</phase>
+                            </execution>
+
+                            <!-- Create the installers and the update site -->
+                            <execution>
+                                <id>installers-and-site</id>
+                                <goals>
+                                    <goal>build-installers</goal>
+                                    <goal>autoupdate</goal>
+                                </goals>
+                            </execution>
+
+                        </executions>
+
+                    </plugin>
+
+                    <!-- Disable this during deployment -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>replace-mac-executable</id>
+                                <phase>none</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profile used along with deployment to create the autoupdate site -->
+        <profile>
+            <id>create-autoupdate</id>
+            <build>
+                <plugins>
+                    <!-- NBM Plugin settings. Enable the autoupdate generation -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>nbm-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>autoupdate</id>
+                                <goals>
+                                    <goal>autoupdate</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profile that pushes the /site folder to GitHub's gh-pages -->
+        <profile>
+            <id>push-site</id>
+            <build>
+                <plugins>
+                    <!-- Copy parent's site into target/site -->
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <phase>site</phase>
+                                <configuration>
+                                    <target>
+                                        <copy todir="${project.build.directory}/site">
+                                            <fileset dir="${basedir}/../../target/site"/>
+                                        </copy>
+                                    </target>
+                                </configuration>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Publish site folder to GitHub's gh-pages branch -->
+                    <plugin>
+                        <groupId>com.github.github</groupId>
+                        <artifactId>site-maven-plugin</artifactId>
+                        <configuration>
+                            <message>Creating site for ${project.version}</message>
+                            <path>${project.version}</path>
+                            <merge>true</merge>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>site</goal>
+                                </goals>
+                                <phase>site</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+</project>
