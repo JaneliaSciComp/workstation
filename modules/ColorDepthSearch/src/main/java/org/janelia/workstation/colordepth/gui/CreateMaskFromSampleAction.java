@@ -1,13 +1,5 @@
 package org.janelia.workstation.colordepth.gui;
 
-import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
-import java.io.InputStream;
-import java.util.List;
-
-import javax.swing.AbstractAction;
-import javax.swing.JOptionPane;
-
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.interfaces.HasFiles;
@@ -20,8 +12,12 @@ import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
+import java.io.InputStream;
+import java.util.List;
 
 /**
  * Allows the user to create a mask for color depth search from an existing color depth MIP on a sample.
@@ -29,8 +25,6 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class CreateMaskFromSampleAction extends AbstractAction {
-
-    private static final Logger log = LoggerFactory.getLogger(CreateMaskFromSampleAction.class);
 
     private Sample sample;
     private ArtifactDescriptor resultDescriptor;

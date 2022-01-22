@@ -1,11 +1,5 @@
 package org.janelia.workstation.colordepth.actions;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.swing.Action;
-
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFiles;
@@ -26,6 +20,10 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @ActionID(
         category = "actions",
@@ -59,15 +57,14 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
         }
 
         setEnabledAndVisible(false);
-        if (selectedObject !=null) {
+        if (selectedObject!=null) {
 
             log.trace("Processing selected object: {}", selectedObject.getName());
 
-            ViewerContext viewerContext = getViewerContext();
+            ViewerContext<?,?> viewerContext = getViewerContext();
             DomainObjectImageModel doim = DomainUIUtils.getDomainObjectImageModel(viewerContext);
             if (doim != null) {
 
-                Collection selectedObjects = viewerContext.getSelectedObjects();
                 ArtifactDescriptor resultDescriptor = doim.getArtifactDescriptor();
                 String typeName = doim.getImageTypeName();
 
@@ -82,7 +79,7 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
                     }
                 }
 
-                if (!samples.isEmpty() && samples.size() == 1) {
+                if (samples.size() == 1) {
                     if (resultDescriptor!=null && resultDescriptor.isAligned()) {
                         setVisible(true);
 
@@ -100,7 +97,7 @@ public class CreateColorDepthMaskAction extends BaseContextualNodeAction {
                             }
                         }
                     }
-                } else if (!images.isEmpty() && images.size() == 1) {
+                } else if (images.size() == 1) {
                     this.innerAction = new CreateMaskFromImageAction(images.get(0));
                     setEnabledAndVisible(true);
                 }

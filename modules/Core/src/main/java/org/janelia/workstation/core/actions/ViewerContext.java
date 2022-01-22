@@ -27,8 +27,6 @@ public interface ViewerContext<T,S> {
     }
 
     default T getLastSelectedObject() {
-        // TODO: this causes database access on EDT
-        //return getImageModel().getImageByUniqueId(getSelectionModel().getLastSelectedId());
         return getSelectionModel().getLastSelectedObject();
     }
 

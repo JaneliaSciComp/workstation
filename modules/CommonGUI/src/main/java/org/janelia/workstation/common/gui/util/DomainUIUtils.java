@@ -1,16 +1,14 @@
 package org.janelia.workstation.common.gui.util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.model.ImageModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Utility methods for dealing with Domain Objects in context of the UI.
@@ -19,18 +17,16 @@ import org.slf4j.LoggerFactory;
  */
 public class DomainUIUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(DomainUIUtils.class);
-
-    public static DomainObjectImageModel getDomainObjectImageModel(ViewerContext viewerContext) {
+    public static DomainObjectImageModel getDomainObjectImageModel(ViewerContext<?,?> viewerContext) {
         if (viewerContext==null) return null;
-        ImageModel imageModel = viewerContext.getImageModel();
+        ImageModel<?,?> imageModel = viewerContext.getImageModel();
         if (imageModel instanceof DomainObjectImageModel) {
             return (DomainObjectImageModel) imageModel;
         }
         return null;
     }
 
-    public static DomainObject getLastSelectedDomainObject(ViewerContext viewerContext) {
+    public static DomainObject getLastSelectedDomainObject(ViewerContext<?,?> viewerContext) {
         if (viewerContext==null) return null;
         if (viewerContext.getLastSelectedObject() instanceof DomainObject) {
             return ((DomainObject) viewerContext.getLastSelectedObject());
@@ -38,7 +34,7 @@ public class DomainUIUtils {
         return null;
     }
 
-    public static Collection<DomainObject> getSelectedDomainObjects(ViewerContext viewerContext) {
+    public static Collection<DomainObject> getSelectedDomainObjects(ViewerContext<?,?> viewerContext) {
         if (viewerContext==null) return null;
         List<DomainObject> domainObjects = new ArrayList<>();
         for(Object obj : viewerContext.getSelectedObjects()) {

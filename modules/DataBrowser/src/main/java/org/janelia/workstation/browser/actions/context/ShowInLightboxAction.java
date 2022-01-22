@@ -15,8 +15,6 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @ActionID(
         category = "actions",
@@ -33,7 +31,6 @@ import org.slf4j.LoggerFactory;
 @NbBundle.Messages("CTL_LightboxToggleAction=Show in Lightbox")
 public class ShowInLightboxAction extends BaseContextualNodeAction {
 
-    private static final Logger log = LoggerFactory.getLogger(ShowInLightboxAction.class);
     private DomainObject domainObject;
     private ArtifactDescriptor resultDescriptor;
     private String typeName;
@@ -46,7 +43,7 @@ public class ShowInLightboxAction extends BaseContextualNodeAction {
     @Override
     protected void processContext() {
         setEnabledAndVisible(false);
-        ViewerContext viewerContext = getViewerContext();
+        ViewerContext<?,?> viewerContext = getViewerContext();
         if (viewerContext!=null) {
             DomainObjectImageModel doim = DomainUIUtils.getDomainObjectImageModel(viewerContext);
             if (doim != null) {
