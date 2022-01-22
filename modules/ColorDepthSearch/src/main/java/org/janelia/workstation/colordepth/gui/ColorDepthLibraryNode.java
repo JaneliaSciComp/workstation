@@ -1,4 +1,4 @@
-package org.janelia.workstation.colordepth;
+package org.janelia.workstation.colordepth.gui;
 
 import java.awt.Image;
 import java.util.ArrayList;
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
-import org.janelia.workstation.browser.model.ColorDepthAlignmentSpace;
+import org.janelia.workstation.colordepth.model.ColorDepthAlignmentSpace;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.nodes.FilterNode;
 import org.janelia.workstation.core.util.ColorDepthUtils;

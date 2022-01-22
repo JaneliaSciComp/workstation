@@ -1,8 +1,8 @@
-package org.janelia.workstation.colordepth;
+package org.janelia.workstation.colordepth.gui;
 
 import java.awt.Image;
 
-import org.janelia.workstation.browser.model.ColorDepthAlignmentSpace;
+import org.janelia.workstation.colordepth.model.ColorDepthAlignmentSpace;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.nodes.FilterNode;
 import org.slf4j.Logger;

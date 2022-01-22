@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.actions;
+package org.janelia.workstation.colordepth.actions;
 
 import org.janelia.model.domain.flyem.EMBody;
 import org.janelia.model.domain.gui.cdmip.ColorDepthImage;

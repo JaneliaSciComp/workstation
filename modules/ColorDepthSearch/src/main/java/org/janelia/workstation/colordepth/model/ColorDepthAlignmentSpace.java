@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.model;
+package org.janelia.workstation.colordepth.model;
 
 import java.util.ArrayList;
 import java.util.Date;

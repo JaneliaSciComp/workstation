@@ -1,4 +1,4 @@
-package org.janelia.workstation.colordepth;
+package org.janelia.workstation.colordepth.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;

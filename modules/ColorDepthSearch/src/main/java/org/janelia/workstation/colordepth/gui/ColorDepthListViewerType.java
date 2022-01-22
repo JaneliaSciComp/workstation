@@ -1,4 +1,4 @@
-package org.janelia.workstation.colordepth;
+package org.janelia.workstation.colordepth.gui;
 
 import org.janelia.workstation.common.gui.listview.ListViewer;
 import org.janelia.workstation.common.gui.listview.ListViewerClassProvider;

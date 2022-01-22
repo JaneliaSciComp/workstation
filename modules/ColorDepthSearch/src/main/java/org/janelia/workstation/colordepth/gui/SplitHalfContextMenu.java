@@ -1,4 +1,4 @@
-package org.janelia.workstation.colordepth;
+package org.janelia.workstation.colordepth.gui;
 
 import javax.swing.Action;
 import javax.swing.JMenuItem;

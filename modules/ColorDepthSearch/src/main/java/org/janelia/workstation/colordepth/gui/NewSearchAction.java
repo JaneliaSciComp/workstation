@@ -1,4 +1,4 @@
-package org.janelia.workstation.colordepth;
+package org.janelia.workstation.colordepth.gui;
 
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -14,7 +14,7 @@ import org.openide.util.actions.CallableSystemAction;
  */
 @ActionID(
         category = "File",
-        id = "org.janelia.workstation.colordepth.NewSearchAction"
+        id = "org.janelia.workstation.colordepth.gui.NewSearchAction"
 )
 @ActionRegistration(
         displayName = "Color Depth Search"

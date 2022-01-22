@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.actions.context;
+package org.janelia.workstation.colordepth.actions;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,8 +11,8 @@ import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.AlignedImage2d;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.workstation.colordepth.CreateMaskFromImageAction;
-import org.janelia.workstation.colordepth.CreateMaskFromSampleAction;
+import org.janelia.workstation.colordepth.gui.CreateMaskFromImageAction;
+import org.janelia.workstation.colordepth.gui.CreateMaskFromSampleAction;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
 import org.janelia.workstation.common.gui.util.DomainUIUtils;

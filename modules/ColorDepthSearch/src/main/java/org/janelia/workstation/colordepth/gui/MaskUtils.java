@@ -1,4 +1,4 @@
-package org.janelia.workstation.colordepth;
+package org.janelia.workstation.colordepth.gui;
 
 import org.janelia.model.domain.gui.cdmip.ColorDepthMatch;
 import org.janelia.workstation.core.api.AccessManager;

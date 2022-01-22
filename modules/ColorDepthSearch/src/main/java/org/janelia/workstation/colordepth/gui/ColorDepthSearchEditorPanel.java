@@ -1,4 +1,4 @@
-package org.janelia.workstation.colordepth;
+package org.janelia.workstation.colordepth.gui;
 
 import com.google.common.eventbus.Subscribe;
 import org.apache.commons.lang3.StringUtils;
