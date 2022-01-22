@@ -1,14 +1,5 @@
 package org.janelia.workstation.browser.nodes;
 
-import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.workstation.browser.gui.dialogs.DataSetDialog;
@@ -25,6 +16,13 @@ import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * A node which shows the items most recently opened by the user.  
  * 
@@ -34,6 +32,7 @@ public class DataSetsNode extends IdentifiableNode {
 
     private final static Logger log = LoggerFactory.getLogger(DataSetsNode.class);
 
+    public static final String NODE_NAME = "Data Sets";
     public static final long NODE_ID = 20L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final DataSetNodeChildFactory childFactory;
@@ -55,7 +54,7 @@ public class DataSetsNode extends IdentifiableNode {
 
     @Override
     public String getDisplayName() {
-        return "Data Sets";
+        return NODE_NAME;
     }
 
     @Override

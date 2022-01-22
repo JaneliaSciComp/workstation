@@ -30,7 +30,8 @@ import org.slf4j.LoggerFactory;
 public class RecentlyOpenedItemsNode extends IdentifiableNode {
         
     private final static Logger log = LoggerFactory.getLogger(RecentlyOpenedItemsNode.class);
-    
+
+    public static final String NODE_NAME = "Recently Opened";
     public static final long NODE_ID = 10L; // This magic number means nothing, it just needs to be unique and different from GUID space.
     
     private final DomainObjectNodeChildFactory childFactory;
@@ -52,7 +53,7 @@ public class RecentlyOpenedItemsNode extends IdentifiableNode {
 
     @Override
     public String getDisplayName() {
-        return "Recently Opened";
+        return NODE_NAME;
     }
 
     @Override

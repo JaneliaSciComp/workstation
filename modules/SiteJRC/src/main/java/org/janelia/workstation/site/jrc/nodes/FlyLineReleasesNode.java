@@ -1,15 +1,5 @@
 package org.janelia.workstation.site.jrc.nodes;
 
-import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JOptionPane;
-
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -25,6 +15,13 @@ import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * A node which shows the items most recently opened by the user.  
  * 
@@ -34,6 +31,7 @@ public class FlyLineReleasesNode extends IdentifiableNode {
 
     private final static Logger log = LoggerFactory.getLogger(FlyLineReleasesNode.class);
 
+    public static final String NODE_NAME = "Fly Line Releases";
     public static final long NODE_ID = 40L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final LineReleaseNodeChildFactory childFactory;
@@ -55,7 +53,7 @@ public class FlyLineReleasesNode extends IdentifiableNode {
 
     @Override
     public String getDisplayName() {
-        return "Fly Line Releases";
+        return NODE_NAME;
     }
 
     @Override

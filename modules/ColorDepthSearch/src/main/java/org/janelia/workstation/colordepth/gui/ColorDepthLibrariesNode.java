@@ -38,6 +38,7 @@ public class ColorDepthLibrariesNode extends IdentifiableNode {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthLibrariesNode.class);
 
+    public static final String NODE_NAME = "Color Depth Libraries";
     public static final long NODE_ID = 30L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final ColorDepthLibrariesChildFactory childFactory;
@@ -59,7 +60,7 @@ public class ColorDepthLibrariesNode extends IdentifiableNode {
 
     @Override
     public String getDisplayName() {
-        return "Color Depth Libraries";
+        return NODE_NAME;
     }
 
     @Override

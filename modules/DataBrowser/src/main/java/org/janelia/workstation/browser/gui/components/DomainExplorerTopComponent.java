@@ -3,15 +3,13 @@ package org.janelia.workstation.browser.gui.components;
 import java.awt.BorderLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import javax.swing.ActionMap;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.text.DefaultEditorKit;
 import javax.swing.text.Position;
 
@@ -52,6 +50,9 @@ import org.janelia.workstation.core.util.ConcurrentUtils;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
 import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
+import org.janelia.workstation.integration.spi.nodes.NodeGenerator;
+import org.janelia.workstation.integration.spi.nodes.NodePreference;
+import org.janelia.workstation.integration.spi.nodes.NodeProvider;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -163,35 +164,27 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         configButton.setFocusable(false);
         configButton.setToolTipText("Options for the Data Explorer");
 
-        // TODO: move these into the NodeProvider interface
-
         final JCheckBoxMenuItem navigateOnClickMenuItem = new JCheckBoxMenuItem("Navigate on click", isNavigateOnClick());
         navigateOnClickMenuItem.addActionListener(e -> setNavigateOnClick(navigateOnClickMenuItem.isSelected()));
         configButton.addMenuItem(navigateOnClickMenuItem);
 
-        final JCheckBoxMenuItem showRecentItemsMenuItem = new JCheckBoxMenuItem("Show recently opened items", isShowRecentMenuItems());
-        showRecentItemsMenuItem.addActionListener(e -> setShowRecentMenuItems(showRecentItemsMenuItem.isSelected()));
-        configButton.addMenuItem(showRecentItemsMenuItem);
+        // Add checkboxes for node providers
 
-        final JCheckBoxMenuItem showDataSetsMenuItem = new JCheckBoxMenuItem("Show LM data sets", isShowDataSets());
-        showDataSetsMenuItem.addActionListener(e -> setShowDataSets(showDataSetsMenuItem.isSelected()));
-        configButton.addMenuItem(showDataSetsMenuItem);
+        List<NodeGenerator> allGenerators = new ArrayList<>();
+        for(NodeProvider provider : Lookups.forPath(NodeProvider.LOOKUP_PATH).lookupAll(NodeProvider.class)) {
+            allGenerators.addAll(provider.getNodeGenerators());
+        }
+        allGenerators.sort(Comparator.comparing(NodeGenerator::getIndex));
 
-        final JCheckBoxMenuItem showEMDataSetsMenuItem = new JCheckBoxMenuItem("Show EM data sets", isShowEMDataSets());
-        showEMDataSetsMenuItem.addActionListener(e -> setShowEMDataSets(showEMDataSetsMenuItem.isSelected()));
-        configButton.addMenuItem(showEMDataSetsMenuItem);
-
-        final JCheckBoxMenuItem showColorDepthLibraries = new JCheckBoxMenuItem("Show color depth libraries", isShowColorDepthLibraries());
-        showColorDepthLibraries.addActionListener(e -> setShowColorDepthLibraries(showColorDepthLibraries.isSelected()));
-        configButton.addMenuItem(showColorDepthLibraries);
-
-        final JCheckBoxMenuItem showColorDepthSearches = new JCheckBoxMenuItem("Show color depth searches", isShowColorDepthSearches());
-        showColorDepthSearches.addActionListener(e -> setShowColorDepthSearches(showColorDepthSearches.isSelected()));
-        configButton.addMenuItem(showColorDepthSearches);
-
-        final JCheckBoxMenuItem showReleasesMenuItem = new JCheckBoxMenuItem("Show fly line releases", isShowFlyLineReleases());
-        showReleasesMenuItem.addActionListener(e -> setShowFlyLineReleases(showReleasesMenuItem.isSelected()));
-        configButton.addMenuItem(showReleasesMenuItem);
+        for (NodeGenerator generator : allGenerators) {
+            NodePreference nodePreference = generator.getNodePreference();
+            if (nodePreference!=null) {
+                final JCheckBoxMenuItem menuItem = new JCheckBoxMenuItem(
+                        "Show "+nodePreference.getNodeName(), nodePreference.isNodeShown());
+                menuItem.addActionListener(e -> nodePreference.setNodeShown(menuItem.isSelected()));
+                configButton.addMenuItem(menuItem);
+            }
+        }
 
         toolbar.getJToolBar().add(configButton);
         
@@ -704,54 +697,6 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
     
     private static void setNavigateOnClick(boolean value) {
         FrameworkAccess.setModelProperty(NAVIGATE_ON_CLICK, value);
-    }
-
-    private static boolean isShowRecentMenuItems() {
-        return FrameworkAccess.getModelProperty(SHOW_RECENTLY_OPENED_ITEMS, true);
-    }
-    
-    private static void setShowRecentMenuItems(boolean value) {
-        FrameworkAccess.setModelProperty(SHOW_RECENTLY_OPENED_ITEMS, value);
-    }
-
-    private static boolean isShowDataSets() {
-        return FrameworkAccess.getModelProperty(SHOW_DATA_SETS, true);
-    }
-
-    private static void setShowDataSets(boolean value) {
-        FrameworkAccess.setModelProperty(SHOW_DATA_SETS, value);
-    }
-
-    private static boolean isShowEMDataSets() {
-        return FrameworkAccess.getModelProperty(SHOW_EM_DATA_SETS, true);
-    }
-
-    private static void setShowEMDataSets(boolean value) {
-        FrameworkAccess.setModelProperty(SHOW_EM_DATA_SETS, value);
-    }
-
-    private static boolean isShowColorDepthLibraries() {
-        return FrameworkAccess.getModelProperty(SHOW_COLOR_DEPTH_LIBRARIES, true);
-    }
-
-    private static void setShowColorDepthLibraries(boolean value) {
-        FrameworkAccess.setModelProperty(SHOW_COLOR_DEPTH_LIBRARIES, value);
-    }
-
-    private static boolean isShowColorDepthSearches() {
-        return FrameworkAccess.getModelProperty(SHOW_COLOR_DEPTH_SEARCHES, true);
-    }
-
-    private static void setShowColorDepthSearches(boolean value) {
-        FrameworkAccess.setModelProperty(SHOW_COLOR_DEPTH_SEARCHES, value);
-    }
-
-    private static boolean isShowFlyLineReleases() {
-        return FrameworkAccess.getModelProperty(SHOW_FLY_LINE_RELEASES, true);
-    }
-
-    private static void setShowFlyLineReleases(boolean value) {
-        FrameworkAccess.setModelProperty(SHOW_FLY_LINE_RELEASES, value);
     }
 
 }

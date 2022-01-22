@@ -1,12 +1,8 @@
 package org.janelia.workstation.browser.nodes;
 
-import java.util.List;
-import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.flyem.EMDataSet;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
-import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
 import org.janelia.workstation.core.nodes.IdentifiableNode;
 import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -21,6 +17,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * A node which shows the items most recently opened by the user.  
@@ -31,6 +28,7 @@ public class EMDataSetsNode extends IdentifiableNode {
 
     private final static Logger log = LoggerFactory.getLogger(EMDataSetsNode.class);
 
+    public static final String NODE_NAME = "FlyEM Data Sets";
     public static final long NODE_ID = 25L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final DataSetNodeChildFactory childFactory;
@@ -52,7 +50,7 @@ public class EMDataSetsNode extends IdentifiableNode {
 
     @Override
     public String getDisplayName() {
-        return "FlyEM Data Sets";
+        return NODE_NAME;
     }
 
     @Override
