@@ -70,16 +70,22 @@
             <artifactId>infopanel</artifactId>
         </dependency>
 
-        <!-- Large Volume Viewer --> 
+        <!-- Large Volume Viewer -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>large_volume_viewer</artifactId>
         </dependency>
- 
-        <!-- Horta --> 
+
+        <!-- Horta -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>horta</artifactId>
+        </dependency>
+
+        <!-- Color Depth Search -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>colordepth</artifactId>
         </dependency>
 
         <!-- Janelia Site Customizations -->

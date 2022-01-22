@@ -223,7 +223,7 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- ConsoleWrapper --> 
+            <!-- CommonLibraries -->
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
                 <artifactId>libraries</artifactId>
@@ -318,6 +318,13 @@
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
                 <artifactId>geometry3d</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- Color Depth Search -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>colordepth</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -1100,6 +1107,10 @@
 
         <profile>
             <id>janeliaws</id>
+            <properties>
+                <brandingToken>janeliaws</brandingToken>
+                <clusterName>JaneliaWorkstation</clusterName>
+            </properties>
             <modules>
                 <module>modules/application</module>
             </modules>
@@ -1107,6 +1118,10 @@
 
         <profile>
             <id>horta</id>
+            <properties>
+                <brandingToken>horta</brandingToken>
+                <clusterName>Horta</clusterName>
+            </properties>
             <modules>
                 <module>modules/application_horta</module>
             </modules>
@@ -1133,6 +1148,7 @@
         <module>modules/Jogl213Lib</module>
         <module>modules/Jogl224Lib</module>
         <module>modules/SiteJRC</module>
+        <module>modules/ColorDepthSearch</module>
         <module>modules/branding</module>
     </modules>
 

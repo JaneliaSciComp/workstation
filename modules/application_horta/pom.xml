@@ -15,11 +15,6 @@
     <version>9.7.1</version>
     <packaging>nbm-application</packaging>
 
-    <properties>
-        <jarGoalPhase>package</jarGoalPhase>
-        <brandingToken>horta</brandingToken>
-    </properties>
-
     <!-- Dependencies -->
     <dependencies>
         
@@ -71,13 +66,13 @@
             <artifactId>infopanel</artifactId>
         </dependency>
 
-        <!-- Large Volume Viewer --> 
+        <!-- Large Volume Viewer -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>large_volume_viewer</artifactId>
         </dependency>
- 
-        <!-- Horta --> 
+
+        <!-- Horta -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>horta</artifactId>
