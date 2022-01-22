@@ -15,7 +15,6 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
-import org.janelia.workstation.core.events.selection.GlobalDomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
 import org.janelia.workstation.core.nodes.DomainObjectNode;
 import org.janelia.workstation.core.workers.SimpleWorker;

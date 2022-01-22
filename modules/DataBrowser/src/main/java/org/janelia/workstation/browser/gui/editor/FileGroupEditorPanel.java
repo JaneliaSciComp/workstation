@@ -5,7 +5,6 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.interfaces.HasFileGroups;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.FileGroup;

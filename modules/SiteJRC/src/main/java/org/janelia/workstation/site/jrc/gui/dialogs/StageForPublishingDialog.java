@@ -458,7 +458,7 @@ public class StageForPublishingDialog extends ModalDialog {
     }
 
     /**
-     * Wrapper to present ColorDepthSearch with names in a combo box.
+     * Wrapper to present Fly Line Release with names in a combo box.
      */
     private static class ReleaseWrapper {
 

@@ -17,7 +17,7 @@
 
     <dependencies>
         
-        <!-- ConsoleWrapper --> 
+        <!-- CommonLibraries -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>libraries</artifactId>

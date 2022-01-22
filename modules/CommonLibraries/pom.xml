@@ -33,7 +33,7 @@
             <groupId>org.janelia.jacs-model</groupId>
             <artifactId>jacs-model-core</artifactId>
             <exclusions>
-                <!-- already provided by ConsoleWrapper -->
+                <!-- already provided by CommonLibraries -->
                 <exclusion>
                     <groupId>ome</groupId>
                     <artifactId>jai_imageio</artifactId>
@@ -304,7 +304,7 @@
             <artifactId>formats-bsd</artifactId>
             <version>5.0.0</version>
             <exclusions>
-                <!-- already provided by ConsoleWrapper -->
+                <!-- already provided by CommonLibraries -->
                 <exclusion>
                     <groupId>ome</groupId>
                     <artifactId>jai_imageio</artifactId>

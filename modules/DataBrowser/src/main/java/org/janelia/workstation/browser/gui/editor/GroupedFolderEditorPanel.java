@@ -1,13 +1,11 @@
 package org.janelia.workstation.browser.gui.editor;
 
 import com.google.common.eventbus.Subscribe;
-
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
 import org.janelia.model.domain.interfaces.HasFilepath;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.GroupedFolder;
@@ -35,11 +33,7 @@ import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
-import org.janelia.workstation.core.events.selection.ChildSelectionModel;
-import org.janelia.workstation.core.events.selection.DomainObjectEditSelectionModel;
-import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
-import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
-import org.janelia.workstation.core.events.selection.ViewerContextChangeEvent;
+import org.janelia.workstation.core.events.selection.*;
 import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.search.DomainObjectSearchResults;
 import org.janelia.workstation.core.model.search.ResultPage;
@@ -52,25 +46,13 @@ import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.SwingConstants;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 

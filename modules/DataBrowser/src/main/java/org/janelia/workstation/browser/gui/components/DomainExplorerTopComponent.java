@@ -163,6 +163,8 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         configButton.setFocusable(false);
         configButton.setToolTipText("Options for the Data Explorer");
 
+        // TODO: move these into the NodeProvider interface
+
         final JCheckBoxMenuItem navigateOnClickMenuItem = new JCheckBoxMenuItem("Navigate on click", isNavigateOnClick());
         navigateOnClickMenuItem.addActionListener(e -> setNavigateOnClick(navigateOnClickMenuItem.isSelected()));
         configButton.addMenuItem(navigateOnClickMenuItem);
