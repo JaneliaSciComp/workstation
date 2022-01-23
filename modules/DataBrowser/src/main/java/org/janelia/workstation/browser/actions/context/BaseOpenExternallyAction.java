@@ -1,19 +1,20 @@
 package org.janelia.workstation.browser.actions.context;
 
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.model.domain.sample.SamplePostProcessingResult;
 import org.janelia.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.workstation.browser.gui.support.SampleUIUtils;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
+import org.janelia.workstation.common.gui.model.SampleResultModel;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.model.ImageModel;
@@ -40,26 +41,32 @@ public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction 
 
     @Override
     protected void processContext() {
+
+        this.selectedObject = null;
+        this.rd = null;
         this.filepath = null;
+
         if (getNodeContext().isSingleObjectOfType(DomainObject.class)) {
+            ViewerContext<?,?> viewerContext = getViewerContext();
+            DomainObjectImageModel doim = DomainUIUtils.getDomainObjectImageModel(viewerContext);
+            if (doim != null) {
+                rd = doim.getArtifactDescriptor();
+                log.trace("descriptor={}", rd);
+            }
+            HasFiles fileProvider = SampleUIUtils.getSingle3dResult(viewerContext);
+            if (fileProvider != null) {
+                this.filepath = DomainUtils.getDefault3dImageFilePath(fileProvider);
+                log.trace("filepath={}", filepath);
+            }
             this.selectedObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
-            ViewerContext viewerContext = getViewerContext();
-            log.trace("viewerContext={}", viewerContext);
-
-            if (viewerContext != null) {
-
-                ImageModel imageModel = viewerContext.getImageModel();
-                if (imageModel instanceof DomainObjectImageModel) {
-                    DomainObjectImageModel doim = (DomainObjectImageModel) imageModel;
-                    rd = doim.getArtifactDescriptor();
-                    log.trace("descriptor={}", rd);
-                }
-
-                HasFiles fileProvider = SampleUIUtils.getSingle3dResult(viewerContext);
-                if (fileProvider != null) {
-                    this.filepath = DomainUtils.getDefault3dImageFilePath(fileProvider);
-                    log.trace("filepath={}", filepath);
-                }
+        }
+        else if (getNodeContext().isSingleObjectOfType(PipelineResult.class)) {
+            SampleResultModel srm = DomainUIUtils.getSampleResultModel(getViewerContext());
+            if (srm != null) {
+                PipelineResult pipelineResult = getNodeContext().getSingleObjectOfType(PipelineResult.class);
+                this.filepath = DomainUtils.getFilepath(pipelineResult, srm.getFileType());
+                log.trace("filepath={}", filepath);
+                this.selectedObject = pipelineResult.getParentRun().getParent().getParent();
             }
         }
 
@@ -71,29 +78,32 @@ public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction 
         return selectedObject;
     }
 
-    protected String getFilepath(HasFiles fileProvider) {
-        return DomainUtils.getDefault3dImageFilePath(fileProvider);
-    }
-
+    /**
+     * This method can be called by subclasses to get the filepath that should be opened. It may show a dialog
+     * to the user to disambiguate the filepath, so it must be called in the EDT.
+     * @return filepath
+     */
     protected String getFilepath() {
-        if (needsClarity(rd)) {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            log.warn("getFilepath illegally called from non-EDT thread");
+        }
+        if (rd != null && needsClarity(rd)) {
             return showSelectionDialog();
         }
         return filepath;
     }
 
-    private boolean needsClarity(ArtifactDescriptor rd) {
-        log.trace("needsClarity({})?", rd);
+    private boolean needsClarity(ArtifactDescriptor artifactDescriptor) {
+        log.trace("needsClarity({})?", artifactDescriptor);
         if (selectedObject instanceof Sample) {
-            if (rd instanceof LatestDescriptor) return true;
-            if (rd instanceof ResultArtifactDescriptor) {
-                ResultArtifactDescriptor rad = (ResultArtifactDescriptor) rd;
+            if (artifactDescriptor instanceof LatestDescriptor) return true;
+            if (artifactDescriptor instanceof ResultArtifactDescriptor) {
+                ResultArtifactDescriptor rad = (ResultArtifactDescriptor) artifactDescriptor;
                 if (SamplePostProcessingResult.class.getName().equals(rad.getResultClass())) {
                     return true;
                 }
             }
         }
-
         return false;
     }
 
@@ -127,7 +137,7 @@ public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction 
         if (result == JOptionPane.OK_OPTION) {
             ArtifactDescriptor rd = resultButton.getResultDescriptor();
             Sample sample = (Sample) selectedObject;
-            HasFiles fileProvider = DescriptorUtils.getResult(sample, rd);
+            HasFiles fileProvider = DescriptorUtils.getLatestResult(sample, rd);
             this.filepath = DomainUtils.getDefault3dImageFilePath(fileProvider);
             return filepath;
         }

@@ -511,7 +511,7 @@ public class ColorDepthSearchEditorPanel
             }
 
             @Override
-            public ImageModel<ColorDepthMatch,Reference> getImageModel() {
+            public ImageModel<ColorDepthMatch,Reference> getViewerModel() {
                 return colorDepthResultPanel.getImageModel();
             }
         };

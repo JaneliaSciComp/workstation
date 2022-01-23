@@ -704,7 +704,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
     }
 
     @Override
-    public ViewerContext getViewerContext() {
+    public ViewerContext<DomainObject, Reference> getViewerContext() {
         return new ViewerContext<DomainObject, Reference>() {
             @Override
             public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
@@ -717,7 +717,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
             }
 
             @Override
-            public ImageModel<DomainObject, Reference> getImageModel() {
+            public ImageModel<DomainObject, Reference> getViewerModel() {
                 return resultsPanel.getImageModel();
             }
         };

@@ -335,7 +335,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
         ExportResultsAction<DomainObject, Reference> action = new ExportResultsAction<>(searchResults, viewer);
         action.actionPerformed(null);
     }
-    
+
     @Override
     public DomainObjectSelectionModel getSelectionModel() {
         return selectionModel;
@@ -360,7 +360,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             }
 
             @Override
-            public ImageModel<DomainObject, Reference> getImageModel() {
+            public ImageModel<DomainObject, Reference> getViewerModel() {
                 return resultsPanel.getImageModel();
             }
         };

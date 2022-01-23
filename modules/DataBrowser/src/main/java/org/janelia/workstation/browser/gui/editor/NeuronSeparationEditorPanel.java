@@ -6,6 +6,7 @@ import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.NeuronFragment;
@@ -139,7 +140,7 @@ public class NeuronSeparationEditorPanel
         configPanel = new ConfigPanel(true) {
             @Override
             protected void titleClicked(MouseEvent e) {
-                Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, separation, true));
+                Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, separation, FileType.NeuronSeparatorResult, true));
             }
         };
         configPanel.addTitleComponent(fragmentSortButton, true, true);
@@ -547,7 +548,7 @@ public class NeuronSeparationEditorPanel
             }
 
             @Override
-            public ImageModel<DomainObject, Reference> getImageModel() {
+            public ImageModel<DomainObject, Reference> getViewerModel() {
                 return resultsPanel.getImageModel();
             }
         };

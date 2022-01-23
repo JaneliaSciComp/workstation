@@ -221,7 +221,7 @@ public class FileGroupEditorPanel extends JPanel implements SampleResultEditor {
             }
 
             @Override
-            public ImageModel<FileGroup,String> getImageModel() {
+            public ImageModel<FileGroup,String> getViewerModel() {
                 return resultsPanel.getImageModel();
             }
         };

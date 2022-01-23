@@ -32,7 +32,7 @@ public abstract class DomainObjectImageModel implements ImageModel<DomainObject,
         HasFiles result = null;
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
-            result = DescriptorUtils.getResult(sample, getArtifactDescriptor());
+            result = DescriptorUtils.getLatestResult(sample, getArtifactDescriptor());
         }
         else if (domainObject instanceof HasFiles) {
             result = (HasFiles)domainObject;

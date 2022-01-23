@@ -1,9 +1,8 @@
 package org.janelia.workstation.core.actions;
 
-import java.util.Collection;
-
 import org.janelia.workstation.core.events.selection.ChildSelectionModel;
-import org.janelia.workstation.core.model.ImageModel;
+
+import java.util.Collection;
 
 /**
  * Current viewer context which can be used to construct context menus.
@@ -16,7 +15,7 @@ public interface ViewerContext<T,S> {
 
     ChildSelectionModel<T,S> getEditSelectionModel();
 
-    ImageModel<T,S> getImageModel();
+    Object getViewerModel();
 
     default Object getContextObject() {
         return getSelectionModel().getParentObject();

@@ -140,8 +140,10 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         }
         if (editor!=null) {
             ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
-            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
-            ViewerUtils.updateGlobalSelection(editor.getSelectionModel(), true);
+            if (editor.getViewerContext()!=null) {
+                ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
+                ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), true);
+            }
         }
     }
     
@@ -162,7 +164,7 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
     protected void componentHidden() {
         log.info("componentHidden - {}", this.getName());
         if (editor!=null) {
-            ViewerUtils.updateGlobalSelection(editor.getSelectionModel(), false);
+            ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), false);
         }
     }
 
@@ -174,8 +176,10 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         if (topComponent==this && editor!=null) {
             log.trace("Our selection changed, updating cookie because of {}", e);
             ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
-            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
-            ViewerUtils.updateGlobalSelection(editor.getSelectionModel(), true);
+            if (editor.getViewerContext()!=null) {
+                ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
+                ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), true);
+            }
         }
     }
 
@@ -435,7 +439,10 @@ public final class DomainListViewTopComponent extends TopComponent implements Fi
         editor.restoreState(state, null);
 
         ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
-        ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
+        if (editor.getViewerContext()!=null) {
+            ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
+            ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), true);
+        }
 
         // TODO: this should run as a callback after loadState is fully complete
         // Update the editor name

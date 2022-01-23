@@ -12,6 +12,7 @@ import org.janelia.model.domain.sample.SamplePostProcessingResult;
 import org.janelia.model.domain.sample.SampleProcessingResult;
 import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
 import org.janelia.workstation.common.gui.model.SampleDecorator;
+import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.model.Decorator;
 import org.janelia.workstation.core.model.ImageModel;
@@ -37,9 +38,10 @@ public class SampleUIUtils {
      */
     public static HasFiles getSingle3dResult(ViewerContext viewerContext) {
 
-        ImageModel imageModel = viewerContext.getImageModel();
-        if (imageModel instanceof DomainObjectImageModel) {
-            DomainObjectImageModel doim = (DomainObjectImageModel) imageModel;
+        if (viewerContext==null) return null;
+
+        DomainObjectImageModel doim = DomainUIUtils.getDomainObjectImageModel(viewerContext);
+        if (doim != null) {
             Object lastSelectedObject = viewerContext.getLastSelectedObject();
             if (lastSelectedObject instanceof DomainObject) {
                 DomainObject domainObject = (DomainObject) lastSelectedObject;
@@ -59,7 +61,7 @@ public class SampleUIUtils {
                             }
                         }
                         Sample sample = (Sample) domainObject;
-                        result = DescriptorUtils.getResult(sample, rd);
+                        result = DescriptorUtils.getLatestResult(sample, rd);
                     }
                 }
                 else if (domainObject instanceof HasFiles) {

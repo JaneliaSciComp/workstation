@@ -1,11 +1,14 @@
 package org.janelia.workstation.browser.actions.context;
 
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.interfaces.HasFiles;
+import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
+import org.janelia.workstation.common.gui.model.SampleResultModel;
 import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -42,20 +45,39 @@ public class ShowInLightboxAction extends BaseContextualNodeAction {
 
     @Override
     protected void processContext() {
+
+        this.domainObject = null;
+        this.resultDescriptor = null;
+        this.typeName = null;
         setEnabledAndVisible(false);
-        ViewerContext<?,?> viewerContext = getViewerContext();
-        if (viewerContext!=null) {
-            DomainObjectImageModel doim = DomainUIUtils.getDomainObjectImageModel(viewerContext);
-            if (doim != null) {
-                this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
-                this.resultDescriptor = doim.getArtifactDescriptor();
-                this.typeName = doim.getImageTypeName();
-                setEnabledAndVisible(isSupported(domainObject)
-                        && resultDescriptor != null
-                        && typeName != null
-                        && !viewerContext.isMultiple());
+
+        if (getNodeContext().isSingleObjectOfType(DomainObject.class)) {
+            ViewerContext<?,?> viewerContext = getViewerContext();
+            if (viewerContext!=null) {
+                DomainObjectImageModel doim = DomainUIUtils.getDomainObjectImageModel(viewerContext);
+                if (doim != null) {
+                    this.domainObject = DomainUIUtils.getLastSelectedDomainObject(viewerContext);
+                    this.resultDescriptor = doim.getArtifactDescriptor();
+                    this.typeName = doim.getImageTypeName();
+                    setEnabledAndVisible(isSupported(domainObject)
+                            && resultDescriptor != null
+                            && typeName != null
+                            && !viewerContext.isMultiple());
+                }
             }
         }
+        else if (getNodeContext().isSingleObjectOfType(PipelineResult.class)) {
+            SampleResultModel srm = DomainUIUtils.getSampleResultModel(getViewerContext());
+            if (srm != null) {
+                PipelineResult pipelineResult = getNodeContext().getSingleObjectOfType(PipelineResult.class);
+                this.domainObject = pipelineResult.getParentRun().getParent().getParent();
+                this.resultDescriptor = srm.getArtifactDescriptor();
+                this.typeName = srm.getFileType().name();
+                setEnabledAndVisible(true);
+            }
+        }
+
+
     }
 
     private boolean isSupported(DomainObject domainObject) {

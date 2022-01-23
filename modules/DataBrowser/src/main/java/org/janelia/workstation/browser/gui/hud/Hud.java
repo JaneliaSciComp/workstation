@@ -269,7 +269,7 @@ public class Hud extends ModalDialog {
 
         if (domainObject instanceof Sample) {
             Sample sample = (Sample)domainObject;
-            fileProvider = DescriptorUtils.getResult(sample, resultButton.getResultDescriptor());
+            fileProvider = DescriptorUtils.getLatestResult(sample, resultButton.getResultDescriptor());
 //            colorDepthMaskButton.setVisible(
 //                               imageType == FileType.ColorDepthMip1
 //                            || imageType == FileType.ColorDepthMip2

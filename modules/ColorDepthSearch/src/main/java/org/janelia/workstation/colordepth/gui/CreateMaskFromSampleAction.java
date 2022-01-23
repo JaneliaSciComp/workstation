@@ -39,21 +39,31 @@ public class CreateMaskFromSampleAction extends AbstractAction {
         this.typeName = typeName;
     }
 
+    public CreateMaskFromSampleAction(Sample sample, SampleAlignmentResult alignment, String typeName) {
+        super("Create Mask for Color Depth Search...");
+        this.sample = sample;
+        this.alignment = alignment;
+        this.typeName = typeName;
+    }
+
     @Override
     public void actionPerformed(ActionEvent e) {
 
-        HasFiles fileProvider = DescriptorUtils.getResult(sample, resultDescriptor);
+        if (alignment == null) {
+            HasFiles fileProvider = DescriptorUtils.getLatestResult(sample, resultDescriptor);
 
-        if (!(fileProvider instanceof SampleAlignmentResult)) {
-            
-            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "Must select an aligned image", 
-                    "Image not aligned", JOptionPane.ERROR_MESSAGE);
-            
-            return;
+            if (!(fileProvider instanceof SampleAlignmentResult)) {
+
+                JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                        "Must select an aligned image",
+                        "Image not aligned", JOptionPane.ERROR_MESSAGE);
+
+                return;
+            }
+
+            alignment = (SampleAlignmentResult) fileProvider;
         }
-        
-        alignment = (SampleAlignmentResult)fileProvider;
+
         imagePath = DomainUtils.getFilepath(alignment, typeName);
         
         if (imagePath==null) {

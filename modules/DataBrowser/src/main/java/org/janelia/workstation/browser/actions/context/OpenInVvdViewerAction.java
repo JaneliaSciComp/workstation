@@ -13,7 +13,6 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>

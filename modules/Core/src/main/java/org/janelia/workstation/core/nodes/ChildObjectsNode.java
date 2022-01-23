@@ -1,9 +1,10 @@
 package org.janelia.workstation.core.nodes;
 
-import java.util.Collection;
-
 import org.openide.nodes.AbstractNode;
 import org.openide.nodes.Children;
+
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * Represents the currently selected set of child objects in the currently focused object viewer.
@@ -14,14 +15,18 @@ import org.openide.nodes.Children;
  */
 public class ChildObjectsNode extends AbstractNode {
 
-    private Collection objects;
+    private Collection<Object> objects;
 
-    public ChildObjectsNode(Collection objects) {
+    public ChildObjectsNode(Object object) {
+        this(Collections.singleton(object));
+    }
+
+    public ChildObjectsNode(Collection<Object> objects) {
         super(Children.LEAF);
         this.objects = objects;
     }
 
-    public Collection getObjects() {
+    public Collection<Object> getObjects() {
         return objects;
     }
 }

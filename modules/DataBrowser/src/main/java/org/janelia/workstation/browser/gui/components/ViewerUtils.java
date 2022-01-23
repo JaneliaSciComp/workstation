@@ -131,11 +131,13 @@ public class ViewerUtils {
 
     public static void updateNodeIfChanged(Lookup.Provider lookupProvider, InstanceContent content, Collection objects) {
 
+        // Find currently selected child objects
         List<Object> currentObjects = new ArrayList<>();
         for (ChildObjectsNode childObjectsNode : lookupProvider.getLookup().lookupAll(ChildObjectsNode.class)) {
             currentObjects.addAll(childObjectsNode.getObjects());
         }
 
+        // Compare with new objects
         List<Object> newObjects = new ArrayList<Object>(objects);
         if (!currentObjects.equals(newObjects)) {
             log.info("Updating ChildObjectsNode (current={}, new={})", currentObjects.size(), newObjects.size());

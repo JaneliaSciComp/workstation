@@ -31,16 +31,16 @@ public class NodeContext {
         this(Collections.singletonList(node));
     }
 
-    NodeContext(Collection<? extends Node> nodes) {
+    public <T extends Node> NodeContext(Collection<T> nodes) {
         this.nodes = nodes;
         this.objects = new ArrayList<>();
         for (Node node : nodes) {
-            if (node instanceof UserObjectNode) {
-                Object object = ((UserObjectNode) node).getObject();
+            if (node instanceof UserObjectNode<?>) {
+                Object object = ((UserObjectNode<?>) node).getObject();
                 objects.add(object);
             }
             else if (node instanceof ChildObjectsNode) {
-                Collection objects = ((ChildObjectsNode) node).getObjects();
+                Collection<?> objects = ((ChildObjectsNode) node).getObjects();
                 this.objects.addAll(objects);
             }
         }

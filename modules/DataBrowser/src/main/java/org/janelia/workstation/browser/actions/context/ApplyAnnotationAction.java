@@ -54,9 +54,6 @@ public class ApplyAnnotationAction extends BaseContextualNodeAction {
 
             setEnabledAndVisible(selected.size()>0);
         }
-        else if (getViewerContext()!=null) {
-            setEnabledAndVisible(true);
-        }
         else {
             setEnabledAndVisible(false);
         }

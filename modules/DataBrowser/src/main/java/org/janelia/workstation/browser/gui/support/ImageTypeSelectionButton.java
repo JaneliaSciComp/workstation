@@ -99,7 +99,7 @@ public class ImageTypeSelectionButton extends DropDownButton {
             if (source instanceof Sample) {
                 Sample sample = (Sample)source;
                 log.trace("Source is sample: {}",sample.getId());
-                HasFiles result = DescriptorUtils.getResult(sample, currResult);
+                HasFiles result = DescriptorUtils.getLatestResult(sample, currResult);
                 if (result!=null) {
                     source = result;
                 }

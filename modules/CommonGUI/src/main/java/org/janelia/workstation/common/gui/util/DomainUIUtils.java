@@ -2,8 +2,8 @@ package org.janelia.workstation.common.gui.util;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.workstation.common.gui.model.DomainObjectImageModel;
+import org.janelia.workstation.common.gui.model.SampleResultModel;
 import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.model.ImageModel;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,9 +19,18 @@ public class DomainUIUtils {
 
     public static DomainObjectImageModel getDomainObjectImageModel(ViewerContext<?,?> viewerContext) {
         if (viewerContext==null) return null;
-        ImageModel<?,?> imageModel = viewerContext.getImageModel();
-        if (imageModel instanceof DomainObjectImageModel) {
-            return (DomainObjectImageModel) imageModel;
+        Object viewerModel = viewerContext.getViewerModel();
+        if (viewerModel instanceof DomainObjectImageModel) {
+            return (DomainObjectImageModel)viewerModel;
+        }
+        return null;
+    }
+
+    public static SampleResultModel getSampleResultModel(ViewerContext<?,?> viewerContext) {
+        if (viewerContext==null) return null;
+        Object viewerModel = viewerContext.getViewerModel();
+        if (viewerModel instanceof SampleResultModel) {
+            return (SampleResultModel)viewerModel;
         }
         return null;
     }

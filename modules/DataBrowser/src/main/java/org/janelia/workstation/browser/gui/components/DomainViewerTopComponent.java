@@ -1,5 +1,6 @@
 package org.janelia.workstation.browser.gui.components;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
@@ -10,6 +11,7 @@ import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.NeuronFragment;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.browser.gui.editor.SampleEditorPanel;
+import org.janelia.workstation.browser.selection.PipelineResultSelectionEvent;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.api.AccessManager;
@@ -155,7 +157,7 @@ public final class DomainViewerTopComponent extends TopComponent {
             log.info("Our selection changed, updating cookie because of {}", e);
             if (editor.getViewerContext()!=null) {
                 ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
-                if (editor.getViewerContext()!=null) {
+                if (editor.getViewerContext().getSelectionModel()!=null) {
                     ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
                     ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), true);
                 }
@@ -163,27 +165,15 @@ public final class DomainViewerTopComponent extends TopComponent {
         }
     }
 
-    // TODO: complete this refactoring so that context menus can be unified
-
-    //    @Subscribe
-//    public void resultSelected(PipelineResultSelectionEvent e) {
-//        TopComponent topComponent = UIUtils.getAncestorWithType(
-//                (Component)e.getSourceComponent(), TopComponent.class);
-//        if (topComponent==this && editor!=null) {
-//            PipelineResult result = e.getPipelineResult();
-//            updateNodeIfChanged(result);
-//        }
-//    }
-//
-//    @Subscribe
-//    public void errorSelected(PipelineErrorSelectionEvent e) {
-//        TopComponent topComponent = UIUtils.getAncestorWithType(
-//                (Component)e.getSourceComponent(), TopComponent.class);
-//        if (topComponent==this && editor!=null) {
-//            PipelineError result = e.getPipelineError();
-//            updateNodeIfChanged(result);
-//        }
-//    }
+    @Subscribe
+    public void resultSelected(PipelineResultSelectionEvent e) {
+        TopComponent topComponent = UIUtils.getAncestorWithType(
+                (Component)e.getSourceComponent(), TopComponent.class);
+        if (topComponent==this && editor!=null) {
+            log.info("Our result selection changed, updating cookie because of {}", e);
+            ViewerUtils.updateNodeIfChanged(this, content, ImmutableList.of(e.getPipelineResult()));
+        }
+    }
 
     @Subscribe
     public void contextChanged(ViewerContextChangeEvent e) {

@@ -966,7 +966,7 @@ public class FilterEditorPanel
             }
 
             @Override
-            public ImageModel<DomainObject, Reference> getImageModel() {
+            public ImageModel<DomainObject, Reference> getViewerModel() {
                 return resultsPanel.getImageModel();
             }
         };

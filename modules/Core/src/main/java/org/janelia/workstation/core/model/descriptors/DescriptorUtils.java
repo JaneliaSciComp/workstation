@@ -144,7 +144,7 @@ public class DescriptorUtils {
         return countedArtifacts;
     }
 
-    public static HasFiles getResult(DomainObject domainObject, ArtifactDescriptor descriptor) {
+    public static HasFiles getLatestResult(DomainObject domainObject, ArtifactDescriptor descriptor) {
         try {
             List<HasFiles> sources = descriptor.getFileSources(domainObject);
             if (sources==null || sources.isEmpty()) {

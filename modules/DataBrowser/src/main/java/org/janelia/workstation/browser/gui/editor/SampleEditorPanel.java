@@ -28,6 +28,7 @@ import org.janelia.workstation.browser.selection.PipelineErrorSelectionEvent;
 import org.janelia.workstation.browser.selection.PipelineResultSelectionEvent;
 import org.janelia.workstation.common.gui.editor.DomainObjectEditor;
 import org.janelia.workstation.common.gui.listview.ListViewerState;
+import org.janelia.workstation.common.gui.model.SampleResultModel;
 import org.janelia.workstation.common.gui.support.*;
 import org.janelia.workstation.common.gui.support.buttons.DropDownButton;
 import org.janelia.workstation.core.actions.ViewerContext;
@@ -103,7 +104,7 @@ public class SampleEditorPanel
     
     // Results
     private DomainObjectSearchResults lsmSearchResults;
-    private final DomainObjectSelectionModel selectionModel = new DomainObjectSelectionModel();
+    private final DomainObjectSelectionModel lsmSelectionModel = new DomainObjectSelectionModel();
     
     // State
     private Sample sample;
@@ -118,7 +119,10 @@ public class SampleEditorPanel
     private String currArea = ALL_VALUE;
     private String currAlignmentSpace;
     private String sortCriteria;
-    private Map<Long, ContainerizedService> containers = new HashMap<>();;
+    private Map<Long, ContainerizedService> containers = new HashMap<>();
+    private PipelineResult currentPanelResult;
+    private ArtifactDescriptor currentPanelDescriptor;
+    private FileType currentPanelResultType;
     
     public SampleEditorPanel() {
 
@@ -202,12 +206,12 @@ public class SampleEditorPanel
         configPanel = new ConfigPanel(true) {
             @Override
             protected void titleClicked(MouseEvent e) {
-                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Arrays.asList(sample), true, true, true));
+                Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(this, Collections.singletonList(sample), true, true, true));
             }
         };
         configPanel.addTitleComponent(viewButton, true, true);
         
-        lsmPanel = new PaginatedDomainResultsPanel(selectionModel, null, this, this) {
+        lsmPanel = new PaginatedDomainResultsPanel(lsmSelectionModel, null, this, this) {
             @Override
             protected ResultPage<DomainObject, Reference> getPage(SearchResults<DomainObject, Reference> searchResults, int page) throws Exception {
                 return searchResults.getPage(page);
@@ -233,7 +237,7 @@ public class SampleEditorPanel
                 }
                 else if (resultPanel instanceof ColorDepthPanel) {
                     ArtifactDescriptor resultDescriptor = ((ColorDepthPanel)resultPanel).getResultDescriptor();
-                    FileType fileType = ((ColorDepthPanel)resultPanel).getType();
+                    FileType fileType = ((ColorDepthPanel)resultPanel).getFileType();
                     Hud.getSingletonInstance().setObjectAndToggleDialog(sample, resultDescriptor, fileType.toString(), toggle, true);
                 }
             }
@@ -241,12 +245,22 @@ public class SampleEditorPanel
             @Override
             protected void panelSelected(SelectablePanel resultPanel, boolean isUserDriven) {
                 if (resultPanel instanceof PipelineResultPanel) {
-                    PipelineResultPanel resultPanel2 = (PipelineResultPanel)resultPanel;
-                    Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, resultPanel2.getResult(), isUserDriven));
+                    PipelineResultPanel pipelineResultPanel = (PipelineResultPanel)resultPanel;
+                    currentPanelResult = pipelineResultPanel.getResult();
+                    currentPanelDescriptor = pipelineResultPanel.getResultDescriptor();
+                    currentPanelResultType = pipelineResultPanel.getSignalFileType();
+                    Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, pipelineResultPanel.getResult(), pipelineResultPanel.getSignalFileType(), isUserDriven));
                 }
                 else if (resultPanel instanceof PipelineErrorPanel) {
                     PipelineErrorPanel resultPanel2 = (PipelineErrorPanel)resultPanel;
                     Events.getInstance().postOnEventBus(new PipelineErrorSelectionEvent(this, resultPanel2.getError(), isUserDriven));
+                }
+                else if (resultPanel instanceof ColorDepthPanel) {
+                    ColorDepthPanel colorDepthPanel = (ColorDepthPanel)resultPanel;
+                    currentPanelResult = colorDepthPanel.getAlignmentResult();
+                    currentPanelDescriptor = colorDepthPanel.getResultDescriptor();
+                    currentPanelResultType = colorDepthPanel.getFileType();
+                    Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, colorDepthPanel.getAlignmentResult(), colorDepthPanel.getFileType(), isUserDriven));
                 }
             }
             
@@ -258,7 +272,8 @@ public class SampleEditorPanel
                 // TODO: refactor this in the style of the IconGridViewerPanel's popupTriggered
 
                 if (resultPanel instanceof PipelineResultPanel) {
-                    SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
+                    PipelineResultPanel pipelineResultPanel = (PipelineResultPanel)resultPanel;
+                    PipelineResultContextMenu popupMenu = new PipelineResultContextMenu();
                     popupMenu.addMenuItems();
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
@@ -268,8 +283,8 @@ public class SampleEditorPanel
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
                 else if (resultPanel instanceof ColorDepthPanel) {
-                    ColorDepthPanel resultPanel2 = (ColorDepthPanel)resultPanel;
-                    ColorDepthContextMenu popupMenu = new ColorDepthContextMenu(sample, resultPanel2.getResultDescriptor(), resultPanel2.getResult(), resultPanel2.getType());
+                    ColorDepthPanel colorDepthPanel = (ColorDepthPanel)resultPanel;
+                    PipelineResultContextMenu popupMenu = new PipelineResultContextMenu();
                     popupMenu.addMenuItems();
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
@@ -287,8 +302,8 @@ public class SampleEditorPanel
                 }
                 else if (resultPanel instanceof ColorDepthPanel) {
                     ColorDepthPanel resultPanel2 = (ColorDepthPanel)resultPanel;
-                    ColorDepthContextMenu popupMenu = new ColorDepthContextMenu(sample, resultPanel2.getResultDescriptor(), resultPanel2.getResult(), resultPanel2.getType());
-                    popupMenu.runDefaultAction();
+                    PipelineResultContextMenu popupMenu = new PipelineResultContextMenu();
+                    //popupMenu.runDefaultAction();
                 }
             }
             
@@ -320,7 +335,7 @@ public class SampleEditorPanel
             return new ViewerContext<DomainObject, Reference>() {
                 @Override
                 public ChildSelectionModel<DomainObject, Reference> getSelectionModel() {
-                    return selectionModel;
+                    return lsmSelectionModel;
                 }
 
                 @Override
@@ -329,14 +344,42 @@ public class SampleEditorPanel
                 }
 
                 @Override
-                public ImageModel<DomainObject, Reference> getImageModel() {
+                public ImageModel<DomainObject, Reference> getViewerModel() {
                     return lsmPanel.getImageModel();
                 }
             };
         }
         else {
-            // TODO: implement viewer contexts for the other modes
-            return null;
+            DomainObjectSelectionModel sampleSelectionModel = new DomainObjectSelectionModel() {
+                @Override
+                protected void selectionChanged(List<DomainObject> domainObjects, boolean select, boolean clearAll, boolean isUserDriven) {
+                    // suppress event generation
+                }
+            };
+            sampleSelectionModel.select(sample, true, false);
+            return new ViewerContext<DomainObject,Reference>() {
+                @Override
+                public DomainObjectSelectionModel getSelectionModel() {
+                    return sampleSelectionModel;
+                }
+                @Override
+                public DomainObjectSelectionModel getEditSelectionModel() {
+                    return null;
+                }
+                @Override
+                public SampleResultModel getViewerModel() {
+                    return new SampleResultModel() {
+                        @Override
+                        public ArtifactDescriptor getArtifactDescriptor() {
+                            return currentPanelDescriptor;
+                        }
+                        @Override
+                        public FileType getFileType() {
+                            return currentPanelResultType;
+                        }
+                    };
+                }
+            };
         }
     }
 
@@ -457,7 +500,7 @@ public class SampleEditorPanel
         final ListViewerState viewerState = MODE_LSMS.equals(currMode) ? lsmPanel.getViewer().saveState() : null;
 
         currRunMap.clear();
-        selectionModel.reset();
+        lsmSelectionModel.reset();
 
         SimpleWorker worker = new SimpleWorker() {
 
@@ -469,7 +512,7 @@ public class SampleEditorPanel
 
                 if (sample!=null) {
                     configPanel.setTitle(sample.getName());
-                    selectionModel.setParentObject(sample);
+                    lsmSelectionModel.setParentObject(sample);
 
                     if (MODE_LSMS.equals(currMode)) {
                         lsms = model.getLsmsForSample(sample);
@@ -498,7 +541,7 @@ public class SampleEditorPanel
                 }
                 ConcurrentUtils.invokeAndHandleExceptions(success);
                 debouncer.success();
-                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(lsmPanel, getViewerContext()));
+                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(SampleEditorPanel.this, getViewerContext()));
                 ActivityLogHelper.logElapsed("SampleEditorPanel.loadDomainObject", sample, w);
             }
             
@@ -902,6 +945,7 @@ public class SampleEditorPanel
     private class PipelineResultPanel extends SelectablePanel {
         
         private final ArtifactDescriptor resultDescriptor;
+        private final FileType signalFileType;
         private final PipelineResult result;
         
         private PipelineResultPanel(PipelineResult result) {
@@ -939,12 +983,17 @@ public class SampleEditorPanel
                 
                 // Attempt to find a signal MIP to display
                 String signalMip = DomainUtils.getFilepath(files, FileType.SignalMip);
+                FileType fileType = FileType.SignalMip;
                 if (signalMip==null) {
                     signalMip = DomainUtils.getFilepath(files, FileType.AllMip);
+                    fileType = FileType.AllMip;
                 }
                 if (signalMip==null) {
                     signalMip = DomainUtils.getFilepath(files, FileType.Signal1Mip);
+                    fileType = FileType.Signal1Mip;
                 }
+
+                this.signalFileType = fileType;
                 
                 String refMip = DomainUtils.getFilepath(files, FileType.ReferenceMip);
                 
@@ -969,6 +1018,7 @@ public class SampleEditorPanel
             }
             else {
                 this.resultDescriptor = null;
+                this.signalFileType = null;
             }
         }
 
@@ -979,7 +1029,11 @@ public class SampleEditorPanel
         public ArtifactDescriptor getResultDescriptor() {
             return resultDescriptor;
         }
-    
+
+        public FileType getSignalFileType() {
+            return signalFileType;
+        }
+
         private JPanel getImagePanel(String filepath, List<Decorator> decorators) {
             LoadedImagePanel lip = new LoadedImagePanel(filepath, decorators) {
                 @Override
@@ -997,13 +1051,10 @@ public class SampleEditorPanel
     
     private static final ImageIcon ERROR_ICON = Icons.getIcon("error_large.png");
     
-    private class PipelineErrorPanel extends SelectablePanel {
+    private static class PipelineErrorPanel extends SelectablePanel {
         
         private SamplePipelineRun run;
-        private JLabel label = new JLabel();
-        private JLabel subLabel1 = new JLabel();
-        private JLabel subLabel2 = new JLabel();
-        
+
         private PipelineErrorPanel(SamplePipelineRun run) {
                         
             this.run = run;
@@ -1027,10 +1078,13 @@ public class SampleEditorPanel
             else {
                 title = run.getParent().getObjective()+" "+op+" - "+errorType.getLabel();
             }
-            
+
+            JLabel label = new JLabel();
             label.setText(title);
             label.setToolTipText(errorType.getDescription());
+            JLabel subLabel1 = new JLabel();
             subLabel1.setText(DomainModelViewUtils.getDateString(error.getCreationDate()));
+            JLabel subLabel2 = new JLabel();
             subLabel2.setText("Error detail: "+error.getDescription());
 
             JPanel titlePanel = new JPanel(new BorderLayout());
@@ -1062,8 +1116,7 @@ public class SampleEditorPanel
         private final ArtifactDescriptor resultDescriptor;
         private final SampleAlignmentResult result;
         private final FileType fileType;
-        private final JLabel label = new JLabel();
-        
+
         private ColorDepthPanel(SampleAlignmentResult result, FileType fileType) {
             
             this.result = result;
@@ -1076,34 +1129,29 @@ public class SampleEditorPanel
             JPanel imagePanel = new JPanel();
             imagePanel.setLayout(new GridLayout(1, 2, 5, 0));
 
-            if (result!=null) {
-                this.resultDescriptor = new ResultArtifactDescriptor(result);
-                label.setText(resultDescriptor.toString());
-                
-                HasFiles files = result;
-                String colorDepthMip = DomainUtils.getFilepath(files, fileType);
-                if (colorDepthMip!=null) {
-                    imagePanel.add(getImagePanel(colorDepthMip, null));
-                }
-                
-                JPanel titlePanel = new JPanel(new BorderLayout());
-                titlePanel.add(label, BorderLayout.PAGE_START);
-                
-                add(titlePanel, BorderLayout.NORTH);
-                add(imagePanel, BorderLayout.CENTER);
+            this.resultDescriptor = new ResultArtifactDescriptor(result);
+            JLabel label = new JLabel();
+            label.setText(resultDescriptor.toString());
 
-                setFocusTraversalKeysEnabled(false);
+            String colorDepthMip = DomainUtils.getFilepath(result, fileType);
+            if (colorDepthMip!=null) {
+                imagePanel.add(getImagePanel(colorDepthMip, null));
             }
-            else {
-                this.resultDescriptor = null;
-            }
+
+            JPanel titlePanel = new JPanel(new BorderLayout());
+            titlePanel.add(label, BorderLayout.PAGE_START);
+
+            add(titlePanel, BorderLayout.NORTH);
+            add(imagePanel, BorderLayout.CENTER);
+
+            setFocusTraversalKeysEnabled(false);
         }
 
-        public SampleAlignmentResult getResult() {
+        public SampleAlignmentResult getAlignmentResult() {
             return result;
         }
       
-        public FileType getType() {
+        public FileType getFileType() {
             return fileType;
         }
 
@@ -1312,10 +1360,10 @@ public class SampleEditorPanel
 
     @Override
     public Long getCurrentContextId() {
-        Object parentObject = selectionModel.getParentObject();
+        Object parentObject = lsmSelectionModel.getParentObject();
         if (parentObject instanceof HasIdentifier) {
             return ((HasIdentifier)parentObject).getId();
         }
-        throw new IllegalStateException("Parent object has no identifier: "+selectionModel.getParentObject());
+        throw new IllegalStateException("Parent object has no identifier: "+ lsmSelectionModel.getParentObject());
     }
 }

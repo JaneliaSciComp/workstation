@@ -137,8 +137,10 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         }
         if (editor!=null) {
             ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
-            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
-            ViewerUtils.updateGlobalSelection(editor.getSelectionModel(), true);
+            if (editor.getViewerContext()!=null) {
+                ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
+                ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), true);
+            }
         }
     }
     
@@ -172,8 +174,10 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         if (topComponent==this && editor!=null) {
             log.trace("Our selection changed, updating cookie because of {}", e);
             ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
-            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
-            ViewerUtils.updateGlobalSelection(editor.getSelectionModel(), true);
+            if (editor.getViewerContext()!=null) {
+                ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
+                ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), true);
+            }
         }
     }
 
@@ -185,8 +189,10 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         if (topComponent==this && editor!=null) {
             log.trace("Our selection changed, updating cookie because of {}", e);
             ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
-            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
-            ViewerUtils.updateGlobalSelection(editor.getSelectionModel(), true);
+            if (editor.getViewerContext()!=null) {
+                ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
+                ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), true);
+            }
         }
     }
 
@@ -198,8 +204,10 @@ public final class SampleResultViewerTopComponent extends TopComponent implement
         if (topComponent==this && editor!=null) {
             log.trace("Viewer context changed, updating cookie because of {}", e);
             ViewerUtils.updateContextIfChanged(this, content, editor.getViewerContext());
-            ViewerUtils.updateNodeIfChanged(this, content, editor.getSelectionModel().getObjects());
-            ViewerUtils.updateGlobalSelection(editor.getSelectionModel(), true);
+            if (editor.getViewerContext()!=null) {
+                ViewerUtils.updateNodeIfChanged(this, content, editor.getViewerContext().getSelectionModel().getObjects());
+                ViewerUtils.updateGlobalSelection(editor.getViewerContext().getSelectionModel(), true);
+            }
         }
     }
 
