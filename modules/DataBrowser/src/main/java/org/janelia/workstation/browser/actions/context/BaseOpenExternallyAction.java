@@ -1,7 +1,5 @@
 package org.janelia.workstation.browser.actions.context;
 
-import javax.swing.*;
-
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.enums.FileType;
@@ -17,7 +15,6 @@ import org.janelia.workstation.common.gui.model.SampleResultModel;
 import org.janelia.workstation.common.gui.util.DomainUIUtils;
 import org.janelia.workstation.common.gui.util.UIUtils;
 import org.janelia.workstation.core.actions.ViewerContext;
-import org.janelia.workstation.core.model.ImageModel;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.janelia.workstation.core.model.descriptors.LatestDescriptor;
@@ -25,6 +22,8 @@ import org.janelia.workstation.core.model.descriptors.ResultArtifactDescriptor;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
 
 /**
  * Base class for actions which want to open a stack with an external tool.
@@ -55,7 +54,7 @@ public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction 
             }
             HasFiles fileProvider = SampleUIUtils.getSingle3dResult(viewerContext);
             if (fileProvider != null) {
-                this.filepath = DomainUtils.getDefault3dImageFilePath(fileProvider);
+                this.filepath = getFilepath(fileProvider, FileType.FirstAvailable3d);
                 log.trace("filepath={}", filepath);
             }
             this.selectedObject = getNodeContext().getSingleObjectOfType(DomainObject.class);
@@ -64,7 +63,7 @@ public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction 
             SampleResultModel srm = DomainUIUtils.getSampleResultModel(getViewerContext());
             if (srm != null) {
                 PipelineResult pipelineResult = getNodeContext().getSingleObjectOfType(PipelineResult.class);
-                this.filepath = DomainUtils.getFilepath(pipelineResult, srm.getFileType());
+                this.filepath = getFilepath(pipelineResult, srm.getFileType());
                 log.trace("filepath={}", filepath);
                 this.selectedObject = pipelineResult.getParentRun().getParent().getParent();
             }
@@ -74,8 +73,22 @@ public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction 
         setEnabledAndVisible(filepath != null);
     }
 
-    public DomainObject getSelectedObject() {
+    /**
+     * This method can be used by subclasses to access the object that was selected for opening.
+     * @return
+     */
+    protected DomainObject getSelectedObject() {
         return selectedObject;
+    }
+
+    /**
+     * This method can be overridden by subclasses to return special filepaths for task-specific work.
+     * @param fileProvider
+     * @param fileType
+     * @return
+     */
+    protected String getFilepath(HasFiles fileProvider, FileType fileType) {
+        return DomainUtils.getFilepath(fileProvider, fileType);
     }
 
     /**

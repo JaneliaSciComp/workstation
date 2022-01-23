@@ -37,7 +37,7 @@ public class OpenInVvdViewerAction extends BaseOpenExternallyAction {
     }
 
     @Override
-    protected String getFilepath(HasFiles fileProvider) {
+    protected String getFilepath(HasFiles fileProvider, FileType fileType) {
         // VVD can only open H5J files, not V3DRAW or V3DPBD, so we can't use FirstAvailable3D
         // TODO: this can be better customized to allow TIFF files and other things supported by VVD
         return DomainUtils.getFilepath(fileProvider, FileType.VisuallyLosslessStack);
