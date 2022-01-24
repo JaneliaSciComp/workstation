@@ -81,9 +81,10 @@ public class HortaDataSync extends CallableSystemAction {
             attrPanel.addSeparator("Synchronize Horta Data");
 
             JLabel instructions = new JLabel(
-                    "Choose a folder to search for TM samples. Each sample folder should contain a transform.txt.\n" +
-                    "Samples will be synchronized with the TM samples owned by the given user. If a sample with the same\n" +
-                    "name exits, it will be updated. Otherwise a new sample will be created.");
+                    "<html><font color='#959595' size='-1'>" +
+                    "Choose a folder to search for TM samples. Each sample folder should contain a transform.txt.<br>" +
+                    "Samples will be synchronized with the TM samples owned by the given user or group.<br>" +
+                    "If a sample with the same name exits it will be updated. Otherwise a new sample will be created.</font></html>");
 
             attrPanel.addItem(instructions);
 
