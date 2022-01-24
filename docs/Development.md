@@ -28,14 +28,3 @@ There are many ways to set up
 2)  Create a new Run Configuration of type "Remote" and set it to mode "Attach to remote JVM". The host and port should default to localhost:5005, as we configured above. Running this will begin debugging the Workstation session. 
 
 3) Run the Workstation as normal, and any time you want to debug, just run the debugger configuration after starting the Workstation.
-
-An alternative would be to run a persistent debugger server and set up the Workstation to connect to it each time you run it in "debug mode":
-
-1) Create a Run Configuration of type "Remote" and set it to "Listen to remote VM". Make note of the *address* that is generated.
-
-2) Create a copy of your Run Configuration for the Workstation, name it something like "Debug Workstation", and under the "Runner" tab in "VM Options" add this, filling in the `<address>` with the *address* you noted earlier: 
-
-    ```"-Dnetbeans.run.params.debug=-J-Xdebug -J-Xrunjdwp:transport=dt_socket,suspend=y,server=y,address=<address>"```
-    
- 3) Now you can run the debugger process once, and then choose when starting the Workstation whether or run it normally, or in debug mode. Note that (somewhat confusingly) you must use the regular run arrow when running the Workstation in debug mode, not the normal debug icon.
- 
