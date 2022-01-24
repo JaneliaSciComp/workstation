@@ -167,29 +167,46 @@ public class OpenInNeuronAnnotatorActionListener implements ActionListener {
                 startNA();
             }
         }
-
-        if (ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "Could not get Neuron Annotator to launch and connect. "
-                            + "Please contact support.", "Launch Error", JOptionPane.ERROR_MESSAGE);
-        }
     }
 
     private void startNA() throws Exception {
-        log.debug("Client {} is not running. Starting a new instance.",
-                NEURON_ANNOTATOR_CLIENT_NAME);
-        ToolMgr.runTool(FrameworkAccess.getMainFrame(), ToolMgr.TOOL_NA);
-        boolean notRunning = true;
-        int killCount = 0;
-        while (notRunning && killCount < 2) {
-            if (ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
-                log.debug("Waiting for {} to start.", NEURON_ANNOTATOR_CLIENT_NAME);
-                Thread.sleep(3000);
-                killCount++;
+
+        SimpleWorker worker = new SimpleWorker() {
+
+            @Override
+            protected void doStuff() throws Exception {
+                log.debug("Client {} is not running. Starting a new instance.",
+                        NEURON_ANNOTATOR_CLIENT_NAME);
+                ToolMgr.runTool(FrameworkAccess.getMainFrame(), ToolMgr.TOOL_NA);
+                boolean notRunning = true;
+                int killCount = 0;
+                while (notRunning && killCount < 2) {
+                    if (ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+                        log.debug("Waiting for {} to start.", NEURON_ANNOTATOR_CLIENT_NAME);
+                        Thread.sleep(3000);
+                        killCount++;
+                    }
+                    else {
+                        notRunning = false;
+                    }
+                }
             }
-            else {
-                notRunning = false;
+
+            @Override
+            protected void hadSuccess() {
+                if (ExternalClientMgr.getInstance().getExternalClientsByName(NEURON_ANNOTATOR_CLIENT_NAME).isEmpty()) {
+                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                            "Could not get Neuron Annotator to launch and connect. "
+                                    + "Please contact support.", "Launch Error", JOptionPane.ERROR_MESSAGE);
+                }
+
             }
-        }
+            @Override
+            protected void hadError(Throwable error) {
+                FrameworkAccess.handleException(error);
+            }
+        };
+
+        worker.execute();
     }
 }

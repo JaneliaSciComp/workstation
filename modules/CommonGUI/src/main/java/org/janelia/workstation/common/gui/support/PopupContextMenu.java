@@ -3,6 +3,7 @@ package org.janelia.workstation.common.gui.support;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -78,5 +79,13 @@ public abstract class PopupContextMenu extends JPopupMenu {
         JMenuItem titleMenuItem = new JMenuItem(title);
         titleMenuItem.setEnabled(false);
         return titleMenuItem;
+    }
+
+    /**
+     * Shortcut to show the menu at the correct location for a MouseEvent.
+     * @param e mouse click that requested the menu
+     */
+    public void show(MouseEvent e) {
+        show(e.getComponent(), e.getX(), e.getY());
     }
 }

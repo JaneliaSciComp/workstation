@@ -1,7 +1,6 @@
 package org.janelia.workstation.browser.actions.context;
 
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.model.domain.sample.Sample;

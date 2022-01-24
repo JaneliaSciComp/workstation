@@ -81,7 +81,7 @@ public class ConfigPanel extends JPanel {
 				}
 				LabelContextMenu popupMenu = new LabelContextMenu("Name", titleLabel);
 				popupMenu.addMenuItems();
-				popupMenu.show(e.getComponent(), e.getX(), e.getY());
+				popupMenu.show(e);
 				e.consume();
 			}
 

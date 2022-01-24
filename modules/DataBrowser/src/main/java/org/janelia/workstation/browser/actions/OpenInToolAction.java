@@ -1,6 +1,5 @@
 package org.janelia.workstation.browser.actions;
 
-import org.janelia.workstation.browser.gui.editor.SampleResultContextMenu;
 import org.janelia.workstation.browser.tools.ToolMgr;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.FileMgr;
@@ -14,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,7 +23,7 @@ import java.util.List;
  */
 public class OpenInToolAction extends AbstractAction {
 
-    private static final Logger log = LoggerFactory.getLogger(SampleResultContextMenu.class);
+    private static final Logger log = LoggerFactory.getLogger(OpenInToolAction.class);
 
     private final String tool;
     private final String path;

@@ -1,6 +1,9 @@
 package org.janelia.workstation.browser.actions.context;
 
 import org.janelia.model.domain.sample.NeuronFragment;
+import org.janelia.model.domain.sample.NeuronSeparation;
+import org.janelia.model.domain.sample.PipelineResult;
+import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -22,24 +25,44 @@ import org.openide.util.NbBundle;
         @ActionReference(path = "Menu/Actions", position = 241)
 })
 @NbBundle.Messages("CTL_OpenInVvdNAPluginAction=Open With VVD Viewer (Neurons)")
-public class OpenInVvdNAPluginAction extends BaseOpenExternallyAction {
+public class OpenInVvdNAPluginAction extends BaseContextualNodeAction {
 
-    private NeuronFragment selectedObject;
+    protected NeuronSeparation neuronSeparation;
+    protected NeuronFragment neuronFragment;
+    protected PipelineResult pipelineResult;
 
     @Override
     protected void processContext() {
+        neuronSeparation = null;
+        neuronFragment = null;
+        pipelineResult = null;
+        setEnabledAndVisible(false);
+
         if (getNodeContext().isSingleObjectOfType(NeuronFragment.class)) {
-            this.selectedObject = getNodeContext().getSingleObjectOfType(NeuronFragment.class);
+            this.neuronFragment = getNodeContext().getSingleObjectOfType(NeuronFragment.class);
             setEnabledAndVisible(true);
         }
-        else {
-            setEnabledAndVisible(false);
+        else if (getNodeContext().isSingleObjectOfType(PipelineResult.class)) {
+            PipelineResult pipelineResult = getNodeContext().getSingleObjectOfType(PipelineResult.class);
+            this.neuronSeparation = pipelineResult.getLatestSeparationResult();
+            if (neuronSeparation!= null) {
+                setEnabledAndVisible(true);
+            }
         }
     }
+
     @Override
     public void performAction() {
-        OpenInVvdNAPluginActionListener openInVvdNAPluginAction
-                = new OpenInVvdNAPluginActionListener(selectedObject);
-        openInVvdNAPluginAction.actionPerformed(null);
+
+        if (neuronSeparation != null) {
+            OpenInVvdNAPluginActionListener openInVvdNAPluginAction
+                    = new OpenInVvdNAPluginActionListener(neuronSeparation);
+            openInVvdNAPluginAction.actionPerformed(null);
+        }
+        else if (neuronFragment != null) {
+            OpenInVvdNAPluginActionListener openInVvdNAPluginAction
+                    = new OpenInVvdNAPluginActionListener(neuronFragment);
+            openInVvdNAPluginAction.actionPerformed(null);
+        }
     }
 }

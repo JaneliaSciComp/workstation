@@ -143,7 +143,7 @@ public class ColorDepthSearchEditorPanel
             protected void popupTriggered(MouseEvent e, SelectablePanel resultPanel) {
                 MaskContextMenu popupMenu = new MaskContextMenu(search, ((MaskPanel)resultPanel).getMask());
                 popupMenu.addMenuItems();
-                popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                popupMenu.show(e);
             }
             
         };

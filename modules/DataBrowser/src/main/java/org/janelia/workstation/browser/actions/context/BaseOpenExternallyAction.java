@@ -62,10 +62,13 @@ public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction 
         else if (getNodeContext().isSingleObjectOfType(PipelineResult.class)) {
             SampleResultModel srm = DomainUIUtils.getSampleResultModel(getViewerContext());
             if (srm != null) {
-                PipelineResult pipelineResult = getNodeContext().getSingleObjectOfType(PipelineResult.class);
-                this.filepath = getFilepath(pipelineResult, srm.getFileType());
-                log.trace("filepath={}", filepath);
-                this.selectedObject = pipelineResult.getParentRun().getParent().getParent();
+                FileType fileType = srm.getFileType();
+                if (allowFileType(fileType)) {
+                    PipelineResult pipelineResult = getNodeContext().getSingleObjectOfType(PipelineResult.class);
+                    this.filepath = getFilepath(pipelineResult, fileType);
+                    log.trace("filepath={}", filepath);
+                    this.selectedObject = pipelineResult.getParentRun().getParent().getParent();
+                }
             }
         }
 
@@ -74,8 +77,16 @@ public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction 
     }
 
     /**
+     * By default this filters only 3d images. Can be overridden by subclasses to allow 2d imagery.
+     * @return true if the file type being opened is allowed
+     */
+    protected boolean allowFileType(FileType fileType) {
+        return fileType.is3dImage();
+    }
+
+    /**
      * This method can be used by subclasses to access the object that was selected for opening.
-     * @return
+     * @return the object that was selected by the user
      */
     protected DomainObject getSelectedObject() {
         return selectedObject;

@@ -12,11 +12,16 @@ import org.janelia.model.domain.enums.AlignmentScoreType;
 import org.janelia.model.domain.enums.ErrorType;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.interfaces.HasAnatomicalArea;
+import org.janelia.model.domain.interfaces.HasFileGroups;
 import org.janelia.model.domain.interfaces.HasFiles;
 import org.janelia.model.domain.interfaces.HasIdentifier;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.sample.*;
 import org.janelia.workstation.browser.actions.ExportResultsAction;
+import org.janelia.workstation.browser.actions.OpenWithDefaultAppAction;
+import org.janelia.workstation.browser.gui.components.SampleResultViewerManager;
+import org.janelia.workstation.browser.gui.components.SampleResultViewerTopComponent;
+import org.janelia.workstation.browser.gui.components.ViewerUtils;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.listview.PaginatedDomainResultsPanel;
 import org.janelia.workstation.browser.gui.listview.table.DomainObjectTableViewer;
@@ -82,8 +87,8 @@ public class SampleEditorPanel
     // Constants
     private final static String PREFERENCE_KEY = "SampleEditor";
     private final static String MODE_LSMS = "LSMs";
-    private final static String MODE_RESULTS = "Results";
-    private final static String MODE_COLOR_DEPTH = "Color Depth";
+    private final static String MODE_RESULTS = "Pipeline Results";
+    private final static String MODE_COLOR_DEPTH = "Color Depth MIPs";
     private final static String ALL_VALUE = "all";
     private final static List<FileType> COLOR_DEPTH_TYPES = Arrays.asList(FileType.ColorDepthMip1, FileType.ColorDepthMip2, FileType.ColorDepthMip3, FileType.ColorDepthMip4);
 
@@ -248,8 +253,8 @@ public class SampleEditorPanel
                     PipelineResultPanel pipelineResultPanel = (PipelineResultPanel)resultPanel;
                     currentPanelResult = pipelineResultPanel.getResult();
                     currentPanelDescriptor = pipelineResultPanel.getResultDescriptor();
-                    currentPanelResultType = pipelineResultPanel.getSignalFileType();
-                    Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, pipelineResultPanel.getResult(), pipelineResultPanel.getSignalFileType(), isUserDriven));
+                    currentPanelResultType = FileType.FirstAvailable3d;
+                    Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, currentPanelResult, currentPanelResultType, isUserDriven));
                 }
                 else if (resultPanel instanceof PipelineErrorPanel) {
                     PipelineErrorPanel resultPanel2 = (PipelineErrorPanel)resultPanel;
@@ -269,41 +274,44 @@ public class SampleEditorPanel
                 if (e.isConsumed()) {
                     return;
                 }
-                // TODO: refactor this in the style of the IconGridViewerPanel's popupTriggered
-
-                if (resultPanel instanceof PipelineResultPanel) {
-                    PipelineResultPanel pipelineResultPanel = (PipelineResultPanel)resultPanel;
-                    PipelineResultContextMenu popupMenu = new PipelineResultContextMenu();
-                    popupMenu.addMenuItems();
-                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
-                }
-                else if (resultPanel instanceof PipelineErrorPanel) {
-                    SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
-                    popupMenu.addMenuItems();
-                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
-                }
-                else if (resultPanel instanceof ColorDepthPanel) {
-                    ColorDepthPanel colorDepthPanel = (ColorDepthPanel)resultPanel;
-                    PipelineResultContextMenu popupMenu = new PipelineResultContextMenu();
-                    popupMenu.addMenuItems();
-                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
-                }
+                // Important: consume the event before queueing on the EDT. See IconGridViewerPanel.
+                e.consume();
+                SwingUtilities.invokeLater(() -> {
+                    if (resultPanel instanceof PipelineResultPanel) {
+                        PipelineResultContextMenu popupMenu = new PipelineResultContextMenu();
+                        popupMenu.show(e);
+                    }
+                    else if (resultPanel instanceof PipelineErrorPanel) {
+                        SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
+                        popupMenu.addMenuItems();
+                        popupMenu.show(e);
+                    }
+                    else if (resultPanel instanceof ColorDepthPanel) {
+                        PipelineResultContextMenu popupMenu = new PipelineResultContextMenu();
+                        popupMenu.show(e);
+                    }
+                });
             }
             
             @Override
             protected void doubleLeftClicked(MouseEvent e, SelectablePanel resultPanel) {
                 if (resultPanel instanceof PipelineResultPanel) {
-                    SampleResultContextMenu popupMenu = new SampleResultContextMenu(((PipelineResultPanel)resultPanel).getResult());
-                    popupMenu.runDefaultAction();
+                    PipelineResultPanel pipelineResultPanel = (PipelineResultPanel)resultPanel;
+                    PipelineResult result = pipelineResultPanel.getResult();
+                    if (result.getLatestSeparationResult()!=null || result instanceof HasFileGroups) {
+                        SampleResultViewerTopComponent viewer = ViewerUtils.getViewer(SampleResultViewerManager.getInstance(), "editor3");
+                        if (viewer == null || !SampleUtils.equals(viewer.getCurrent(), result)) {
+                            viewer = ViewerUtils.createNewViewer(SampleResultViewerManager.getInstance(), "editor3");
+                            viewer.requestActive();
+                            viewer.loadSampleResult(result, true, null);
+                        }
+                    }
                 }
                 else if (resultPanel instanceof PipelineErrorPanel) {
-                    SampleErrorContextMenu popupMenu = new SampleErrorContextMenu(((PipelineErrorPanel)resultPanel).getRun());
-                    popupMenu.runDefaultAction();
-                }
-                else if (resultPanel instanceof ColorDepthPanel) {
-                    ColorDepthPanel resultPanel2 = (ColorDepthPanel)resultPanel;
-                    PipelineResultContextMenu popupMenu = new PipelineResultContextMenu();
-                    //popupMenu.runDefaultAction();
+                    PipelineErrorPanel pipelineErrorPanel = (PipelineErrorPanel)resultPanel;
+                    SamplePipelineRun run = pipelineErrorPanel.getRun();
+                    OpenWithDefaultAppAction action = new OpenWithDefaultAppAction(run.getError().getFilepath());
+                    action.actionPerformed(null);
                 }
             }
             

@@ -138,7 +138,7 @@ public class GroupedFolderEditorPanel extends JPanel implements
                     DomainObject proxyObject = ((GroupPanel)resultPanel).getProxyObject();
                     GroupContextMenu popupMenu = new GroupContextMenu(groupedFolder, group, proxyObject);
                     popupMenu.addMenuItems();
-                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                    popupMenu.show(e);
                 }
             }
             

@@ -4,6 +4,7 @@ import java.io.File;
 
 import javax.swing.JOptionPane;
 
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.util.FileCallable;
@@ -57,5 +58,12 @@ public class OpenInDefaultAppAction extends BaseOpenExternallyAction {
         catch (Exception e) {
             FrameworkAccess.handleException(e);
         }
+    }
+
+    /**
+     * Allow any file.
+     */
+    protected boolean allowFileType(FileType fileType) {
+        return true;
     }
 }

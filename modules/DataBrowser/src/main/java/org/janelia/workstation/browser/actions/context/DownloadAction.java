@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.workstation.browser.gui.dialogs.download.DownloadWizardAction;
@@ -52,7 +53,8 @@ public class DownloadAction extends BaseContextualNodeAction {
                 PipelineResult pipelineResult = getNodeContext().getSingleObjectOfType(PipelineResult.class);
                 domainObjects.add(pipelineResult.getParentRun().getParent().getParent());
                 defaultResultDescriptor = srm.getArtifactDescriptor();
-                setEnabledAndVisible(true);
+                setVisible(true);
+                setEnabled(DomainUtils.getDefault3dImageFilePath(pipelineResult)!=null);
             }
         }
         else {
