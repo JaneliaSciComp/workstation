@@ -28,7 +28,7 @@ public class EMDataSetsNode extends IdentifiableNode {
 
     private final static Logger log = LoggerFactory.getLogger(EMDataSetsNode.class);
 
-    public static final String NODE_NAME = "FlyEM Data Sets";
+    public static final String NODE_NAME = "EM Data Sets";
     public static final long NODE_ID = 25L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final DataSetNodeChildFactory childFactory;

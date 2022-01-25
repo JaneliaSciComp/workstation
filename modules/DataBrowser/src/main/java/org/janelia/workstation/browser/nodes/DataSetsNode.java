@@ -32,7 +32,7 @@ public class DataSetsNode extends IdentifiableNode {
 
     private final static Logger log = LoggerFactory.getLogger(DataSetsNode.class);
 
-    public static final String NODE_NAME = "Data Sets";
+    public static final String NODE_NAME = "LM Data Sets";
     public static final long NODE_ID = 20L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final DataSetNodeChildFactory childFactory;
