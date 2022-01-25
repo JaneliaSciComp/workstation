@@ -9,7 +9,6 @@ import org.janelia.model.domain.report.QuotaUsage;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.browser.actions.NewFilterActionListener;
 import org.janelia.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -29,8 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
@@ -89,7 +86,6 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         colorDepthIcon = COLOR_DEPTH_ICON;
         
         JLabel titleLabel = new JLabel("Welcome to the Janelia Workstation");
-        //titleLabel.setForeground(UIManager.getColor("textInactiveText"));
         
         titleFont = titleLabel.getFont().deriveFont(Font.BOLD, 20);
         largeFont = titleLabel.getFont().deriveFont(Font.BOLD, 16);
@@ -122,30 +118,14 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         
         searchButton = new JButton("Search");
         searchButton.setFont(mediumFont);
-        searchButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                NewFilterActionListener actionListener = new NewFilterActionListener(searchField.getText(), searchClass);
-                actionListener.actionPerformed(e);
-            }
+        searchButton.addActionListener(e -> {
+            NewFilterActionListener actionListener = new NewFilterActionListener(searchField.getText(), searchClass);
+            actionListener.actionPerformed(e);
         });
 
         ButtonGroup group = new ButtonGroup();
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.X_AXIS));
-
-//        JToggleButton button0 = new JToggleButton("Everything");
-//        button0.setSelected(true);
-//        button0.setMargin(new Insets(5,5,5,5));
-//        button0.addActionListener(new ActionListener() {
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//                // TODO: this needs to search everything
-//                searchClass = Sample.class.getSimpleName();
-//            }
-//        });
-//        group.add(button0);
-//        buttonsPanel.add(button0);
                 
         JToggleButton button1 = new JToggleButton("Confocal Samples");
         button1.setFont(mediumFont);
@@ -254,8 +234,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         colorDepthTitlePanel.setLayout(new BoxLayout(colorDepthTitlePanel, BoxLayout.LINE_AXIS));
                 
         colorDepthTitlePanel.add(getLargeLabel("Color Depth Mask Search"));
-        //colorDepthTitlePanel.add(getHighlightLabel("NEW"));
-        
+
         JButton userManualButton = new JButton("Learn more in the User Manual");
         userManualButton.setFont(mediumFont);
         userManualButton.addActionListener(e -> {
@@ -431,14 +410,6 @@ public class StartPage extends JPanel implements PropertyChangeListener {
     private JLabel getLargeLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(largeFont);
-        return label;
-    }
-
-    private JLabel getHighlightLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setFont(largeFont.deriveFont(10));
-        label.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 0));
-        label.setForeground(Color.red);
         return label;
     }
     
