@@ -335,6 +335,13 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- HortaCloud Customizations -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>sitehortacloud</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- Jars from Workstation Maven Repo -->
             <dependency>
                 <groupId>org.janelia.jacs-model</groupId>
@@ -1113,6 +1120,7 @@
             </properties>
             <modules>
                 <module>modules/application</module>
+                <module>modules/SiteJRC</module>
             </modules>
         </profile>
 
@@ -1124,6 +1132,7 @@
             </properties>
             <modules>
                 <module>modules/application_horta</module>
+                <module>modules/SiteHortaCloud</module>
             </modules>
         </profile>
 
@@ -1147,7 +1156,6 @@
         <module>modules/SceneWindow</module>
         <module>modules/Jogl213Lib</module>
         <module>modules/Jogl224Lib</module>
-        <module>modules/SiteJRC</module>
         <module>modules/ColorDepthSearch</module>
         <module>modules/branding</module>
     </modules>

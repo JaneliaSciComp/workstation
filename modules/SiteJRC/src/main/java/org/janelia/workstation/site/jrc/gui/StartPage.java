@@ -1,4 +1,4 @@
-package org.janelia.workstation.browser.gui.editor;
+package org.janelia.workstation.site.jrc.gui;
 
 import com.google.common.eventbus.Subscribe;
 import net.miginfocom.swing.MigLayout;

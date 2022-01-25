@@ -82,6 +82,12 @@
             <artifactId>horta</artifactId>
         </dependency>
 
+        <!-- HortaCloud Site Customizations -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>sitehortacloud</artifactId>
+        </dependency>
+
         <!-- NetBeans Platform --> 
         <dependency>
             <groupId>org.netbeans.cluster</groupId>

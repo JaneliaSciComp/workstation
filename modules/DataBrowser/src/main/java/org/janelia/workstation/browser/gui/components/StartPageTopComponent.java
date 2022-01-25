@@ -1,14 +1,9 @@
 package org.janelia.workstation.browser.gui.components;
 
-import java.awt.BorderLayout;
-import java.lang.ref.WeakReference;
-
-import javax.swing.SwingUtilities;
-
-import org.janelia.workstation.browser.gui.editor.StartPage;
 import org.janelia.workstation.core.api.lifecycle.ConsoleState;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.options.ApplicationOptions;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -17,6 +12,11 @@ import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.beans.PropertyChangeListener;
+import java.lang.ref.WeakReference;
 
 /**
  * 
@@ -52,7 +52,7 @@ public class StartPageTopComponent extends TopComponent {
     public static final String TC_VERSION = "1.0";
 
     private static WeakReference<StartPageTopComponent> component = new WeakReference<>(null);
-    private StartPage startPage;
+    private JPanel startPage;
 
     private boolean initialized = false;
     
@@ -74,9 +74,8 @@ public class StartPageTopComponent extends TopComponent {
      */
     private void doInitialize() {
         if (null == startPage) {
-            startPage = new StartPage();
-            add(startPage, BorderLayout.CENTER);
-            //setFocusable(false);
+            startPage = FrameworkAccess.getStartPageProvider().getStartPage();
+            add(this.startPage, BorderLayout.CENTER);
         }
     }
 
@@ -143,7 +142,7 @@ public class StartPageTopComponent extends TopComponent {
         if (startPage!=null) {
             Events.getInstance().registerOnEventBus(startPage);
         }
-        ApplicationOptions.getInstance().addPropertyChangeListener(startPage);
+        ApplicationOptions.getInstance().addPropertyChangeListener((PropertyChangeListener)startPage);
     }
 
     @Override
@@ -160,7 +159,7 @@ public class StartPageTopComponent extends TopComponent {
         if (startPage!=null) {
             Events.getInstance().unregisterOnEventBus(startPage);
         }
-        ApplicationOptions.getInstance().removePropertyChangeListener(startPage);
+        ApplicationOptions.getInstance().removePropertyChangeListener((PropertyChangeListener)startPage);
     }
     
     @Override 

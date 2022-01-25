@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.janelia</groupId>
+        <artifactId>workstation</artifactId>
+        <version>9.7.1</version>
+        <relativePath>../..</relativePath>
+    </parent>
+
+    <name>SiteHortaCloud</name>
+    <groupId>org.janelia.workstation</groupId>
+    <artifactId>sitehortacloud</artifactId>
+    <version>9.7.1</version>
+    <packaging>nbm</packaging>
+
+    <dependencies>
+        
+        <!-- CommonLibraries -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>libraries</artifactId>
+        </dependency>
+        
+        <!-- Integration APIs --> 
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>integration</artifactId>
+        </dependency>
+
+        <!-- CommonGUI -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>common-gui</artifactId>
+        </dependency>
+
+        <!-- Core -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+
+        <!-- Data Browser -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>browser</artifactId>
+        </dependency>
+
+        <!-- NetBeans Modules -->
+        <dependency>
+            <groupId>org.netbeans.api</groupId>
+            <artifactId>org-openide-nodes</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>nbm-maven-plugin</artifactId>
+                <configuration>
+                    <publicPackages>
+                    </publicPackages>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

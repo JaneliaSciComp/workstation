@@ -9,7 +9,7 @@ import java.util.List;
  */
 public interface NodeProvider {
     
-    public static final String LOOKUP_PATH = "Nodes/NodeProvider";
+    public static final String LOOKUP_PATH = "Providers/NodeProvider";
     
     /**
      * Implement this method to provide a list of generators for nodes you want to add.

@@ -15,6 +15,7 @@ import org.janelia.workstation.integration.api.InspectionController;
 import org.janelia.workstation.integration.api.PreferenceModel;
 import org.janelia.workstation.integration.api.ProgressController;
 import org.janelia.workstation.integration.api.SettingsModel;
+import org.janelia.workstation.integration.spi.gui.StartPageProvider;
 import org.janelia.workstation.integration.spi.compression.CompressedFileResolverI;
 import org.openide.util.Lookup;
 import org.openide.util.NbPreferences;
@@ -51,7 +52,11 @@ public class FrameworkAccess {
     public static CompressedFileResolverI getCompressedFileResolver() {
         return getProvider(CompressedFileResolverI.LOOKUP_PATH, CompressedFileResolverI.class);
     }
-    
+
+    public static StartPageProvider getStartPageProvider() {
+        return getProvider(StartPageProvider.LOOKUP_PATH, StartPageProvider.class);
+    }
+
     public static ActivityLogging getActivityLogging() {
         return getProvider(ActivityLogging.LOOKUP_PATH, ActivityLogging.class);
     }
