@@ -12,6 +12,11 @@
         </folder>
     </folder>
     <folder name="Menu">
+        <folder name="Actions">
+            <folder name="Horta">
+                <attr name="position" intvalue="700"/>
+            </folder>
+        </folder>
         <folder name="Window">
             <folder name="Horta">
                 <attr name="position" intvalue="20"/>

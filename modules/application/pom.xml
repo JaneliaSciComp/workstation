@@ -58,6 +58,12 @@
             <artifactId>browser</artifactId>
         </dependency>
 
+        <!-- Data Browser -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>lmdatabrowser</artifactId>
+        </dependency>
+
         <!-- Viewer Controller -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>

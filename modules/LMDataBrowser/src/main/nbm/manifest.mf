@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+OpenIDE-Module-Layer: org/janelia/workstation/lm/layer.xml
+OpenIDE-Module-Localizing-Bundle: org/janelia/workstation/lm/Bundle.properties
+OpenIDE-Module-Specification-Version: ${janeliaws.modules.specification.version}
+OpenIDE-Module-Implementation-Version: ${buildNumber}

@@ -87,7 +87,7 @@ import java.util.concurrent.Callable;
         iconBase = "images/page.png",
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
-@TopComponent.Registration(mode = "properties", openAtStartup = true, position = 500)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position = 500)
 @ActionID(category = "Window", id = "org.janelia.workstation.browser.components.OntologyExplorerTopComponent")
 @ActionReference(path = "Menu/Window/Core", position = 40)
 @TopComponent.OpenActionRegistration(

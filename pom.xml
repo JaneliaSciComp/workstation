@@ -264,7 +264,14 @@
                 <artifactId>browser</artifactId>
                 <version>${project.version}</version>
             </dependency>
-         
+
+            <!-- LMDataBrowser -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>lmdatabrowser</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- Large Volume Viewer -->
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
@@ -1146,6 +1153,8 @@
         <module>modules/CommonGUI</module>
         <module>modules/DarculaLAF</module>
         <module>modules/DataBrowser</module>
+        <module>modules/LMDataBrowser</module>
+        <module>modules/ColorDepthSearch</module>
         <module>modules/HortaTracer</module>
         <module>modules/LargeVolumeViewer</module>
         <module>modules/Viewer3D</module>
@@ -1156,7 +1165,6 @@
         <module>modules/SceneWindow</module>
         <module>modules/Jogl213Lib</module>
         <module>modules/Jogl224Lib</module>
-        <module>modules/ColorDepthSearch</module>
         <module>modules/branding</module>
     </modules>
 
