@@ -15,6 +15,10 @@
     <version>9.7.1</version>
     <packaging>nbm-application</packaging>
 
+    <properties>
+        <jarGoalPhase>package</jarGoalPhase>
+    </properties>
+
     <!-- Dependencies -->
     <dependencies>
         
