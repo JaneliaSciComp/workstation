@@ -59,12 +59,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
         JPanel attrPanel = new JPanel(new MigLayout("wrap 2, ins 20", "[grow 0, growprio 0][grow 100, growprio 100]"));
 
         this.loadLastCheckbox = new JCheckBox();
-        loadLastCheckbox.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                controller.changed();
-            }
-        });
+        loadLastCheckbox.addChangeListener(e -> controller.changed());
         JLabel titleLabel = new JLabel("Load last opened sample or workspace on startup: ");
         titleLabel.setLabelFor(loadLastCheckbox);
         attrPanel.add(titleLabel,"gap para");
@@ -83,12 +78,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
         attrPanel.add(showColorSlidersOnOpen,"gap para");
 
         this.disableSharedWorkspace = new JCheckBox();
-        disableSharedWorkspace.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                controller.changed();
-            }
-        });
+        disableSharedWorkspace.addChangeListener(e -> controller.changed());
         JLabel disableSharedLabel = new JLabel("Disable Shared Workspace for Performance: ");
         disableSharedLabel.setLabelFor(disableSharedWorkspace);
         attrPanel.add(disableSharedLabel,"gap para");
@@ -96,12 +86,7 @@ public class ApplicationPanel extends javax.swing.JPanel {
 
         
         this.verifyNeuronsCheckbox = new JCheckBox();
-        verifyNeuronsCheckbox.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                controller.changed();
-            }
-        });
+        verifyNeuronsCheckbox.addChangeListener(e -> controller.changed());
         JLabel titleLabel4 = new JLabel("Verify neurons on workspace load: ");
         titleLabel4.setLabelFor(verifyNeuronsCheckbox);
         attrPanel.add(titleLabel4,"gap para");
