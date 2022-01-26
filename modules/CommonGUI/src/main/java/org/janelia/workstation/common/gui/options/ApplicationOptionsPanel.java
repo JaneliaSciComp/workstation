@@ -1,46 +1,28 @@
 package org.janelia.workstation.common.gui.options;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.IOException;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JFormattedTextField;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
-import javax.swing.JRadioButton;
-import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.plaf.basic.BasicProgressBarUI;
-import javax.swing.text.DefaultFormatter;
-
-import org.janelia.workstation.core.api.LocalCacheMgr;
-import org.janelia.workstation.core.api.LocalPreferenceMgr;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.panels.MemorySettingPanel;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.LocalCacheMgr;
+import org.janelia.workstation.core.api.LocalPreferenceMgr;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.util.Utils;
 import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.plaf.basic.BasicProgressBarUI;
+import javax.swing.text.DefaultFormatter;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
 
 final class ApplicationOptionsPanel extends javax.swing.JPanel {
 
@@ -105,14 +87,7 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         mainPanel.addSeparator("Memory Management");
 
         memoryPanel = new MemorySettingPanel();
-        memoryPanel.setSettingListener(
-            new MemorySettingPanel.SettingListener() {
-                @Override
-                public void settingChanged() {
-                    controller.changed();
-                }
-            }
-        );
+        memoryPanel.setSettingListener(controller::changed);
         mainPanel.addItem("Max Memory (GB)", memoryPanel);
 
         // Cache
