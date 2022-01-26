@@ -1,4 +1,16 @@
 // 9.8
 
+Data Browser
+* Factored LM functionality into its own module
+* Unified actions between the grid view and Sample view
+
+Color Depth Search
+* Factored into its own module
+
 Horta
+* Added Services -> Load Horta Data to automatically discover MouseLight data
+* Fixed sync service so that it correctly marks unopenable samples with the error icon
+* Restored TM Sample as a search option on the Start Page
+* Moved "Show Horta Control Center on startup" option into the Horta options panel
+* Behind-the-scenes refactoring to support janeliaHortaCloud
 * "Go to ..." button can now be assigned a keyboard shortcut
