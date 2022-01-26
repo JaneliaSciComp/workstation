@@ -37,8 +37,6 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
     private JCheckBox showReleaseNotesOnStartup;
     private JCheckBox showStartPageOnStartup;
     private JCheckBox useRunAsUserPreferences;
-    private JCheckBox useHTTPForTileAccess;
-    private JCheckBox showHortaControlCenterOnStartup;
     private JRadioButton fileCacheEnabledRadioButton;
     private JRadioButton fileCacheDisabledRadioButton;
     private JSpinner fileCacheSpinner;
@@ -73,14 +71,6 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         if (AccessManager.getAccessManager().isAdmin()) {
             mainPanel.addItem(useRunAsUserPreferences);
         }
-
-        useHTTPForTileAccess = new JCheckBox("Use http for tile access");
-        useHTTPForTileAccess.addActionListener((e) -> controller.changed());
-        mainPanel.addItem(useHTTPForTileAccess);
-
-        showHortaControlCenterOnStartup = new JCheckBox("Show Horta Control Center on startup");
-        showHortaControlCenterOnStartup.addActionListener((e) -> controller.changed());
-        mainPanel.addItem(showHortaControlCenterOnStartup);
 
         // Memory
 
@@ -290,8 +280,6 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         showReleaseNotesOnStartup.setSelected(options.isShowReleaseNotes());
         showStartPageOnStartup.setSelected(options.isShowStartPageOnStartup());
         useRunAsUserPreferences.setSelected(options.isUseRunAsUserPreferences());
-        useHTTPForTileAccess.setSelected(options.isUseHTTPForTileAccess());
-        showHortaControlCenterOnStartup.setSelected(options.isShowHortaOnStartup());
         memoryPanel.setMemorySetting(Utils.getMemoryAllocation());
         
         updateFileCacheComponents(false);
@@ -307,8 +295,6 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         options.setShowReleaseNotes(showReleaseNotesOnStartup.isSelected());
         options.setShowStartPageOnStartup(showStartPageOnStartup.isSelected());
         options.setUseRunAsUserPreferences(useRunAsUserPreferences.isSelected());
-        options.setUseHTTPForTileAccess(useHTTPForTileAccess.isSelected());
-        options.setShowHortaControlCenterOnStartup(showHortaControlCenterOnStartup.isSelected());
 
         // Memory
         String error = memoryPanel.getError();

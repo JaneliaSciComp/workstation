@@ -1,17 +1,19 @@
 package org.janelia.workstation.controller.options;
 
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
-import javax.swing.JComponent;
 import org.netbeans.spi.options.OptionsPanelController;
 import org.openide.util.HelpCtx;
 import org.openide.util.Lookup;
+
+import javax.swing.*;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 
 @OptionsPanelController.SubRegistration(
         location = "Horta",
         displayName = "#AdvancedOption_DisplayName_Application",
         keywords = "#AdvancedOption_Keywords_Application",
-        keywordsCategory = "LargeVolumeViewer/Application"
+        keywordsCategory = "LargeVolumeViewer/Application",
+        position=1
 )
 @org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_Application=Application", "AdvancedOption_Keywords_Application=LVV"})
 public final class ApplicationOptionsPanelController extends OptionsPanelController {

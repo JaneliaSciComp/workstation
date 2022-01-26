@@ -13,7 +13,8 @@ import org.openide.util.Lookup;
         location = "Horta",
         displayName = "#AdvancedOption_DisplayName_TileLoading",
         keywords = "#AdvancedOption_Keywords_TileLoading",
-        keywordsCategory = "Horta/TileLoading"
+        keywordsCategory = "Horta/TileLoading",
+        position=2
 )
 @org.openide.util.NbBundle.Messages({"AdvancedOption_DisplayName_TileLoading=Tile Loading", "AdvancedOption_Keywords_TileLoading=loading"})
 public final class TileLoadingOptionsPanelController extends OptionsPanelController {

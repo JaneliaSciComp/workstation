@@ -107,17 +107,20 @@ public class ApplicationOptions {
         if (null != propSupport)
             propSupport.firePropertyChange(OptionConstants.USE_RUN_AS_USER_PREFERENCES, oldVal, value); 
     }
-        
+
+    // TODO: move Horta properties to Horta module
     public boolean isUseHTTPForTileAccess() {
         Boolean value = FrameworkAccess.getModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, true);
         return value!=null && value;
     }
 
+    // TODO: move Horta properties to Horta module
     public boolean isShowHortaOnStartup() {
         Boolean value = FrameworkAccess.getModelProperty(OptionConstants.SHOW_HORTA_CONTROL_CENTER_STARTUP, false);
         return value!=null && value;
     }
-    
+
+    // TODO: move Horta properties to Horta module
     public void setUseHTTPForTileAccess(boolean value) {
         boolean oldVal = isUseHTTPForTileAccess();
         if (oldVal == value) {
@@ -131,6 +134,7 @@ public class ApplicationOptions {
             propSupport.firePropertyChange(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, oldVal, value);         
     }
 
+    // TODO: move Horta properties to Horta module
     public void setShowHortaControlCenterOnStartup(boolean value) {
         boolean oldVal = isShowHortaOnStartup();
         if (oldVal == value) {
