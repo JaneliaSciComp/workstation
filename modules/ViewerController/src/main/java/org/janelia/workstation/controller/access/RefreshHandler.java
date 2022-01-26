@@ -13,13 +13,12 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import java.lang.management.ManagementFactory;
 import java.util.HashMap;
 import java.util.Iterator;

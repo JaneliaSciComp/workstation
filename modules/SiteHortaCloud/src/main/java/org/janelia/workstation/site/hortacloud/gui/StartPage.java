@@ -107,17 +107,13 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         // Default search button
         button1.setSelected(true);
         searchClass = TmSample.class;
-        
-        JLabel promptLabel = new JLabel("What would you like to search?");
-        promptLabel.setFont(largeFont);
-        
+
         searchPanel = new JPanel();
         searchPanel.setLayout(new MigLayout(
                 "gap 50, fill, wrap 2", // Layout constraints
                 "[grow 50]5[grow 50]", // Column constraints
                 "[grow 50]5[grow 0]5[grow 0]5[grow 75, fill]")); // Row constraints
         searchPanel.add(titleLabel, "gap 10, span 2, al center bottom");
-        searchPanel.add(promptLabel, "gap 10, span 2, al center bottom");
         searchPanel.add(buttonsPanel, "span 2, al center");
         searchPanel.add(searchField, "height 35, al right top");
         searchPanel.add(searchButton, "al left top");

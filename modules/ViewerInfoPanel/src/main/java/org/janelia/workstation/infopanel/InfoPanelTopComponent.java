@@ -6,8 +6,6 @@ import org.openide.awt.ActionReference;
 import org.openide.util.NbBundle.Messages;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,10 +16,10 @@ import java.awt.*;
 )
 @TopComponent.Description(
         preferredID = InfoPanelTopComponent.PREFERRED_ID,
-        //iconBase="SET/PATH/TO/ICON/HERE", 
+        iconBase="images/ano_small.png",
         persistenceType = TopComponent.PERSISTENCE_NEVER
 )
-@TopComponent.Registration(mode = "properties", openAtStartup = false, position = 500)
+@TopComponent.Registration(mode = "properties", openAtStartup = false, position = 1500)
 @ActionID(category = "Window", id = "org.janelia.workstation.gui.task_workflow.InfoPanelTopComponentTopComponent")
 @ActionReference(path = "Menu/Window/Horta", position = 0)
 @TopComponent.OpenActionRegistration(
@@ -34,10 +32,9 @@ import java.awt.*;
     "HINT_InfoPanelTopComponentTopComponent=Info Panel"
 })
 public final class InfoPanelTopComponent extends TopComponent {
-    private static final Logger log = LoggerFactory.getLogger(InfoPanelTopComponent.class);
+
     public static final String PREFERRED_ID = "InfoPanelTopComponent";
     public static final String LABEL_TEXT = "Horta Control Center";
-
 
     // Annotation Panel Layout
     private AnnotationPanel annotationPanel;
@@ -49,9 +46,7 @@ public final class InfoPanelTopComponent extends TopComponent {
         setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
         annotationPanel = new AnnotationPanel();
         add (annotationPanel);
-
     }
-
 
     @Override
     public Dimension getPreferredSize() {
