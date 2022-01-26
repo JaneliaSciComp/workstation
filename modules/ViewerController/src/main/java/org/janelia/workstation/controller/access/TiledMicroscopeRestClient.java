@@ -85,23 +85,6 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         }
     }
 
-    List<String> getTmSamplePaths() {
-        WebTarget target = getMouselightDataEndpoint("/sampleRootPaths");
-        Response response = target
-                .request("application/json")
-                .get();
-        checkBadResponse(target, response);
-        return response.readEntity(new GenericType<List<String>>() {});
-    }
-
-    void updateSamplePaths(List<String> paths) {
-        WebTarget target = getMouselightDataEndpoint("/sampleRootPaths");
-        Response response = target
-                .request("application/json")
-                .post(Entity.json(paths));
-        checkBadResponse(target, response);
-    }
-    
     Collection<TmSample> getTmSamples() {
         WebTarget target = getMouselightDataEndpoint("/sample");
         Response response = target

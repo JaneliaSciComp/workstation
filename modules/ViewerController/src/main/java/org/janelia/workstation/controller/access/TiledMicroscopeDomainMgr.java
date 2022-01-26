@@ -55,14 +55,6 @@ public class TiledMicroscopeDomainMgr {
     private DomainModel getModel() {
         return DomainMgr.getDomainMgr().getModel();
     }
-
-    public List<String> getSamplePaths() throws Exception {
-        return client.getTmSamplePaths();
-    }
-
-    public void setSamplePaths(List<String> paths) throws Exception {
-        client.updateSamplePaths(paths);
-    }
     
     public TmSample getSample(Long sampleId) throws Exception {
         LOG.debug("getSample(sampleId={})",sampleId);
