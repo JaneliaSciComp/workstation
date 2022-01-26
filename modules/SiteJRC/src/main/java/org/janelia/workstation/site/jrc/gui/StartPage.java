@@ -9,6 +9,7 @@ import org.janelia.model.domain.report.QuotaUsage;
 import org.janelia.model.domain.sample.DataSet;
 import org.janelia.model.domain.sample.LSMImage;
 import org.janelia.model.domain.sample.Sample;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.browser.actions.NewFilterActionListener;
 import org.janelia.workstation.browser.gui.support.SelectablePanel;
 import org.janelia.workstation.common.gui.support.Icons;
@@ -145,11 +146,19 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         button3.addActionListener(e -> searchClass = EMBody.class);
         group.add(button3);
 
+        JToggleButton button4 = new JToggleButton("TM Samples");
+        button4.setFont(mediumFont);
+        button4.setMargin(new Insets(5,5,5,5));
+        button4.addActionListener(e -> searchClass = TmSample.class);
+        group.add(button4);
+
         buttonsPanel.add(button1);
         buttonsPanel.add(Box.createRigidArea(new Dimension(5,0)));
         buttonsPanel.add(button2);
         buttonsPanel.add(Box.createRigidArea(new Dimension(5,0)));
         buttonsPanel.add(button3);
+        buttonsPanel.add(Box.createRigidArea(new Dimension(5,0)));
+        buttonsPanel.add(button4);
         
         // Default search button
         button1.setSelected(true);
