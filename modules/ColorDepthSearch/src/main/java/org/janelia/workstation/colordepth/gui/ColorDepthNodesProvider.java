@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.janelia.workstation.core.options.OptionConstants.SHOW_COLOR_DEPTH_LIBRARIES;
+import static org.janelia.workstation.core.options.OptionConstants.SHOW_COLOR_DEPTH_SEARCHES;
 
 /**
  * Adds the color depth libraries and searches nodes to the Data Explorer.
@@ -76,6 +77,23 @@ public class ColorDepthNodesProvider implements NodeProvider  {
                     Events.getInstance().registerOnEventBus(SEARCHES_NODE_INSTANCE);
                     return SEARCHES_NODE_INSTANCE;
                 }
+            }
+            @Override
+            public NodePreference getNodePreference() {
+                return new NodePreference() {
+                    @Override
+                    public String getNodeName() {
+                        return ColorDepthSearchesNode.NODE_NAME;
+                    }
+                    @Override
+                    public boolean isNodeShown() {
+                        return FrameworkAccess.getModelProperty(SHOW_COLOR_DEPTH_SEARCHES, true);
+                    }
+                    @Override
+                    public void setNodeShown(boolean value) {
+                        FrameworkAccess.setModelProperty(SHOW_COLOR_DEPTH_SEARCHES, value);
+                    }
+                };
             }
         });
     }

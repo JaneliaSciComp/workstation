@@ -1,15 +1,5 @@
 package org.janelia.workstation.colordepth.gui;
 
-import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.JOptionPane;
-
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.gui.cdmip.ColorDepthSearch;
@@ -27,6 +17,13 @@ import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 /**
  * A node which shows the color depth libraries accessible to the current user.
  * 
@@ -36,6 +33,7 @@ public class ColorDepthSearchesNode extends IdentifiableNode {
 
     private final static Logger log = LoggerFactory.getLogger(ColorDepthSearchesNode.class);
 
+    public static final String NODE_NAME = "Color Depth Searches";
     public static final long NODE_ID = 31L; // This magic number means nothing, it just needs to be unique and different from GUID space.
 
     private final ColorDepthSearchesChildFactory childFactory;
@@ -57,7 +55,7 @@ public class ColorDepthSearchesNode extends IdentifiableNode {
 
     @Override
     public String getDisplayName() {
-        return "Color Depth Searches";
+        return NODE_NAME;
     }
 
     @Override
