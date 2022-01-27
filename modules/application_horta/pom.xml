@@ -283,9 +283,9 @@
                         <suite.props.app.title>${project.name.capitalized}</suite.props.app.title>
                         <nbi.install.dir>${clusterName}</nbi.install.dir>
                         <nbi.stub.buildfile>${basedir}/src/main/app-resources/build.xml</nbi.stub.buildfile>
-                        <nbi.icon.file>${basedir}/src/main/app-resources/janeliaws48.png</nbi.icon.file>
-                        <nbi.dock.icon.file>${basedir}/src/main/app-resources/janeliaws.icns</nbi.dock.icon.file>
-                        <nbi.instleftcorner.file>${basedir}/src/main/app-resources/janeliaws48.png</nbi.instleftcorner.file>
+                        <nbi.icon.file>${basedir}/src/main/app-resources/horta48.png</nbi.icon.file>
+                        <nbi.dock.icon.file>${basedir}/src/main/app-resources/horta.icns</nbi.dock.icon.file>
+                        <nbi.instleftcorner.file>${basedir}/src/main/app-resources/horta48.png</nbi.instleftcorner.file>
                         <configuration.logic.file>${basedir}/src/main/app-resources/ConfigurationLogic.java</configuration.logic.file>
                         <unix.launcher.prop.file>${basedir}/src/main/app-resources/unix.launcher.properties</unix.launcher.prop.file>
                         <windows.launcher.prop.file>${basedir}/src/main/app-resources/windows.launcher.properties</windows.launcher.prop.file>
