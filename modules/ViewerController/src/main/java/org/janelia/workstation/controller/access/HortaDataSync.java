@@ -82,16 +82,16 @@ public class HortaDataSync extends CallableSystemAction {
 
             JLabel instructions = new JLabel(
                     "<html><font color='#959595' size='-1'>" +
-                    "Choose a folder to search for TM samples. Each sample folder should contain a transform.txt.<br>" +
+                    "Choose a folder to search for TM sample folders. Each sample folder should contain a transform.txt.<br>" +
                     "Samples will be synchronized with the TM samples owned by the given user or group.<br>" +
                     "If a sample with the same name exits it will be updated. Otherwise a new sample will be created.</font></html>");
 
             attrPanel.addItem(instructions);
 
-            this.pathTextField = new JTextField(60);
+            this.pathTextField = new JTextField(50);
             pathTextField.setToolTipText("The filepath must be accessible to the backend JADE service.\n" +
                     "Each child folder represents a TM Sample if it contains a transform.txt file");
-            attrPanel.addItem("Filepath containing sample imagery folders", pathTextField);
+            attrPanel.addItem("Filepath", pathTextField);
 
             subjectCombobox = new SubjectComboBox();
             subjectCombobox.setToolTipText("User or group who should own the samples");
@@ -152,7 +152,9 @@ public class HortaDataSync extends CallableSystemAction {
                     AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
                     ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
                             .add("-imagesPath", imagesPath);
-                    serviceArgsBuilder.add("-ownerKey", subject.getKey());
+                    if (subject!=null) {
+                        serviceArgsBuilder.add("-ownerKey", subject.getKey());
+                    }
 
                     Long taskId = asyncServiceClient.invokeService("hortaDataSync",
                             serviceArgsBuilder.build(),
