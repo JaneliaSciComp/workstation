@@ -1,18 +1,28 @@
 # Development
 
-## Adding a Module
+## Compile
 
-To add a module, create a new directory for your module under modules/ and create the following files:
+To build the Janelia Workstation application for Janelia Research Campus, use the `janeliaws` profile:
+```
+mvn --batch-mode -T 8 -Djava.awt.headless=true -P janeliaws clean install
+```
 
-* `pom.xml`
-* `src/main/nbm/manifest.mf`
-* `src/main/resources/org/janelia/workstation/<module>/Bundle.properties`
+To build the Janelia HortaCloud application, use the `horta` profile:
+```
+mvn --batch-mode -T 8 -Djava.awt.headless=true -P horta clean install
+```
 
-You can follow any of the existing modules as a guide for the content of these files. Make sure to change the module's **name** and **artifact** in `pom.xml`!
+## Run
 
-Next, edit `pom.xml` at the top-level and add your module to the `<modules>` section at the bottom. This will make it part of the build.
+To run the Janelia Workstation application, use the `janeliaws` profile:
+```
+mvn --batch-mode -T 8 -Djava.awt.headless=true -P janeliaws nbm:cluster-app nbm:run-platform
+```
 
-Finally, edit the `pom.xml` for one or more applications (e.g. `modules/application/pom.xml` or `modules/application_horta/pom.xml`), and add your module as a dependency. This will include it into the default configuration for that application. 
+To run the Janelia HortaCloud application, use the `horta` profile:
+```
+mvn --batch-mode -T 8 -Djava.awt.headless=true -P horta nbm:cluster-app nbm:run-platform
+```
 
 ## IntelliJ Debugging
 
@@ -28,3 +38,17 @@ There are many ways to set up
 2)  Create a new Run Configuration of type "Remote" and set it to mode "Attach to remote JVM". The host and port should default to localhost:5005, as we configured above. Running this will begin debugging the Workstation session. 
 
 3) Run the Workstation as normal, and any time you want to debug, just run the debugger configuration after starting the Workstation.
+
+## Adding a Module
+
+To add a module, create a new directory for your module under modules/ and create the following files:
+
+* `pom.xml`
+* `src/main/nbm/manifest.mf`
+* `src/main/resources/org/janelia/workstation/<module>/Bundle.properties`
+
+You can follow any of the existing modules as a guide for the content of these files. Make sure to change the module's **name** and **artifact** in `pom.xml`!
+
+Next, edit `pom.xml` at the top-level and add your module to the `<modules>` section at the bottom. This will make it part of the build.
+
+Finally, edit the `pom.xml` for one or more applications (e.g. `modules/application/pom.xml` or `modules/application_horta/pom.xml`), and add your module as a dependency. This will include it into the default configuration for that application. 
