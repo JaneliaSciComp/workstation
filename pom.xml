@@ -55,8 +55,11 @@
 
         <!-- NBM Plugin settings -->
         <project.name.capitalized>Janelia Workstation</project.name.capitalized>
+
         <brandingToken>janeliaws</brandingToken>
         <clusterName>JaneliaWorkstation</clusterName>
+        <janeliaws.appbundle.name>Janelia Workstation</janeliaws.appbundle.name>
+
         <all.clusters>${project.build.directory}/${clusterName}</all.clusters>
         <janeliaws.app.title>${project.name.capitalized} ${project.version}</janeliaws.app.title>
 
@@ -94,8 +97,6 @@
         <janeliaws.test.failureIgnore>${testFailureIgnore}</janeliaws.test.failureIgnore>
 
         <janeliaws.debug.args></janeliaws.debug.args>
-        <!-- Mac OS X bundle settings -->
-        <janeliaws.appbundle.name>Janelia Workstation</janeliaws.appbundle.name>
 
         <!-- Mac OS X signing identity - must match with a verified Apple developer certificate in the keychain -->
         <janeliaws.codesign.identity>Developer ID Application</janeliaws.codesign.identity>
@@ -1124,6 +1125,7 @@
             <properties>
                 <brandingToken>janeliaws</brandingToken>
                 <clusterName>JaneliaWorkstation</clusterName>
+                <janeliaws.appbundle.name>Janelia Workstation</janeliaws.appbundle.name>
             </properties>
             <modules>
                 <module>modules/application</module>
@@ -1136,6 +1138,7 @@
             <properties>
                 <brandingToken>horta</brandingToken>
                 <clusterName>Horta</clusterName>
+                <janeliaws.appbundle.name>Janelia HortaCloud</janeliaws.appbundle.name>
             </properties>
             <modules>
                 <module>modules/application_horta</module>
