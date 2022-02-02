@@ -1,11 +1,12 @@
 // 9.8
 
-Data Browser
-* Factored LM functionality into its own module
-* Unified actions between the grid view and Sample view
+Workstation Installer
+* Fixed installer on Mac when there is a JDK 11+ installed
 
-Color Depth Search
-* Factored into its own module
+Data Browser
+* Factored LM functionality into separate modules
+* Unified actions between the grid view and Sample view
+* Fixed bug with "Customize titles" feature
 
 Horta
 * Added Services -> Load Horta Data to automatically discover MouseLight data
