@@ -31,13 +31,13 @@ jobs:
             mkdir private && echo $DNAME && 
             keytool -v -noprompt -genkey -validity 360 -storepass $KEYSTORE_PASSWORD -keypass $KEYSTORE_PASSWORD -alias janeliaws -keystore private/keystore -dname "$DNAME"
       
-      - run: mvn --batch-mode -Djava.awt.headless=true -Dkeystorepass=$KEYSTORE_PASSWORD clean install
+      - run: mvn --batch-mode -Djava.awt.headless=true -Dkeystorepass=$KEYSTORE_PASSWORD clean install -P janeliaws
 
       - save_cache:
           paths:
             - ~/.m2
           key: v1-dependencies-c3-{{ checksum "pom.xml" }}
       
-      - run: cd modules/application && mvn --batch-mode -Djava.awt.headless=true -Dkeystorepass=$KEYSTORE_PASSWORD package -P deployment
+      - run: cd modules/application && mvn --batch-mode -Djava.awt.headless=true -Dkeystorepass=$KEYSTORE_PASSWORD package -P janeliaws,deployment
 
 
