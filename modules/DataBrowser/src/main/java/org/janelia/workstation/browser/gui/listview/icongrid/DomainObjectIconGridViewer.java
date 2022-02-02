@@ -592,7 +592,7 @@ public class DomainObjectIconGridViewer
 
             IconGridViewerConfigDialog configDialog = new IconGridViewerConfigDialog(firstObject.getClass());
             if (configDialog.showDialog(this)==1) {
-                this.config = IconGridViewerConfiguration.loadConfig();
+                this.config = configDialog.getConfig();
                 refresh();
             }
         }
