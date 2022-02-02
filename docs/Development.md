@@ -1,6 +1,8 @@
 # Development
 
-## Compile
+The Janelia Workstation is built on top of the [Apache NetBeans Platform](https://netbeans.apache.org/kb/docs/platform/). It is recommended for developers to get familiar with the concepts used in this framework before diving into Workstation development. The best starting point is _The Definitive Guide to NetBeans Platform_ by Heiko Bock. 
+
+## Building
 
 To build the Janelia Workstation application for Janelia Research Campus, use the `janeliaws` profile:
 ```
@@ -12,7 +14,7 @@ To build the Janelia HortaCloud application, use the `horta` profile:
 mvn --batch-mode -T 8 -Djava.awt.headless=true -P horta clean install
 ```
 
-## Run
+## Running 
 
 To run the Janelia Workstation application, use the `janeliaws` profile:
 ```
@@ -24,7 +26,7 @@ To run the Janelia HortaCloud application, use the `horta` profile:
 mvn --batch-mode -T 8 -Djava.awt.headless=true -P horta nbm:cluster-app nbm:run-platform
 ```
 
-## IntelliJ Debugging
+## Debugging in IntelliJ
 
 There are many ways to set up 
 [debugging in IntelliJ](https://www.jetbrains.com/help/idea/attaching-to-local-process.html). Here's one way, where you can run the Workstation normally each time and add a debugger if you need it:
@@ -47,7 +49,7 @@ To add a module, create a new directory for your module under modules/ and creat
 * `src/main/nbm/manifest.mf`
 * `src/main/resources/org/janelia/workstation/<module>/Bundle.properties`
 
-You can follow any of the existing modules as a guide for the content of these files. Make sure to change the module's **name** and **artifact** in `pom.xml`!
+You can follow any of the existing modules as a guide for the content of these files. Make sure to change the module's **name** and **artifact** in `pom.xml`.
 
 Next, edit `pom.xml` at the top-level and add your module to the `<modules>` section at the bottom. This will make it part of the build.
 
