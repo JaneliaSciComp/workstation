@@ -192,6 +192,13 @@ public class LocalPreferenceMgr {
         return (T) modelProperties.get(key);
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T getModelPropertyWithDefaultAs(Object key, T defaultValue, Class<T> propertyClass) {
+        if (modelProperties == null) throw new IllegalStateException("Local preferences have not yet been initialized");
+        T val =  (T) modelProperties.get(key);
+        return val == null ? defaultValue : val;
+    }
+
     public Integer getFileCacheGigabyteCapacity() {
         Integer cacheCapacityInGB = getModelPropertyAs(OptionConstants.FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY, Integer.class);
         return cacheCapacityInGB != null ? cacheCapacityInGB : DEFAULT_FILE_CACHE_GIGABYTE_CAPACITY;
