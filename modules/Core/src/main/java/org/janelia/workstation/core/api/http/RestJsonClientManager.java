@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
-import javax.net.ssl.SSLContext;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -106,11 +105,7 @@ public class RestJsonClientManager {
             clientResponseContext.setStatus(resp.getStatus());
         };
 
-        SSLContext sslContext = HttpClientManager.createSSLContext();
-
         return ClientBuilder.newBuilder()
-                .sslContext(sslContext)
-                .hostnameVerifier((s, sslSession) -> true)
                 .register(MultiPartFeature.class)
                 .register(jsonProvider)
                 .register(headerFilter)
