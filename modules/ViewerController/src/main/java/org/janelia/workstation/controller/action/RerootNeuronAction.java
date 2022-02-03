@@ -16,7 +16,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 @ActionID(
-        category = "actions",
+        category = "Horta",
         id = "RerootNeuronAction"
 )
 @ActionRegistration(
@@ -29,7 +29,7 @@ public class RerootNeuronAction extends AbstractAction {
     private static final Logger log = LoggerFactory.getLogger(RerootNeuronAction.class);
 
     public RerootNeuronAction() {
-        super("Split neuron between vertices");
+        super("Set anchor as root");
     }
 
     @Override

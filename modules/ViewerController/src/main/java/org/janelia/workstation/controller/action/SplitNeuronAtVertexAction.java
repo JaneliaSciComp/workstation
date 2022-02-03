@@ -26,7 +26,7 @@ import java.awt.event.ActionEvent;
 public class SplitNeuronAtVertexAction extends AbstractAction {
 
     public SplitNeuronAtVertexAction() {
-        super("Split neuron at vertex");
+        super("Split neurite");
     }
 
     @Override

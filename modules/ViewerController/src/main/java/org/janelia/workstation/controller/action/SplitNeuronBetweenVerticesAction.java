@@ -16,7 +16,7 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 @ActionID(
-        category = "actions",
+        category = "Horta",
         id = "SplitNeuronBetweenVerticesAction"
 )
 @ActionRegistration(
@@ -35,7 +35,7 @@ public class SplitNeuronBetweenVerticesAction extends AbstractAction {
     private static final Logger log = LoggerFactory.getLogger(SplitNeuronBetweenVerticesAction.class);
 
     public SplitNeuronBetweenVerticesAction() {
-        super("Split neuron between vertices");
+        super("Split anchor");
     }
 
     @Override
