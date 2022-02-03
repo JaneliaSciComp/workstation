@@ -36,7 +36,7 @@ public class AuthServiceClient extends RESTClientBase {
     public String obtainToken(String username, String password) throws AuthenticationException, ServiceException {
         AuthBody body = new AuthBody();
         body.setUsername(username);
-        body.setPassword(password);
+        body.setPassword(password == null ? "" : password);
         WebTarget target = service.path("authenticate");
         Response response = target
                 .request("application/json")

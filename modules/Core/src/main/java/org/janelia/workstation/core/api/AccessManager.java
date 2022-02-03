@@ -158,8 +158,9 @@ public final class AccessManager {
         LocalPreferenceMgr prefs = LocalPreferenceMgr.getInstance();
         String username = (String)prefs.getModelProperty(AccessManager.USER_NAME);
         String password = (String)prefs.getModelProperty(AccessManager.USER_PASSWORD);
+        Boolean remember = prefs.getModelPropertyAs(AccessManager.REMEMBER_PASSWORD, Boolean.class);
 
-        if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password)) {
+        if (!StringUtils.isEmpty(username) && (remember != null && remember || !StringUtils.isEmpty(password))) {
             try {
                 if (loginUser(username, password)) {
                     hadLoginIssue = false;
