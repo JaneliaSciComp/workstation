@@ -102,6 +102,20 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         return response.readEntity(new GenericType<List<DomainObject>>() {});
     }
 
+    @Override
+    public <T extends DomainObject> List<T> getDomainObjectsWithProperty(String className, String propertyName, String propertyValue) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setObjectType(className);
+        query.setPropertyName(propertyName);
+        query.setPropertyValue(propertyValue);
+        WebTarget target = service.path("data/domainobject/withproperty");
+        Response response = target
+                .request("application/json")
+                .post(Entity.json(query));
+        checkBadResponse(target, response);
+        return response.readEntity(new GenericType<List<T>>() {});
+    }
 
     @Override
     public <T extends DomainObject> List<T> getDomainObjects(String className, Collection<Long> ids) throws Exception {
@@ -120,7 +134,6 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
     @Override
     public List<DomainObject> getAllDomainObjectsByClass(String className) throws Exception {
         DomainQuery query = new DomainQuery();
-        // Not using a subject key: these are universal collections.
         query.setObjectType(className);
         query.setSubjectKey(AccessManager.getSubjectKey());
         WebTarget target = service.path("data/domainobject/class");

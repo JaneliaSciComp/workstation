@@ -543,6 +543,11 @@ public class DomainModel {
         return putOrUpdate(domainObjects, false);
     }
 
+    public List<DomainObject> getDomainObjectsWithProperty(String className, String propertyName, String propertyValue) throws Exception {
+        List<DomainObject> domainObjects = domainFacade.getDomainObjectsWithProperty(className, propertyName, propertyValue);
+        return putOrUpdate(domainObjects, false);
+    }
+
     @SuppressWarnings("unchecked")
     public <T extends DomainObject> List<T> getDomainObjectsAs(Class<T> clazz, ReverseReference reverseReference) throws Exception {
         List<DomainObject> domainObjects = domainFacade.getDomainObjects(reverseReference);

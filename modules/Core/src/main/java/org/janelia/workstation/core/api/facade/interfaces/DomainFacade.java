@@ -54,6 +54,17 @@ public interface DomainFacade {
     List<DomainObject> getDomainObjects(ReverseReference reference) throws Exception;
 
     /**
+     * Returns domain objects with the given property value.
+     * @param className
+     * @param propertyName
+     * @param propertyValue
+     * @param <T>
+     * @return
+     * @throws Exception
+     */
+    <T extends DomainObject> List<T> getDomainObjectsWithProperty(String className, String propertyName, String propertyValue) throws Exception;
+
+    /**
      * Returns the domain objects of a particular type, given by the list of GUIDs. 
      * @param className class name
      * @param ids collection of GUIDs

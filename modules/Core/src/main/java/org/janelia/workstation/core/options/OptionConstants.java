@@ -11,6 +11,7 @@ public class OptionConstants {
     public static final String DISPLAY_RENDERER_2D = "SessionMgr.Renderer2D";
     public static final String NAVIGATE_ON_CLICK = "SessionMgr.NavigateOnClick";
     public static final String SHOW_RECENTLY_OPENED_ITEMS = "SessionMgr.ShowRecentlyOpenedItems";
+    public static final String SHOW_SYNCHED_ROOTS = "SessionMgr.ShowSynchedRoots";
     public static final String SHOW_FLY_LINE_RELEASES = "SessionMgr.ShowFlyLineReleases";
     public static final String SHOW_DATA_SETS = "SessionMgr.ShowDataSets";
     public static final String SHOW_EM_DATA_SETS = "SessionMgr.ShowEMDataSets";
