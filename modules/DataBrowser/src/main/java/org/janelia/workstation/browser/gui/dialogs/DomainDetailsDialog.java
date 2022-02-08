@@ -42,7 +42,7 @@ public class DomainDetailsDialog extends ModalDialog {
         
         setModalityType(ModalityType.APPLICATION_MODAL);
 
-        this.detailsPanel = new DomainInspectorPanel();
+        this.detailsPanel = new DomainInspectorPanel(this);
         add(detailsPanel, BorderLayout.CENTER);
         
         // Buttons

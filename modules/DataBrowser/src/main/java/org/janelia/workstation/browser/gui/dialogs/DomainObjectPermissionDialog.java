@@ -43,10 +43,10 @@ public class DomainObjectPermissionDialog extends ModalDialog {
     private DomainObjectPermission dop;
     private DomainObject domainObject;
 
-    public DomainObjectPermissionDialog(DomainInspectorPanel parent) {
+    public DomainObjectPermissionDialog(ModalDialog parentDialog, DomainInspectorPanel parentPanel) {
 
-        super(parent);
-        this.parent = parent;
+        super(parentDialog);
+        this.parent = parentPanel;
 
         setTitle("Add permission");
 

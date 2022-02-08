@@ -61,7 +61,7 @@ public final class DomainInspectorTopComponent extends TopComponent {
         initComponents();
         setName(Bundle.CTL_DomainInspectorTopComponent());
         setToolTipText(Bundle.HINT_DomainInspectorTopComponent());
-        this.detailsPanel = new DomainInspectorPanel();
+        this.detailsPanel = new DomainInspectorPanel(null);
         add(detailsPanel, BorderLayout.CENTER);
     }
 

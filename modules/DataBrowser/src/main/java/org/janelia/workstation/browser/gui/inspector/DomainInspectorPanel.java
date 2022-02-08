@@ -13,6 +13,7 @@ import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.model.security.Subject;
 import org.janelia.workstation.browser.gui.dialogs.DomainObjectPermissionDialog;
 import org.janelia.workstation.browser.gui.support.AnnotationTablePanel;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.AnnotationView;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.table.DynamicColumn;
@@ -93,7 +94,7 @@ public class DomainInspectorPanel extends JPanel {
         return loadingLabel;
     }
 
-    public DomainInspectorPanel() {
+    public DomainInspectorPanel(ModalDialog parentDialog) {
 
         setLayout(new BorderLayout());
 
@@ -102,7 +103,7 @@ public class DomainInspectorPanel extends JPanel {
         tabNames.add(TAB_NAME_ANNOTATIONS);
 
         // Child dialogs
-        dopDialog = new DomainObjectPermissionDialog(this);
+        dopDialog = new DomainObjectPermissionDialog(parentDialog, this);
 
         // Tabbed pane
         tabbedPane = new JTabbedPane();
