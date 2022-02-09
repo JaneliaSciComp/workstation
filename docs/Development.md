@@ -18,12 +18,12 @@ mvn --batch-mode -T 8 -Djava.awt.headless=true -P horta clean install
 
 To run the Janelia Workstation application, use the `janeliaws` profile:
 ```
-mvn --batch-mode -T 8 -Djava.awt.headless=true -P janeliaws nbm:cluster-app nbm:run-platform
+mvn --batch-mode -T 8 -Djava.awt.headless=true -f modules/application/pom.xml -P janeliaws nbm:cluster-app nbm:run-platform
 ```
 
 To run the Janelia HortaCloud application, use the `horta` profile:
 ```
-mvn --batch-mode -T 8 -Djava.awt.headless=true -P horta nbm:cluster-app nbm:run-platform
+mvn --batch-mode -T 8 -Djava.awt.headless=true -f modules/application_horta/pom.xml  -P horta nbm:cluster-app nbm:run-platform
 ```
 
 ## Debugging in IntelliJ
