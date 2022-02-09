@@ -308,6 +308,13 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- ND Viewer -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>ndviewer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- GL Viewer --> 
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
@@ -1161,6 +1168,7 @@
         <module>modules/HortaTracer</module>
         <module>modules/LargeVolumeViewer</module>
         <module>modules/Viewer3D</module>
+        <module>modules/NDViewer</module>
         <module>modules/ViewerController</module>
         <module>modules/ViewerInfoPanel</module>
         <module>modules/GLViewerTools</module>
