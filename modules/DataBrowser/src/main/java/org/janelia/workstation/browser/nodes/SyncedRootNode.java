@@ -3,6 +3,7 @@ package org.janelia.workstation.browser.nodes;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.files.SyncedRoot;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
+import org.janelia.workstation.browser.actions.NewSyncedRootAction;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
@@ -24,7 +25,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * A node corresponding to a single SynchedRoot in the domain model. It shows the root's SynchedPaths as children.
+ * A node corresponding to a single SyncedRoot in the domain model. It shows the root's SynchedPaths as children.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
@@ -115,13 +116,12 @@ public class SyncedRootNode extends IdentifiableNode {
     protected final class SearchAction extends AbstractAction {
 
         SearchAction() {
-            putValue(NAME, "Search Color Depth MIPs");
+            putValue(NAME, "Add Synchronized Folder...");
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "To search a library, right-click any color depth MIP and select 'Create Mask for Color Depth Search'");
+            NewSyncedRootAction.get().actionPerformed(e);
         }
     }
 
