@@ -44,7 +44,9 @@ public class BulkEditAnnotationKeyValueAction extends AbstractAction {
         SimpleWorker worker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                
+
+                if (annotation.getKeyTerm()==null) throw new Exception("This annotation has no key term and cannot be modified");
+
                 Ontology ontology = model.getDomainObject(Ontology.class, annotation.getKeyTerm().getOntologyId());
                 AnnotationEditor editor = new AnnotationEditor(ontology, annotation);
                 String newValue = editor.showEditor();

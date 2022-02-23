@@ -82,7 +82,7 @@ public class RemoveAnnotationsAction extends AbstractAction {
                 List<Annotation> toRemove = new ArrayList<>();
                 List<Annotation> annotations = model.getAnnotations(DomainUtils.getReferences(selectedObjects));
                 for (Annotation annotation : annotations) {
-                    if (ClientDomainUtils.hasWriteAccess(annotation)) {
+                    if (ClientDomainUtils.hasWriteAccess(annotation) && annotation.getKeyTerm()!=null) {
                         if (matchIdOrName && StringUtils.equals(annotation.getName(), RemoveAnnotationsAction.this.annotation.getName())) {
                             toRemove.add(annotation);
                         }
