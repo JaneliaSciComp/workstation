@@ -957,13 +957,16 @@ public class DomainModel {
         notifyDomainObjectRemoved(dataSet);
     }
 
-
     public List<SyncedRoot> getSyncedRoots() throws Exception {
-        return workspaceFacade.getSyncedRoots();
+        List<SyncedRoot> syncedRoots = workspaceFacade.getSyncedRoots();
+        List<SyncedRoot> canonicalObjects = putOrUpdate(syncedRoots, false);
+        return canonicalObjects;
     }
 
     public List<SyncedPath> getChildren(SyncedRoot root) throws Exception {
-        return workspaceFacade.getChildren(root);
+        List<SyncedPath> syncedRoots = workspaceFacade.getChildren(root);
+        List<SyncedPath> canonicalObjects = putOrUpdate(syncedRoots, false);
+        return canonicalObjects;
     }
 
     public SyncedRoot save(SyncedRoot syncedRoot) throws Exception {
@@ -984,8 +987,6 @@ public class DomainModel {
         workspaceFacade.remove(syncedRoot);
         notifyDomainObjectRemoved(syncedRoot);
     }
-
-
 
     public Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, String value) throws Exception {
         Annotation canonicalObject;

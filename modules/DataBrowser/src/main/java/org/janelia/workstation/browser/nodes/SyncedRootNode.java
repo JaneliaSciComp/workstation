@@ -25,7 +25,7 @@ public class SyncedRootNode extends AbstractDomainObjectNode<SyncedRoot> {
 
     private final static Logger log = LoggerFactory.getLogger(SyncedRootNode.class);
 
-    SyncedRootNode(ChildFactory<?> parentChildFactory, SyncedRoot library) {
+    public SyncedRootNode(ChildFactory<?> parentChildFactory, SyncedRoot library) {
         this(parentChildFactory, new SyncedPathFactory(library), library);
     }
 
@@ -50,10 +50,10 @@ public class SyncedRootNode extends AbstractDomainObjectNode<SyncedRoot> {
     @Override
     public Image getIcon(int type) {
         if (ClientDomainUtils.isOwner(getSyncedRoot())) {
-            return Icons.getIcon("folder_database.png").getImage();
+            return Icons.getIcon("folder_brick.png").getImage();
         }
         else {
-            return Icons.getIcon("folder_blue_database.png").getImage();
+            return Icons.getIcon("folder_blue.png").getImage();
         }
     }
 
@@ -77,7 +77,9 @@ public class SyncedRootNode extends AbstractDomainObjectNode<SyncedRoot> {
                 int c = 0;
                 List<SyncedPath> children = DomainMgr.getDomainMgr().getModel().getChildren(syncedRoot);
                 for (SyncedPath syncedPath : children) {
-                    list.add(syncedPath);
+                    if (syncedPath.isExistsInStorage()) {
+                        list.add(syncedPath);
+                    }
                 }
             }
             catch (Exception ex) {

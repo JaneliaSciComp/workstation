@@ -72,7 +72,7 @@ public class SyncedRootsNode extends IdentifiableNode {
     
     @Override
     public Image getIcon(int type) {
-        return Icons.getIcon("folder_database.png").getImage();
+        return Icons.getIcon("folder_page.png").getImage();
     }
 
     @Override

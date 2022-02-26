@@ -255,7 +255,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
     @Override
     public void remove(SyncedRoot syncedRoot) throws Exception {
         String currentPrincipal = AccessManager.getSubjectKey();
-        WebTarget target = service.path("data/domainobject/remove");
+        WebTarget target = service.path("data/syncedRoot");
         Response response = target
                 .queryParam("subjectKey", currentPrincipal)
                 .queryParam("syncedRootId", syncedRoot.getId())

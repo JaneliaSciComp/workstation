@@ -10,6 +10,7 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.web.AsyncServiceClient;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 import org.janelia.workstation.core.workers.BackgroundWorker;
+import org.janelia.workstation.core.workers.SimpleWorker;
 
 import javax.swing.*;
 import java.awt.*;
@@ -132,9 +133,16 @@ public class SyncedRootDialog extends ModalDialog {
             }
         }
 
+        refreshSyncedRoot(syncedRoot);
+
+        setVisible(false);
+    }
+
+    public static void refreshSyncedRoot(SyncedRoot root) {
+
         BackgroundWorker worker = new AsyncServiceMonitoringWorker() {
 
-            private String taskDisplayName = "Synchronizing Folder "+syncedRoot.getName();
+            private String taskDisplayName = "Synchronizing Folder "+root.getName();
 
             @Override
             public String getName() {
@@ -144,18 +152,12 @@ public class SyncedRootDialog extends ModalDialog {
             @Override
             protected void doStuff() throws Exception {
 
-                SyncedRoot savedRoot = DomainMgr.getDomainMgr().getModel().save(syncedRoot);
+                SyncedRoot savedRoot = DomainMgr.getDomainMgr().getModel().save(root);
 
                 setStatus("Submitting task " + taskDisplayName);
-
-                String[] discoveryAgents = savedRoot.getDiscoveryAgents().stream()
-                        .map(DiscoveryAgentType::getLabel).toArray(String[]::new);
-
                 AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
                 ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
-                        .add("-syncedRootId", savedRoot.getId().toString())
-                        .add("-discoveryAgents")
-                        .add(discoveryAgents);
+                        .add("-syncedRootId", savedRoot.getId().toString());
 
                 Long taskId = asyncServiceClient.invokeService("syncedRoot",
                         serviceArgsBuilder.build(),
@@ -173,8 +175,10 @@ public class SyncedRootDialog extends ModalDialog {
             }
 
         };
+        worker.setSuccessCallback(() -> {
+            SimpleWorker.runInBackground(() -> DomainMgr.getDomainMgr().getModel().invalidate(root));
+            return null;
+        });
         worker.executeWithEvents();
-
-        setVisible(false);
     }
 }

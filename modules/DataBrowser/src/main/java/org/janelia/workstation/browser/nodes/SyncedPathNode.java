@@ -30,7 +30,7 @@ public class SyncedPathNode extends AbstractDomainObjectNode<SyncedPath> {
 
     @Override
     public Image getIcon(int type) {
-        return Icons.getIcon("folder_red.png").getImage();
+        return Icons.getIcon("brick_grey.png").getImage();
     }
 
     @Override
