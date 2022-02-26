@@ -62,8 +62,7 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
         if (getNodeContext().isOnlyObjectsOfType(Sample.class)) {
             for (Sample sample : getNodeContext().getOnlyObjectsOfType(Sample.class)) {
                 boolean canWrite = ClientDomainUtils.hasWriteAccess(sample);
-                boolean canRerun = (!PipelineStatus.Processing.toString().equals(sample.getStatus())  &&
-                        !PipelineStatus.Scheduled.toString().equals(sample.getStatus()));
+                boolean canRerun = (!PipelineStatus.Scheduled.toString().equals(sample.getStatus()));
 
                 if ((canWrite && canRerun) || AccessManager.getAccessManager().isAdmin()) {
                     samples.add(sample);
