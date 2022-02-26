@@ -3,7 +3,6 @@ package org.janelia.workstation.browser.nodes;
 import org.janelia.model.domain.files.SyncedPath;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
-import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
 
 import java.awt.*;
@@ -16,12 +15,8 @@ import java.awt.*;
  */
 public class SyncedPathNode extends AbstractDomainObjectNode<SyncedPath> {
 
-    public SyncedPathNode(ChildFactory<?> parentChildFactory, Children children, SyncedPath path) {
-        super(parentChildFactory, children, path);
-    }
-
-    public SyncedPathNode(ChildFactory<?> parentChildFactory, SyncedPath path) {
-        this(parentChildFactory, Children.LEAF, path);
+    public SyncedPathNode(SyncedPath syncedPath) {
+        super(null, Children.LEAF, syncedPath);
     }
 
     public SyncedPath getSyncedPath() {

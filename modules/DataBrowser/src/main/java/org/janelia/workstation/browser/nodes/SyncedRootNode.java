@@ -1,15 +1,11 @@
 package org.janelia.workstation.browser.nodes;
 
-import com.google.common.eventbus.Subscribe;
+import org.janelia.model.domain.files.SyncedPath;
 import org.janelia.model.domain.files.SyncedRoot;
-import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
-import org.janelia.workstation.browser.actions.NewSyncedRootAction;
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.events.model.DomainObjectCreateEvent;
-import org.janelia.workstation.core.events.model.DomainObjectRemoveEvent;
-import org.janelia.workstation.core.nodes.IdentifiableNode;
-import org.janelia.workstation.core.nodes.NodeTracker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -17,121 +13,72 @@ import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 /**
- * A node corresponding to a single SyncedRoot in the domain model. It shows the root's SynchedPaths as children.
+ * A node corresponding to a single SyncedRoot in the domain model. It shows the root's SyncedPaths as children.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SyncedRootNode extends IdentifiableNode {
+public class SyncedRootNode extends AbstractDomainObjectNode<SyncedRoot> {
 
     private final static Logger log = LoggerFactory.getLogger(SyncedRootNode.class);
 
-    public static final String NODE_NAME = "Synchronized Folders";
-    public static final long NODE_ID = 30L; // This magic number means nothing, it just needs to be unique and different from GUID space.
-
-    private final SyncedRootChildFactory childFactory;
-
-    SyncedRootNode() {
-        this(new SyncedRootChildFactory());
+    SyncedRootNode(ChildFactory<?> parentChildFactory, SyncedRoot library) {
+        this(parentChildFactory, new SyncedPathFactory(library), library);
     }
 
-    private SyncedRootNode(SyncedRootChildFactory childFactory) {
-        super(Children.create(childFactory, false));
-        this.childFactory = childFactory;
-        NodeTracker.getInstance().registerNode(this);
+    private SyncedRootNode(ChildFactory<?> parentChildFactory, final SyncedPathFactory childFactory, SyncedRoot library) {
+        super(parentChildFactory, library.getPaths().getCount()==0 ? Children.LEAF : Children.create(childFactory, false), library);
     }
 
     @Override
     public Long getId() {
-        return NODE_ID;
+        return getSyncedRoot().getId();
+    }
+
+    public SyncedRoot getSyncedRoot() {
+        return getDomainObject();
     }
 
     @Override
-    public String getDisplayName() {
-        return NODE_NAME;
+    public String getPrimaryLabel() {
+        return getSyncedRoot().getName();
     }
 
-    @Override
-    public String getHtmlDisplayName() {
-        String primary = getDisplayName();
-        StringBuilder sb = new StringBuilder();
-        if (primary!=null) {
-            sb.append("<font color='!Label.foreground'>");
-            sb.append(primary);
-            sb.append("</font>");
-        }
-        return sb.toString();
-    }
-    
     @Override
     public Image getIcon(int type) {
-        return Icons.getIcon("folder_database.png").getImage();
-    }
-
-    @Override
-    public Image getOpenedIcon(int type) {
-        return getIcon(type);
+        if (ClientDomainUtils.isOwner(getSyncedRoot())) {
+            return Icons.getIcon("folder_database.png").getImage();
+        }
+        else {
+            return Icons.getIcon("folder_blue_database.png").getImage();
+        }
     }
 
     @Override
     public boolean canDestroy() {
-        return false;
+        return true;
     }
 
-    public void refreshChildren() {
-        childFactory.refresh();
-    }
+    private static class SyncedPathFactory extends ChildFactory<SyncedPath> {
 
-    @Override
-    public Action[] getActions(boolean context) {
-        Collection<Action> actions = new ArrayList<>();
-        actions.add(new PopupLabelAction());
-        actions.add(new SearchAction());
-        return actions.toArray(new Action[0]);
-    }
+        private SyncedRoot syncedRoot;
 
-    protected final class PopupLabelAction extends AbstractAction {
-
-        PopupLabelAction() {
-            putValue(NAME, getDisplayName());
+        SyncedPathFactory(SyncedRoot syncedRoot) {
+            this.syncedRoot = syncedRoot;
         }
 
         @Override
-        public void actionPerformed(ActionEvent e) {
-        }
-
-        @Override
-        public boolean isEnabled() {
-            return false;
-        }
-    }
-
-    protected final class SearchAction extends AbstractAction {
-
-        SearchAction() {
-            putValue(NAME, "Add Synchronized Folder...");
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            NewSyncedRootAction.get().actionPerformed(e);
-        }
-    }
-
-    private static class SyncedRootChildFactory extends ChildFactory<SyncedRoot> {
-
-        @Override
-        protected boolean createKeys(List<SyncedRoot> list) {
+        protected boolean createKeys(java.util.List<SyncedPath> list) {
             try {
                 log.debug("Creating children keys for SyncedRootNode");
-                list.addAll(DomainMgr.getDomainMgr().getModel().getAllDomainObjectsByClass(SyncedRoot.class));
+                int c = 0;
+                List<SyncedPath> children = DomainMgr.getDomainMgr().getModel().getChildren(syncedRoot);
+                for (SyncedPath syncedPath : children) {
+                    list.add(syncedPath);
+                }
             }
             catch (Exception ex) {
                 FrameworkAccess.handleException(ex);
@@ -140,9 +87,9 @@ public class SyncedRootNode extends IdentifiableNode {
         }
 
         @Override
-        protected Node createNodeForKey(SyncedRoot key) {
+        protected Node createNodeForKey(SyncedPath key) {
             try {
-                return new SyncedPathNode(this, key);
+                return new SyncedPathNode(key);
             }
             catch (Exception e) {
                 log.error("Error creating node for key " + key, e);
@@ -153,20 +100,6 @@ public class SyncedRootNode extends IdentifiableNode {
         public void refresh() {
             log.debug("Refreshing child factory for "+getClass().getSimpleName());
             refresh(true);
-        }
-    }
-
-    @Subscribe
-    public void domainObjectAdded(DomainObjectCreateEvent event) {
-        if (event.getDomainObject() instanceof ColorDepthLibrary) {
-            refreshChildren();
-        }
-    }
-
-    @Subscribe
-    public void domainObjectRemoved(DomainObjectRemoveEvent event) {
-        if (event.getDomainObject() instanceof ColorDepthLibrary) {
-            refreshChildren();
         }
     }
 }

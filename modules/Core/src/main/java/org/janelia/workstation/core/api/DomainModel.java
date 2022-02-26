@@ -9,6 +9,8 @@ import org.janelia.model.access.domain.search.DocumentSearchResults;
 import org.janelia.model.domain.*;
 import org.janelia.model.domain.compute.ContainerizedService;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
+import org.janelia.model.domain.files.SyncedPath;
+import org.janelia.model.domain.files.SyncedRoot;
 import org.janelia.model.domain.flyem.EMDataSet;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
@@ -954,6 +956,36 @@ public class DomainModel {
         sampleFacade.remove(dataSet);
         notifyDomainObjectRemoved(dataSet);
     }
+
+
+    public List<SyncedRoot> getSyncedRoots() throws Exception {
+        return workspaceFacade.getSyncedRoots();
+    }
+
+    public List<SyncedPath> getChildren(SyncedRoot root) throws Exception {
+        return workspaceFacade.getChildren(root);
+    }
+
+    public SyncedRoot save(SyncedRoot syncedRoot) throws Exception {
+        SyncedRoot canonicalObject;
+        boolean create = syncedRoot.getId() == null;
+        synchronized (modelLock) {
+            canonicalObject = putOrUpdate(create ? workspaceFacade.create(syncedRoot) : workspaceFacade.update(syncedRoot));
+        }
+        if (create) {
+            notifyDomainObjectCreated(canonicalObject);
+        } else {
+            notifyDomainObjectChanged(canonicalObject);
+        }
+        return canonicalObject;
+    }
+
+    public void remove(SyncedRoot syncedRoot) throws Exception {
+        workspaceFacade.remove(syncedRoot);
+        notifyDomainObjectRemoved(syncedRoot);
+    }
+
+
 
     public Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, String value) throws Exception {
         Annotation canonicalObject;

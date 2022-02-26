@@ -7,6 +7,8 @@ import org.janelia.model.access.domain.search.DocumentSearchResults;
 import org.janelia.model.access.domain.search.DocumentSearchParams;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.files.SyncedPath;
+import org.janelia.model.domain.files.SyncedRoot;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
@@ -110,5 +112,43 @@ public interface WorkspaceFacade {
      * @throws Exception something went wrong
      */
     List<Reference> getContainerReferences(DomainObject object) throws Exception;
+
+    /**
+     * Returns all of the synced roots accessible by the current user.
+     * @return list of roots
+     * @throws Exception something went wrong
+     */
+    List<SyncedRoot> getSyncedRoots() throws Exception;
+
+    /**
+     * Returns all the paths which are part of the given synced root.
+     * @param root the synced root object
+     * @return list of children paths
+     * @throws Exception something went wrong
+     */
+    List<SyncedPath> getChildren(SyncedRoot root) throws Exception;
+
+    /**
+     * Create the given root in the database.
+     * @param syncedRoot object populated with properties to persist
+     * @return saved object with populated id
+     * @throws Exception something went wrong
+     */
+    SyncedRoot create(SyncedRoot syncedRoot) throws Exception;
+
+    /**
+     * Update the properties of the given root.
+     * @param syncedRoot object populated with properties to persist
+     * @return saved object
+     * @throws Exception something went wrong
+     */
+    SyncedRoot update(SyncedRoot syncedRoot) throws Exception;
+
+    /**
+     * Remove the given object from the system, along with all of its discovered child paths.
+     * @param syncedRoot the root object
+     * @throws Exception something went wrong
+     */
+    void remove(SyncedRoot syncedRoot) throws Exception;
 
 }

@@ -14,18 +14,18 @@ import java.util.List;
 import static org.janelia.workstation.core.options.OptionConstants.SHOW_SYNCHED_ROOTS;
 
 /**
- * Adds the color depth libraries and searches nodes to the Data Explorer.
+ * Adds the Synchronized Folders node to the Data Explorer.
  */
 @SuppressWarnings("unused")
 @ServiceProvider(service = NodeProvider.class, path=NodeProvider.LOOKUP_PATH)
-public class SyncedPathNodeProvider implements NodeProvider  {
+public class SyncedRootsNodeProvider implements NodeProvider  {
 
     private static final int NODE_ORDER = 30;
-    private static SyncedRootNode SYNCED_ROOTS_NODE_INSTANCE;
+    private static SyncedRootsNode SYNCED_ROOTS_NODE_INSTANCE;
 
     List<NodeGenerator> generators = new ArrayList<>();
 
-    public SyncedPathNodeProvider() {
+    public SyncedRootsNodeProvider() {
         generators.add(new NodeGenerator() {
             @Override
             public Integer getIndex() {
@@ -33,11 +33,11 @@ public class SyncedPathNodeProvider implements NodeProvider  {
             }
             @Override
             public Node createNode() {
-                synchronized (SyncedRootNode.class) {
+                synchronized (SyncedRootsNode.class) {
                     if (SYNCED_ROOTS_NODE_INSTANCE != null) {
                         Events.getInstance().unregisterOnEventBus(SYNCED_ROOTS_NODE_INSTANCE);
                     }
-                    SYNCED_ROOTS_NODE_INSTANCE = new SyncedRootNode();
+                    SYNCED_ROOTS_NODE_INSTANCE = new SyncedRootsNode();
                     Events.getInstance().registerOnEventBus(SYNCED_ROOTS_NODE_INSTANCE);
                     return SYNCED_ROOTS_NODE_INSTANCE;
                 }
@@ -47,7 +47,7 @@ public class SyncedPathNodeProvider implements NodeProvider  {
                 return new NodePreference() {
                     @Override
                     public String getNodeName() {
-                        return SyncedRootNode.NODE_NAME;
+                        return SyncedRootsNode.NODE_NAME;
                     }
                     @Override
                     public boolean isNodeShown() {

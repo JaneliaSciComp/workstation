@@ -2,13 +2,10 @@ package org.janelia.workstation.browser.gui.dialogs;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
+import org.janelia.model.domain.files.DiscoveryAgentType;
 import org.janelia.model.domain.files.SyncedRoot;
-import org.janelia.model.security.Subject;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
-import org.janelia.workstation.common.gui.support.SubjectComboBox;
-import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.web.AsyncServiceClient;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
@@ -16,17 +13,18 @@ import org.janelia.workstation.core.workers.BackgroundWorker;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.concurrent.CancellationException;
-import java.util.stream.Collectors;
 
 public class SyncedRootDialog extends ModalDialog {
 
+    private JTextField nameField;
     private JTextField pathTextField;
-    private final SubjectComboBox subjectCombobox;
+    private JTextField depthField;
     private SyncedRoot syncedRoot;
+    private HashMap<DiscoveryAgentType, JCheckBox> agentTypeMap = new LinkedHashMap<>();
+
 
     public SyncedRootDialog() {
 
@@ -38,18 +36,34 @@ public class SyncedRootDialog extends ModalDialog {
 
         JLabel instructions = new JLabel(
                 "<html><font color='#959595' size='-1'>" +
-                        "Specify a folder to search, in Linux path style, e.g. /misc/public<br>" +
-                        "If a sample with the same name exits it will be updated. Otherwise a new sample will be created.</font></html>");
+                        "Specify a path to search, in Linux path style e.g. /misc/public<br>" +
+                        "</font></html>");
 
         attrPanel.addItem(instructions);
 
-        this.pathTextField = new JTextField(50);
-        pathTextField.setToolTipText("The filepath must be accessible to the backend JADE service.");
-        attrPanel.addItem("Filepath", pathTextField);
+        this.nameField = new JTextField(50);
+        nameField.setToolTipText("Name of the Synchronized Folder in the Workstation");
+        attrPanel.addItem("Name", nameField);
 
-        subjectCombobox = new SubjectComboBox();
-        subjectCombobox.setToolTipText("User or group who should own the discovered objects");
-        //attrPanel.addItem("Object owner", subjectCombobox);
+        this.pathTextField = new JTextField(50);
+        pathTextField.setToolTipText("The filepath must be accessible to the backend JADE service");
+        attrPanel.addItem("Path", pathTextField);
+
+        this.depthField = new JTextField(20);
+        depthField.setToolTipText("Depth of folders to traverse when discovering files");
+        depthField.setText("2");
+        attrPanel.addItem("Depth", depthField);
+
+        final JPanel agentPanel = new JPanel();
+        agentPanel.setLayout(new BoxLayout(agentPanel, BoxLayout.PAGE_AXIS));
+
+        for (DiscoveryAgentType value : DiscoveryAgentType.values()) {
+            JCheckBox checkbox = new JCheckBox(value.getLabel());
+            agentPanel.add(checkbox);
+            agentTypeMap.put(value, checkbox);
+        }
+
+        attrPanel.addItem("Discover", agentPanel);
 
         add(attrPanel, BorderLayout.CENTER);
 
@@ -57,7 +71,7 @@ public class SyncedRootDialog extends ModalDialog {
         cancelButton.setToolTipText("Close dialog without doing anything");
         cancelButton.addActionListener(e -> setVisible(false));
 
-        JButton okButton = new JButton("OK");
+        JButton okButton = new JButton("Save and Synchronize");
         okButton.setToolTipText("Close dialog and begin data synchronization");
         okButton.addActionListener(e -> saveAndClose());
 
@@ -82,16 +96,17 @@ public class SyncedRootDialog extends ModalDialog {
         if (syncedRoot != null) {
             setTitle("Edit Synchronized Folder");
             pathTextField.setText(syncedRoot.getFilepath());
+            nameField.setText(syncedRoot.getName());
+            depthField.setText(syncedRoot.getDepth()+"");
+
+            for (DiscoveryAgentType agentType : DiscoveryAgentType.values()) {
+                JCheckBox checkBox = agentTypeMap.get(agentType);
+                checkBox.setSelected(syncedRoot.getDiscoveryAgents().contains(agentType));
+            }
         }
         else {
             setTitle("Add Synchronized Folder");
         }
-
-        // Decide which subjects we are allowed to write with
-        Map<String, Subject> subjectsByKey = DomainMgr.getDomainMgr().getSubjectsByKey();
-        List<Subject> writeableSubjects = AccessManager.getAccessManager().getActualWriterSet()
-                .stream().map(subjectsByKey::get).collect(Collectors.toList());
-        subjectCombobox.setItems(writeableSubjects, AccessManager.getAccessManager().getActualSubject());
 
         // Show dialog and wait
         packAndShow();
@@ -99,12 +114,27 @@ public class SyncedRootDialog extends ModalDialog {
 
     private void saveAndClose() {
 
-        String imagesPath = pathTextField.getText();
-        final Subject subject = subjectCombobox.getSelectedItem();
+        if (syncedRoot == null) {
+            syncedRoot = new SyncedRoot();
+        }
+
+        syncedRoot.setName(nameField.getText());
+        syncedRoot.setFilepath(pathTextField.getText());
+        syncedRoot.setDepth(Integer.parseInt(depthField.getText()));
+
+        for (DiscoveryAgentType agentType : DiscoveryAgentType.values()) {
+            JCheckBox checkBox = agentTypeMap.get(agentType);
+            if (checkBox.isSelected()) {
+                syncedRoot.getDiscoveryAgents().add(agentType);
+            }
+            else {
+                syncedRoot.getDiscoveryAgents().remove(agentType);
+            }
+        }
 
         BackgroundWorker worker = new AsyncServiceMonitoringWorker() {
 
-            private String taskDisplayName;
+            private String taskDisplayName = "Synchronizing Folder "+syncedRoot.getName();
 
             @Override
             public String getName() {
@@ -113,26 +143,19 @@ public class SyncedRootDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
-                taskDisplayName = "Synced Root for "+imagesPath;
+
+                SyncedRoot savedRoot = DomainMgr.getDomainMgr().getModel().save(syncedRoot);
 
                 setStatus("Submitting task " + taskDisplayName);
 
-                List<String> discoveryAgents = new ArrayList<>();
-                discoveryAgents.add("org.janelia.jacs2.asyncservice.files.N5DiscoveryAgent");
+                String[] discoveryAgents = savedRoot.getDiscoveryAgents().stream()
+                        .map(DiscoveryAgentType::getLabel).toArray(String[]::new);
 
                 AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
                 ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
-                        .add("-imagesPath", imagesPath)
+                        .add("-syncedRootId", savedRoot.getId().toString())
                         .add("-discoveryAgents")
-                        .add(Iterables.toArray(discoveryAgents, String.class));
-
-                if (syncedRoot != null) {
-                    serviceArgsBuilder.add("-syncedRootId", syncedRoot.getId().toString());
-                }
-
-                if (subject!=null) {
-                    serviceArgsBuilder.add("-ownerKey", subject.getKey());
-                }
+                        .add(discoveryAgents);
 
                 Long taskId = asyncServiceClient.invokeService("syncedRoot",
                         serviceArgsBuilder.build(),

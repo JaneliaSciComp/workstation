@@ -1,21 +1,9 @@
 package org.janelia.workstation.core.api.facade.impl.rest;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
-
-import org.glassfish.jersey.client.ClientProperties;
-import org.janelia.model.domain.dto.DomainQuery;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
+import org.janelia.model.domain.dto.DomainQuery;
 import org.janelia.model.domain.report.DatabaseSummary;
 import org.janelia.model.domain.report.DiskUsageSummary;
 import org.janelia.workstation.core.api.AccessManager;
@@ -25,6 +13,12 @@ import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
+import java.util.*;
 
 public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
 
