@@ -24,7 +24,6 @@ import org.janelia.workstation.core.api.lifecycle.ConsoleState;
 import org.janelia.workstation.core.api.lifecycle.GracefulBrick;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
-import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.model.ConnectionResult;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.BrandingConfig;

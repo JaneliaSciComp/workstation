@@ -71,9 +71,10 @@ public class ApplicationOptions {
     public boolean isAutoDownloadUpdates() {
         return prefs().getBoolean(OptionConstants.AUTO_DOWNLOAD_UPDATES, true);
     }
-    
+
     public boolean isShowReleaseNotes() {
-        Boolean value = (Boolean) FrameworkAccess.getModelProperty(OptionConstants.SHOW_RELEASE_NOTES);
+        Boolean value = FrameworkAccess.getModelProperty(OptionConstants.SHOW_RELEASE_NOTES,
+                Boolean.parseBoolean(System.getProperty(OptionConstants.SHOW_RELEASE_NOTES, "true")));
         return value==null || value;
     }
     

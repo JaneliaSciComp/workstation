@@ -29,5 +29,4 @@ public class OptionConstants {
     public static final String ICON_GRID_VIEWER_SHOW_TITLES = "IconGridViewer.showTitles";
     public static final String ICON_GRID_VIEWER_SHOW_TAGS = "IconGridViewer.showTags";
 
-
 }
