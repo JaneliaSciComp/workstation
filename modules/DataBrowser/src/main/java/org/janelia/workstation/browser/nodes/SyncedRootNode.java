@@ -3,7 +3,7 @@ package org.janelia.workstation.browser.nodes;
 import org.janelia.model.domain.files.SyncedPath;
 import org.janelia.model.domain.files.SyncedRoot;
 import org.janelia.workstation.common.gui.support.Icons;
-import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
+import org.janelia.workstation.common.nodes.FilterNode;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -21,7 +21,7 @@ import java.util.List;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SyncedRootNode extends AbstractDomainObjectNode<SyncedRoot> {
+public class SyncedRootNode extends FilterNode<SyncedRoot> {
 
     private final static Logger log = LoggerFactory.getLogger(SyncedRootNode.class);
 

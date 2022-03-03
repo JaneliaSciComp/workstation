@@ -402,12 +402,16 @@ public class SearchConfiguration {
         if (refs.size()>domainObjects.size()) {
             log.warn("SOLR index is out of date! It refers to {} objects which no longer exist.",
                     refs.size()-domainObjects.size());
-            
-            if (log.isTraceEnabled()) {
-                for(Reference ref : refs) {
-                    if (model.getDomainObject(ref)==null) {
-                        log.trace("Could not find "+ref);
-                    }
+
+            int c = 0;
+            for(Reference ref : refs) {
+                if (model.getDomainObject(ref)==null) {
+                    log.warn("Could not find "+ref);
+                    c++;
+                }
+                if (c>=20) {
+                    log.warn("Reached max logging of out of date objects.");
+                    break;
                 }
             }
         }

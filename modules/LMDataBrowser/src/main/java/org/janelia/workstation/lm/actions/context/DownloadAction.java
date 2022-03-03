@@ -1,18 +1,12 @@
 package org.janelia.workstation.lm.actions.context;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.interfaces.HasRelativeFiles;
-import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.sample.PipelineResult;
 import org.janelia.workstation.browser.gui.dialogs.download.DownloadWizardAction;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.common.gui.model.SampleResultModel;
 import org.janelia.workstation.common.gui.util.DomainUIUtils;
-import org.janelia.workstation.core.actions.ViewerContext;
 import org.janelia.workstation.core.model.descriptors.ArtifactDescriptor;
 import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.openide.awt.ActionID;
@@ -20,6 +14,9 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
+
+import java.util.ArrayList;
+import java.util.Collection;
 
 @ActionID(
         category = "actions",

@@ -176,7 +176,7 @@ public class SyncedRootDialog extends ModalDialog {
 
         };
         worker.setSuccessCallback(() -> {
-            SimpleWorker.runInBackground(() -> DomainMgr.getDomainMgr().getModel().invalidate(root));
+            SimpleWorker.runInBackground(() -> DomainMgr.getDomainMgr().getModel().invalidateAll());
             return null;
         });
         worker.executeWithEvents();

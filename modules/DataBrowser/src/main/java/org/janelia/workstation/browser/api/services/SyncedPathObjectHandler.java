@@ -4,6 +4,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.files.N5Container;
 import org.janelia.model.domain.files.SyncedPath;
 import org.janelia.model.domain.files.SyncedRoot;
+import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.workstation.browser.nodes.SyncedPathNode;
 import org.janelia.workstation.browser.nodes.SyncedRootNode;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
@@ -46,12 +47,10 @@ public class SyncedPathObjectHandler implements DomainObjectHandler {
     @Override
     public Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
         if (domainObject instanceof SyncedRoot) {
-            // TODO: here we can show children as a list
-            return null;
+            return FilterEditorPanel.class;
         }
         else if (domainObject instanceof N5Container) {
             // TODO: create editor for opening N5 here
-
         }
         return null;
     }
@@ -63,7 +62,10 @@ public class SyncedPathObjectHandler implements DomainObjectHandler {
 
     @Override
     public boolean supportsRemoval(DomainObject domainObject) {
-        return true;
+        if (domainObject instanceof SyncedRoot) {
+            return true;
+        }
+        return false;
     }
     
     @Override
@@ -72,4 +74,8 @@ public class SyncedPathObjectHandler implements DomainObjectHandler {
         model.remove((SyncedRoot)domainObject);
     }
 
+    @Override
+    public int getMaxReferencesBeforeRemoval(DomainObject domainObject) {
+        return 0;
+    }
 }

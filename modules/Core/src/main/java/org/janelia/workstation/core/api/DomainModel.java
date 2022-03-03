@@ -960,12 +960,14 @@ public class DomainModel {
     public List<SyncedRoot> getSyncedRoots() throws Exception {
         List<SyncedRoot> syncedRoots = workspaceFacade.getSyncedRoots();
         List<SyncedRoot> canonicalObjects = putOrUpdate(syncedRoots, false);
+        canonicalObjects.sort(Comparator.comparing(AbstractDomainObject::getName));
         return canonicalObjects;
     }
 
     public List<SyncedPath> getChildren(SyncedRoot root) throws Exception {
         List<SyncedPath> syncedRoots = workspaceFacade.getChildren(root);
         List<SyncedPath> canonicalObjects = putOrUpdate(syncedRoots, false);
+        canonicalObjects.sort(Comparator.comparing(AbstractDomainObject::getName));
         return canonicalObjects;
     }
 

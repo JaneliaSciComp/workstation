@@ -2,7 +2,6 @@ package org.janelia.workstation.browser.nodes;
 
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.files.SyncedRoot;
-import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.workstation.browser.actions.NewSyncedRootAction;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -158,14 +157,14 @@ public class SyncedRootsNode extends IdentifiableNode {
 
     @Subscribe
     public void domainObjectAdded(DomainObjectCreateEvent event) {
-        if (event.getDomainObject() instanceof ColorDepthLibrary) {
+        if (event.getDomainObject() instanceof SyncedRoot) {
             refreshChildren();
         }
     }
 
     @Subscribe
     public void domainObjectRemoved(DomainObjectRemoveEvent event) {
-        if (event.getDomainObject() instanceof ColorDepthLibrary) {
+        if (event.getDomainObject() instanceof SyncedRoot) {
             refreshChildren();
         }
     }
