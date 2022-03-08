@@ -38,7 +38,8 @@ public class SearchConfiguration {
 
     private static final boolean LOG_TIME_ELAPSED = false;
 
-    public static final String SOLR_TYPE_FIELD = "search_type";
+    private static final String SOLR_TYPE_FIELD = "search_type";
+    private static final String SOLR_TYPES_FIELD = "search_type_sm";
     
     // Source state
     private final Filter filter;
@@ -170,7 +171,7 @@ public class SearchConfiguration {
         final Map<String, Set<String>> filters = new HashMap<>();
         SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
         String searchType = searchTypeAnnot.key();
-        filters.put(SearchConfiguration.SOLR_TYPE_FIELD,Sets.newHashSet(searchType));
+        filters.put(SearchConfiguration.SOLR_TYPES_FIELD,Sets.newHashSet(searchType));
         
         if (filter.hasCriteria()) {
             for (Criteria criteria : filter.getCriteriaList()) {
