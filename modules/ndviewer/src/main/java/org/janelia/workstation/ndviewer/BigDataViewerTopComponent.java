@@ -1,7 +1,13 @@
 package org.janelia.workstation.ndviewer;
 
+import bdv.util.Bdv;
+import bdv.util.BdvFunctions;
+import bdv.util.BdvHandlePanel;
 import com.google.common.eventbus.Subscribe;
+import java.awt.*;
 import javax.swing.*;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.numeric.real.FloatType;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
@@ -46,22 +52,35 @@ public final class BigDataViewerTopComponent extends TopComponent {
     public static final String LABEL_TEXT = "BigDataViewer";
 
     private Refreshable currentView;
+    final BdvHandlePanel bdv;
 
     public BigDataViewerTopComponent() {
-        setupGUI();
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+
         setName(LABEL_TEXT);
         setToolTipText(LABEL_TEXT);
+        JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
+        bdv = new BdvHandlePanel(topFrame, Bdv.options());
+        setupGUI();
     }
 
-    private void setupGUI() {  JLabel jLabel1 = new JLabel("Hello");
-        add(jLabel1);
-        String testData = "/Users/Marwan/Desktop/cellmap/Task/data/PALM_532nm_gauss3d_d2.nrrd /Users/Marwan/Desktop/cellmap/Task/data/mito_membrane_s4.nrrd";
+    private void setupGUI() {
+        setLayout(new GridLayout(1, 1));
+        this.add(bdv.getViewerPanel());
+        // TODO to be added to side explorer
+        //  this.add(bdv.getCardPanel().getComponent());
+    }
 
+    public void add(RandomAccessibleInterval<FloatType> img) {
+        BdvFunctions.show(img, "img", Bdv.options().addTo(bdv));
+        revalidate();
+        repaint();
     }
 
     public static BigDataViewerTopComponent getInstance() {
         return (BigDataViewerTopComponent) WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
+
 
     @Subscribe
     public void sessionStarted(SessionStartEvent event) {
