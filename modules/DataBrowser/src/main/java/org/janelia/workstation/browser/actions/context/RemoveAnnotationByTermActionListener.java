@@ -57,11 +57,13 @@ public class RemoveAnnotationByTermActionListener implements ActionListener {
                 for (Annotation annotation : annotations) {
                     if (ClientDomainUtils.hasWriteAccess(annotation)) {
                         OntologyTermReference keyTerm = annotation.getKeyTerm();
-                        for (OntologyTerm ontologyTerm : ontologyTerms) {
-                            if (keyTerm.getOntologyId().equals(ontologyTerm.getOntology().getId())
-                                    && keyTerm.getOntologyTermId().equals(ontologyTerm.getId())) {
-                                toRemove.add(annotation);
-                                break;
+                        if (keyTerm!=null) {
+                            for (OntologyTerm ontologyTerm : ontologyTerms) {
+                                if (keyTerm.getOntologyId().equals(ontologyTerm.getOntology().getId())
+                                        && keyTerm.getOntologyTermId().equals(ontologyTerm.getId())) {
+                                    toRemove.add(annotation);
+                                    break;
+                                }
                             }
                         }
                     }

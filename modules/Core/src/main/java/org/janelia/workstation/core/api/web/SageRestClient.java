@@ -68,8 +68,10 @@ public class SageRestClient extends RESTClientBase {
                 JsonNode publishingData = data.get("publishing_data");
                 if (publishingData.isArray()) {
                     for (final JsonNode objNode : publishingData) {
-                        String publishingName = objNode.get("publishing_name").asText();
-                        names.add(publishingName);
+                        if (objNode.get("for_publishing").asInt()==1) {
+                            String publishingName = objNode.get("publishing_name").asText();
+                            names.add(publishingName);
+                        }
                     }
                 }
             }

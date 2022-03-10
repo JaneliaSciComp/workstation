@@ -72,48 +72,48 @@ public class ApplyPublishingNamesActionListener implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
 
-            // Group by line
-            for(Sample sample : samples) {
-                sampleByLine.put(sample.getLine(), sample);
-            }
+        // Group by line
+        for(Sample sample : samples) {
+            sampleByLine.put(sample.getLine(), sample);
+        }
 
-            if (async) {
-                SimpleWorker worker = new SimpleWorker() {
+        if (async) {
+            SimpleWorker worker = new SimpleWorker() {
 
-                    @Override
-                    protected void doStuff() throws Exception {
-                        loadPublishingTerm();
-                        autoAnnotateWherePossible(this);
-                    }
-
-                    @Override
-                    protected void hadSuccess() {
-                        if (userInteraction) {
-                            continueWithManualAnnotation();
-                        }
-                    }
-
-                    @Override
-                    protected void hadError(Throwable error) {
-                        FrameworkAccess.handleException(error);
-                    }
-                };
-
-                worker.setProgressMonitor(new ProgressMonitor(FrameworkAccess.getMainFrame(), "Adding annotations", "", 0, 100));
-                worker.execute();
-            }
-            else {
-                try {
+                @Override
+                protected void doStuff() throws Exception {
                     loadPublishingTerm();
-                    autoAnnotateWherePossible(null);
+                    autoAnnotateWherePossible(this);
+                }
+
+                @Override
+                protected void hadSuccess() {
                     if (userInteraction) {
                         continueWithManualAnnotation();
                     }
                 }
-                catch (Exception ex) {
-                    FrameworkAccess.handleException(ex);
+
+                @Override
+                protected void hadError(Throwable error) {
+                    FrameworkAccess.handleException(error);
+                }
+            };
+
+            worker.setProgressMonitor(new ProgressMonitor(FrameworkAccess.getMainFrame(), "Adding annotations", "", 0, 100));
+            worker.execute();
+        }
+        else {
+            try {
+                loadPublishingTerm();
+                autoAnnotateWherePossible(null);
+                if (userInteraction) {
+                    continueWithManualAnnotation();
                 }
             }
+            catch (Exception ex) {
+                FrameworkAccess.handleException(ex);
+            }
+        }
 
     }
 

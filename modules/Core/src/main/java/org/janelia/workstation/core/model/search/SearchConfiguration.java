@@ -38,7 +38,8 @@ public class SearchConfiguration {
 
     private static final boolean LOG_TIME_ELAPSED = false;
 
-    public static final String SOLR_TYPE_FIELD = "search_type";
+    private static final String SOLR_TYPE_FIELD = "search_type";
+    private static final String SOLR_TYPES_FIELD = "search_type_sm";
     
     // Source state
     private final Filter filter;
@@ -170,7 +171,7 @@ public class SearchConfiguration {
         final Map<String, Set<String>> filters = new HashMap<>();
         SearchType searchTypeAnnot = searchClass.getAnnotation(SearchType.class);
         String searchType = searchTypeAnnot.key();
-        filters.put(SearchConfiguration.SOLR_TYPE_FIELD,Sets.newHashSet(searchType));
+        filters.put(SearchConfiguration.SOLR_TYPES_FIELD,Sets.newHashSet(searchType));
         
         if (filter.hasCriteria()) {
             for (Criteria criteria : filter.getCriteriaList()) {
@@ -402,12 +403,16 @@ public class SearchConfiguration {
         if (refs.size()>domainObjects.size()) {
             log.warn("SOLR index is out of date! It refers to {} objects which no longer exist.",
                     refs.size()-domainObjects.size());
-            
-            if (log.isTraceEnabled()) {
-                for(Reference ref : refs) {
-                    if (model.getDomainObject(ref)==null) {
-                        log.trace("Could not find "+ref);
-                    }
+
+            int c = 0;
+            for(Reference ref : refs) {
+                if (model.getDomainObject(ref)==null) {
+                    log.warn("Could not find "+ref);
+                    c++;
+                }
+                if (c>=20) {
+                    log.warn("Reached max logging of out of date objects.");
+                    break;
                 }
             }
         }

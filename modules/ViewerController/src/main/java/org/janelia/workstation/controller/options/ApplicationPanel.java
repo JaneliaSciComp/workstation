@@ -105,7 +105,7 @@ public class ApplicationPanel extends JPanel {
         clickModeCombo.addActionListener(e -> controller.changed());
         // default to the original behavior, shift-left-click
         clickModeCombo.setSelectedItem(CLICK_MODE_SHIFT_LEFT_CLICK);
-        JLabel clickModeLabel = new JLabel("Click mode for adding annotations: ");
+        JLabel clickModeLabel = new JLabel("Click mode for adding annotations (2d): ");
         clickModeLabel.setLabelFor(clickModeCombo);
         attrPanel.add(clickModeLabel, "gap para");
         attrPanel.add(clickModeCombo, "gap para");

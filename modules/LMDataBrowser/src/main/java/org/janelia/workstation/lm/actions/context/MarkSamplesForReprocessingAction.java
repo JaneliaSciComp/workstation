@@ -62,8 +62,7 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
         if (getNodeContext().isOnlyObjectsOfType(Sample.class)) {
             for (Sample sample : getNodeContext().getOnlyObjectsOfType(Sample.class)) {
                 boolean canWrite = ClientDomainUtils.hasWriteAccess(sample);
-                boolean canRerun = (!PipelineStatus.Processing.toString().equals(sample.getStatus())  &&
-                        !PipelineStatus.Scheduled.toString().equals(sample.getStatus()));
+                boolean canRerun = (!PipelineStatus.Scheduled.toString().equals(sample.getStatus()));
 
                 if ((canWrite && canRerun) || AccessManager.getAccessManager().isAdmin()) {
                     samples.add(sample);
@@ -154,6 +153,9 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
                 if (dialog.isSkipPrealigner()) {
                     extraOptions.append(",skip prealigner=true");
                 }
+                if (dialog.isUseCmtkMerge()) {
+                    extraOptions.append(",merge algorithms=CMTK");
+                }
                 if (!StringUtils.isBlank(dialog.getRunObjectives())) {
                     extraOptions.append(",run objectives=").append(dialog.getRunObjectives());
                 }
@@ -207,6 +209,7 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
         private final JCheckBox skipCorrectionCheckbox;
         private final JCheckBox skipGrouperCheckbox;
         private final JCheckBox skipPrealignerCheckbox;
+        private final JCheckBox useCmtkMerge;
         private final JTextField runObjectivesField;
         private final JTextField extraOptionsField;
         
@@ -249,6 +252,8 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
             mainPanel.addItem("Skip stitching pre-check", skipGrouperCheckbox);
             this.skipPrealignerCheckbox = new JCheckBox();
             mainPanel.addItem("Skip VNC alignment pre-check", skipPrealignerCheckbox);
+            this.useCmtkMerge = new JCheckBox();
+            mainPanel.addItem("Use CMTK-based merge", useCmtkMerge);
 
             this.runObjectivesField = new JTextField();
             runObjectivesField.setColumns(20);
@@ -336,6 +341,10 @@ public class MarkSamplesForReprocessingAction extends BaseContextualNodeAction {
 
         public boolean isSkipPrealigner() {
             return skipPrealignerCheckbox.isSelected();
+        }
+
+        public boolean isUseCmtkMerge() {
+            return useCmtkMerge.isSelected();
         }
 
         public String getRunObjectives() {

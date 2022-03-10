@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>9.8-rc2</version>
+        <version>9.8-rc4</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>CommonLibraries</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>libraries</artifactId>
-    <version>9.8-rc2</version>
+    <version>9.8-rc4</version>
     <packaging>nbm</packaging>
 
     <properties>
@@ -678,6 +678,7 @@
                         <publicPackage>org.janelia.model.domain.dto.annotation</publicPackage>
                         <publicPackage>org.janelia.model.domain.enums</publicPackage>
                         <publicPackage>org.janelia.model.domain.enums.algorithms</publicPackage>
+                        <publicPackage>org.janelia.model.domain.files</publicPackage>
                         <publicPackage>org.janelia.model.domain.flyem</publicPackage>
                         <publicPackage>org.janelia.model.domain.gui.alignment_board</publicPackage>
                         <publicPackage>org.janelia.model.domain.gui.cdmip</publicPackage>

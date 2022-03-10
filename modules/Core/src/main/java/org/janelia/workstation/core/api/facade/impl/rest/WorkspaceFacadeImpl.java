@@ -1,21 +1,14 @@
 package org.janelia.workstation.core.api.facade.impl.rest;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
-
-import org.janelia.model.access.domain.search.DocumentSearchResults;
 import org.janelia.model.access.domain.search.DocumentSearchParams;
-import org.janelia.model.domain.dto.DomainQuery;
+import org.janelia.model.access.domain.search.DocumentSearchResults;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.ReverseReference;
+import org.janelia.model.domain.dto.DomainQuery;
+import org.janelia.model.domain.files.SyncedPath;
+import org.janelia.model.domain.files.SyncedRoot;
 import org.janelia.model.domain.gui.search.Filter;
 import org.janelia.model.domain.workspace.Node;
 import org.janelia.model.domain.workspace.TreeNode;
@@ -24,9 +17,18 @@ import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.facade.interfaces.WorkspaceFacade;
 import org.janelia.workstation.core.api.http.RESTClientBase;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFacade {
 
@@ -50,7 +52,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
     public DocumentSearchResults performSearch(DocumentSearchParams query) throws Exception {
         WebTarget target = service.path("data/search");
         Response response = target
-                .request("application/json")
+                .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(DocumentSearchResults.class);
@@ -61,7 +63,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         WebTarget target = service.path("data/workspace");
         Response response = target
                 .queryParam("subjectKey", AccessManager.getSubjectKey())
-                .request("application/json")
+                .request(MediaType.APPLICATION_JSON)
                 .get();
         checkBadResponse(target, response);
         return response.readEntity(Workspace.class);
@@ -73,7 +75,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         WebTarget target = service.path("data/workspaces");
         Response response = target
                 .queryParam("subjectKey", currentPrincipal)
-                .request("application/json")
+                .request(MediaType.APPLICATION_JSON)
                 .get();
         checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<Workspace>>() {})
@@ -89,7 +91,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         query.setSubjectKey(AccessManager.getSubjectKey());
         WebTarget target = service.path("data/treenode");
         Response response = target
-                .request("application/json")
+                .request(MediaType.APPLICATION_JSON)
                 .put(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(TreeNode.class);
@@ -102,7 +104,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         query.setSubjectKey(AccessManager.getSubjectKey());
         WebTarget target = service.path("data/filter");
         Response response = target
-                .request("application/json")
+                .request(MediaType.APPLICATION_JSON)
                 .put(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(Filter.class);
@@ -115,7 +117,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         query.setSubjectKey(AccessManager.getSubjectKey());
         WebTarget target = service.path("data/filter");
         Response response = target
-                .request("application/json")
+                .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(Filter.class);
@@ -131,7 +133,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
                 .queryParam("sortCriteria", sortCriteria)
                 .queryParam("page", page)
                 .queryParam("pageSize", pageSize)
-                .request("application/json")
+                .request(MediaType.APPLICATION_JSON)
                 .get();
         checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<DomainObject>>() {});
@@ -146,7 +148,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         query.setReferences(new ArrayList<>(references));
         WebTarget target = service.path("data/node/children");
         Response response = target
-                .request("application/json")
+                .request(MediaType.APPLICATION_JSON)
                 .put(Entity.json(query));
         checkBadResponse(target, response);
         return (T)response.readEntity(node.getClass());
@@ -161,7 +163,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         query.setReferences(new ArrayList<>(references));
         WebTarget target = service.path("data/node/children");
         Response response = target
-                .request("application/json")
+                .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(query));
         checkBadResponse(target, response);
         return (T)response.readEntity(node.getClass());
@@ -180,7 +182,7 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         query.setOrdering(orderList);
         WebTarget target = service.path("data/node/reorder");
         Response response = target
-                .request("application/json")
+                .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(query));
         checkBadResponse(target, response);
         return (T)response.readEntity(node.getClass());
@@ -193,9 +195,72 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
         query.setDomainObject(object);
         WebTarget target = service.path("data/domainobject/references");
         Response response = target
-                .request("application/json")
+                .request(MediaType.APPLICATION_JSON)
                 .post(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<Reference>>() {});
+    }
+
+    @Override
+    public List<SyncedRoot> getSyncedRoots() throws Exception {
+        String currentPrincipal = AccessManager.getSubjectKey();
+        WebTarget target = service.path("data/syncedRoot");
+        Response response = target
+                .queryParam("subjectKey", currentPrincipal)
+                .request(MediaType.APPLICATION_JSON)
+                .get();
+        checkBadResponse(target, response);
+        return response.readEntity(new GenericType<List<SyncedRoot>>() {});
+    }
+
+    @Override
+    public List<SyncedPath> getChildren(SyncedRoot root) throws Exception {
+        String currentPrincipal = AccessManager.getSubjectKey();
+        WebTarget target = service.path("data/syncedRoot/children");
+        Response response = target
+                .queryParam("subjectKey", currentPrincipal)
+                .queryParam("syncedRootId", root.getId())
+                .request(MediaType.APPLICATION_JSON)
+                .get();
+        checkBadResponse(target, response);
+        return response.readEntity(new GenericType<List<SyncedPath>>() {});
+    }
+
+    @Override
+    public SyncedRoot create(SyncedRoot syncedRoot) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setDomainObject(syncedRoot);
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        WebTarget target = service.path("data/syncedRoot");
+        Response response = target
+                .request(MediaType.APPLICATION_JSON)
+                .put(Entity.json(query));
+        checkBadResponse(target, response);
+        return response.readEntity(SyncedRoot.class);
+    }
+
+    @Override
+    public SyncedRoot update(SyncedRoot syncedRoot) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setDomainObject(syncedRoot);
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        WebTarget target = service.path("data/syncedRoot");
+        Response response = target
+                .request(MediaType.APPLICATION_JSON)
+                .post(Entity.json(query));
+        checkBadResponse(target, response);
+        return response.readEntity(SyncedRoot.class);
+    }
+
+    @Override
+    public void remove(SyncedRoot syncedRoot) throws Exception {
+        String currentPrincipal = AccessManager.getSubjectKey();
+        WebTarget target = service.path("data/syncedRoot");
+        Response response = target
+                .queryParam("subjectKey", currentPrincipal)
+                .queryParam("syncedRootId", syncedRoot.getId())
+                .request(MediaType.APPLICATION_JSON)
+                .delete();
+        checkBadResponse(target, response);
     }
 }

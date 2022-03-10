@@ -431,12 +431,7 @@ public final class DownloadVisualPanel1 extends JPanel {
                     
                     String fileTypeLabel = fileType.getLabel();
                     JCheckBox fileTypeCheckbox = new JCheckBox(fileTypeLabel, artifactDescriptor.getSelectedFileTypes().contains(fileType));
-                    fileTypeCheckbox.addItemListener(new ItemListener() {
-                        @Override
-                        public void itemStateChanged(ItemEvent e) {
-                            triggerValidation();
-                        }
-                    });
+                    fileTypeCheckbox.addItemListener(e -> triggerValidation());
                     subPanel.add(fileTypeCheckbox);
                     fileTypeMap.put(fileType, fileTypeCheckbox);
                 }

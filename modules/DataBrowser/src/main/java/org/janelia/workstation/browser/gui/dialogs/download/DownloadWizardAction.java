@@ -132,7 +132,7 @@ public final class DownloadWizardAction implements ActionListener {
                 log.info("Finding items for download");
                 for(DomainObject domainObject : inputObjects) {
                     if (isCancelled()) return;
-                    downloadItems.addAll(addObjectsToExport(new ArrayList<String>(), domainObject));
+                    downloadItems.addAll(addObjectsToExport(new ArrayList<>(), domainObject));
                 }
                 
                 setProgress(2);

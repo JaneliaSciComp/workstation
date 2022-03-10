@@ -40,10 +40,21 @@ public class DescriptorUtils {
     private static final Logger log = LoggerFactory.getLogger(DescriptorUtils.class);
 
     private static final ObjectMapper mapper = new ObjectMapper();
-    
+
+    /**
+     * Determines whether or not the given object has artifacts which can be counted and loaded.
+     * This method should be synchronized with getArtifactCounts.
+     * @return
+     */
+    public static boolean hasDownloadableArtifacts(DomainObject domainObject) {
+        return (domainObject instanceof Sample)
+                || (domainObject instanceof HasFiles);
+    }
+
     /**
      * Creates a set of artifact descriptors which describe the contents of the given collection. Note that for certain types
      * (namely, NeuronFragments) this method does lookups in the DomainModel, so it may be slow.
+     * This method should be synchronized with hasDownloadableArtifacts.
      * @param domainObjects
      * @return
      */

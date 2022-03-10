@@ -126,6 +126,10 @@
         <copy file="${windows.launcher.prop.file}"  overwrite="true"
               tofile="${installer.build.dir}/ext/engine/src/native/launcher/windows/i18n/launcher.properties"/>
 
+        <!-- Customized to use JDK 8 on Mac by default -->
+        <copy file="${nbi.installer.script}"  overwrite="true"
+              tofile="${installer.build.dir}/ext/engine/src/native/launcher/unix/launcher.sh"/>
+
         <!-- Get rid of the non-working "Run application when installer finished" checkbox at the last page of installer wizard -->
         <replace file="${installer.build.dir}/ext/engine/src/org/mycompany/installer/wizard/components/panels/PostInstallSummaryPanel.java" encoding="utf-8">
             <replacefilter token="runAppNow.doClick();" value="runAppNow.setVisible(false);"/>

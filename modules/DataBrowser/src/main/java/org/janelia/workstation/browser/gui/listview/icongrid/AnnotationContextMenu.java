@@ -60,12 +60,14 @@ public class AnnotationContextMenu extends PopupContextMenu {
             addSeparator();
             add(getViewDetailsItem());
             add(getRemoveAnnotationItem());
-            OntologyTerm keyTerm = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(annotation.getKeyTerm());
-            if (keyTerm!=null) {
-                if (!(keyTerm instanceof Tag)) {
-                    add(getRemoveAnnotationByTermItem(keyTerm));
+            if (annotation.getKeyTerm() != null) {
+                OntologyTerm keyTerm = DomainMgr.getDomainMgr().getModel().getOntologyTermByReference(annotation.getKeyTerm());
+                if (keyTerm != null) {
+                    if (!(keyTerm instanceof Tag)) {
+                        add(getRemoveAnnotationByTermItem(keyTerm));
+                    }
+                    add(getEditAnnotationItem(keyTerm));
                 }
-                add(getEditAnnotationItem(keyTerm));
             }
         }  
         catch (Exception ex) {

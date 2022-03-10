@@ -9,6 +9,8 @@ import org.janelia.model.access.domain.search.DocumentSearchResults;
 import org.janelia.model.domain.*;
 import org.janelia.model.domain.compute.ContainerizedService;
 import org.janelia.model.domain.dto.SampleReprocessingRequest;
+import org.janelia.model.domain.files.SyncedPath;
+import org.janelia.model.domain.files.SyncedRoot;
 import org.janelia.model.domain.flyem.EMDataSet;
 import org.janelia.model.domain.gui.cdmip.ColorDepthLibrary;
 import org.janelia.model.domain.gui.cdmip.ColorDepthMask;
@@ -543,6 +545,11 @@ public class DomainModel {
         return putOrUpdate(domainObjects, false);
     }
 
+    public List<DomainObject> getDomainObjectsWithProperty(String className, String propertyName, String propertyValue) throws Exception {
+        List<DomainObject> domainObjects = domainFacade.getDomainObjectsWithProperty(className, propertyName, propertyValue);
+        return putOrUpdate(domainObjects, false);
+    }
+
     @SuppressWarnings("unchecked")
     public <T extends DomainObject> List<T> getDomainObjectsAs(Class<T> clazz, ReverseReference reverseReference) throws Exception {
         List<DomainObject> domainObjects = domainFacade.getDomainObjects(reverseReference);
@@ -948,6 +955,39 @@ public class DomainModel {
     public void remove(DataSet dataSet) throws Exception {
         sampleFacade.remove(dataSet);
         notifyDomainObjectRemoved(dataSet);
+    }
+
+    public List<SyncedRoot> getSyncedRoots() throws Exception {
+        List<SyncedRoot> syncedRoots = workspaceFacade.getSyncedRoots();
+        List<SyncedRoot> canonicalObjects = putOrUpdate(syncedRoots, false);
+        canonicalObjects.sort(Comparator.comparing(AbstractDomainObject::getName));
+        return canonicalObjects;
+    }
+
+    public List<SyncedPath> getChildren(SyncedRoot root) throws Exception {
+        List<SyncedPath> syncedRoots = workspaceFacade.getChildren(root);
+        List<SyncedPath> canonicalObjects = putOrUpdate(syncedRoots, false);
+        canonicalObjects.sort(Comparator.comparing(AbstractDomainObject::getName));
+        return canonicalObjects;
+    }
+
+    public SyncedRoot save(SyncedRoot syncedRoot) throws Exception {
+        SyncedRoot canonicalObject;
+        boolean create = syncedRoot.getId() == null;
+        synchronized (modelLock) {
+            canonicalObject = putOrUpdate(create ? workspaceFacade.create(syncedRoot) : workspaceFacade.update(syncedRoot));
+        }
+        if (create) {
+            notifyDomainObjectCreated(canonicalObject);
+        } else {
+            notifyDomainObjectChanged(canonicalObject);
+        }
+        return canonicalObject;
+    }
+
+    public void remove(SyncedRoot syncedRoot) throws Exception {
+        workspaceFacade.remove(syncedRoot);
+        notifyDomainObjectRemoved(syncedRoot);
     }
 
     public Annotation createAnnotation(Reference target, OntologyTermReference ontologyTermReference, String value) throws Exception {

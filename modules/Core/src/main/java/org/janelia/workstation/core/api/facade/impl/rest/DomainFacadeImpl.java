@@ -1,21 +1,9 @@
 package org.janelia.workstation.core.api.facade.impl.rest;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
-
-import org.glassfish.jersey.client.ClientProperties;
-import org.janelia.model.domain.dto.DomainQuery;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.ReverseReference;
+import org.janelia.model.domain.dto.DomainQuery;
 import org.janelia.model.domain.report.DatabaseSummary;
 import org.janelia.model.domain.report.DiskUsageSummary;
 import org.janelia.workstation.core.api.AccessManager;
@@ -25,6 +13,12 @@ import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
+import java.util.*;
 
 public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
 
@@ -102,6 +96,20 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         return response.readEntity(new GenericType<List<DomainObject>>() {});
     }
 
+    @Override
+    public <T extends DomainObject> List<T> getDomainObjectsWithProperty(String className, String propertyName, String propertyValue) throws Exception {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setObjectType(className);
+        query.setPropertyName(propertyName);
+        query.setPropertyValue(propertyValue);
+        WebTarget target = service.path("data/domainobject/withproperty");
+        Response response = target
+                .request("application/json")
+                .post(Entity.json(query));
+        checkBadResponse(target, response);
+        return response.readEntity(new GenericType<List<T>>() {});
+    }
 
     @Override
     public <T extends DomainObject> List<T> getDomainObjects(String className, Collection<Long> ids) throws Exception {
@@ -120,7 +128,6 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
     @Override
     public List<DomainObject> getAllDomainObjectsByClass(String className) throws Exception {
         DomainQuery query = new DomainQuery();
-        // Not using a subject key: these are universal collections.
         query.setObjectType(className);
         query.setSubjectKey(AccessManager.getSubjectKey());
         WebTarget target = service.path("data/domainobject/class");

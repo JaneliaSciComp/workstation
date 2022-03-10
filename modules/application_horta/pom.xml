@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>9.8-rc2</version>
+        <version>9.8-rc4</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>Horta</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>application_horta</artifactId>
-    <version>9.8-rc2</version>
+    <version>9.8-rc4</version>
     <packaging>nbm-application</packaging>
 
     <properties>
@@ -283,6 +283,7 @@
                         <suite.props.app.title>${project.name.capitalized}</suite.props.app.title>
                         <nbi.install.dir>${clusterName}</nbi.install.dir>
                         <nbi.stub.buildfile>${basedir}/src/main/app-resources/build.xml</nbi.stub.buildfile>
+                        <nbi.installer.script>${basedir}/src/main/app-resources/launcher.sh</nbi.installer.script>
                         <nbi.icon.file>${basedir}/src/main/app-resources/horta48.png</nbi.icon.file>
                         <nbi.dock.icon.file>${basedir}/src/main/app-resources/horta.icns</nbi.dock.icon.file>
                         <nbi.instleftcorner.file>${basedir}/src/main/app-resources/horta48.png</nbi.instleftcorner.file>

@@ -1,27 +1,16 @@
 package org.janelia.workstation.browser.gui.dialogs;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dialog;
-import java.awt.Dimension;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
+import com.google.common.eventbus.Subscribe;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
+import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.model.DomainObjectAnnotationChangeEvent;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
-import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
-import org.janelia.model.domain.DomainObject;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import com.google.common.eventbus.Subscribe;
-import org.janelia.workstation.common.gui.dialogs.ModalDialog;
+import javax.swing.*;
+import java.awt.*;
 
 /**
  * A dialog for viewing details about an entity.
@@ -49,12 +38,7 @@ public class DomainDetailsDialog extends ModalDialog {
         
         JButton okButton = new JButton("OK");
         okButton.setToolTipText("Close and save changes");
-        okButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-	            setVisible(false);
-			}
-		});
+        okButton.addActionListener(e -> setVisible(false));
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));

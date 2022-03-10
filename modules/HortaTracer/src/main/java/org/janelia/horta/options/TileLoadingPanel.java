@@ -73,6 +73,10 @@ public class TileLoadingPanel extends javax.swing.JPanel {
         attrPanel.add(titleLabel,"gap para");
         attrPanel.add(ramTileCountField,"gap para, width 100:400:600, growx");
 
+        // note: this click-mode preference really belongs in the other panel, ApplicationPanel,
+        //  alongside the 2d version; unfortunately, they are currently using the same text string
+        //  key in different classes, so doing so would require code to migrate and update the
+        //  prefs, which I don't have time for right now
         String [] modeStrings = {CLICK_MODE_LEFT_CLICK, CLICK_MODE_SHIFT_LEFT_CLICK};
         this.clickModeCombo = new JComboBox<>(modeStrings);
         clickModeCombo.addActionListener(new ActionListener() {
@@ -83,7 +87,7 @@ public class TileLoadingPanel extends javax.swing.JPanel {
         });
         // default to the original behavior, shift-left-click
         clickModeCombo.setSelectedItem(CLICK_MODE_SHIFT_LEFT_CLICK);
-        JLabel clickModeLabel = new JLabel("Click mode for adding annotations: ");
+        JLabel clickModeLabel = new JLabel("Click mode for adding annotations (3d): ");
         clickModeLabel.setLabelFor(clickModeCombo);
         attrPanel.add(clickModeLabel, "gap para");
         attrPanel.add(clickModeCombo, "gap para");

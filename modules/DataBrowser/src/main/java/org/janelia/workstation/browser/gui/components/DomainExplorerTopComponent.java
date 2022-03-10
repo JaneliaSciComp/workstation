@@ -403,15 +403,23 @@ public final class DomainExplorerTopComponent extends TopComponent implements Ex
         log.info("Found {} nodes for {}",nodes.size(),domainObject);
 
         if (!nodes.isEmpty()) {
+            boolean updated = false;
             log.info("Updating removed object: {}",domainObject.getName());
             for(IdentifiableNode node : nodes) {
                 try {
                     log.info("  Destroying node@{} which is no longer relevant",System.identityHashCode(node));
                     node.destroy();
+                    updated = true;
                 }  
                 catch (Exception ex) {
                     log.error("Error destroying node", ex);
                 }
+            }
+            if (updated) {
+                SwingUtilities.invokeLater(() -> {
+                    log.info("Re-expanding {} paths after object invalidation", expanded.size());
+                    beanTreeView.expand(expanded);
+                });
             }
         }
     }

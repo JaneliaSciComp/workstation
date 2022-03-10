@@ -36,15 +36,6 @@ public class AnnotationEditor {
     public AnnotationEditor(Ontology ontology, OntologyTerm keyTerm) {
         this.ontology = ontology;
         this.keyTerm = keyTerm;
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
-        if (keyTerm == null) {
-            try {
-                keyTerm = model.getOntologyTermByReference(annotation.getKeyTerm());
-            }
-            catch (Exception e) {
-                FrameworkAccess.handleException(e);
-            }
-        }
     }
 
     public boolean needsEditor() {
@@ -54,7 +45,7 @@ public class AnnotationEditor {
     public String showEditor() {
         try {
             DomainModel model = DomainMgr.getDomainMgr().getModel();
-            if (keyTerm == null) {
+            if (keyTerm == null && annotation.getKeyTerm() != null) {
                 keyTerm = model.getOntologyTermByReference(annotation.getKeyTerm());
             }
 

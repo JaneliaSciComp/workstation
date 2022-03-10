@@ -1,12 +1,10 @@
 // 9.8
 
-Workstation Installer
-* Fixed installer on Mac when there is a JDK 11+ installed
-
 Data Browser
 * Factored LM functionality into separate modules
 * Unified actions between the grid view and Sample view
 * Fixed bug with "Customize titles" feature
+* Added CMTK-based merge option for reprocessing
 
 Horta
 * Added Services -> Load Horta Data to automatically discover MouseLight data
@@ -15,3 +13,6 @@ Horta
 * Moved "Show Horta Control Center on startup" option into the Horta options panel
 * Behind-the-scenes refactoring to support janeliaHortaCloud
 * "Go to ..." button can now be assigned a keyboard shortcut
+
+Workstation Installer
+* Fixed installer on Mac when there is a JDK 11+ installed
