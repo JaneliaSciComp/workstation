@@ -216,6 +216,13 @@
                 <artifactId>adminstration</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <!--  ND Viewer -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>ndviewer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             
             <!-- IntegrationAPIs --> 
             <dependency>
@@ -305,13 +312,6 @@
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
                 <artifactId>viewer3d</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- ND Viewer -->
-            <dependency>
-                <groupId>org.janelia.workstation</groupId>
-                <artifactId>ndviewer</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -1168,7 +1168,6 @@
         <module>modules/HortaTracer</module>
         <module>modules/LargeVolumeViewer</module>
         <module>modules/Viewer3D</module>
-        <module>modules/NDViewer</module>
         <module>modules/ViewerController</module>
         <module>modules/ViewerInfoPanel</module>
         <module>modules/GLViewerTools</module>
@@ -1177,6 +1176,7 @@
         <module>modules/Jogl213Lib</module>
         <module>modules/Jogl224Lib</module>
         <module>modules/branding</module>
+        <module>modules/ndviewer</module>
     </modules>
 
 </project>

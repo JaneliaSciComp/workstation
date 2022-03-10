@@ -64,6 +64,13 @@
             <artifactId>lmdatabrowser</artifactId>
         </dependency>
 
+        <!--  ND Viewer -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>ndviewer</artifactId>
+        </dependency>
+
+
         <!-- Viewer Controller -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
