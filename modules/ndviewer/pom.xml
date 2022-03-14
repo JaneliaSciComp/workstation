@@ -111,7 +111,11 @@
             <artifactId>org-netbeans-libs-junit4</artifactId>
             <scope>test</scope>
         </dependency>
-</dependencies>
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>browser</artifactId>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
