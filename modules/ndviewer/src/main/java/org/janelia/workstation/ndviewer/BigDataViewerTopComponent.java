@@ -11,7 +11,9 @@ import net.imglib2.type.numeric.real.FloatType;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
+import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.util.Refreshable;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -64,6 +66,10 @@ public final class BigDataViewerTopComponent extends TopComponent {
         setupGUI();
     }
 
+//    static boolean isNavigateOnClick() {
+//        return FrameworkAccess.getModelProperty(OptionConstants.NAVIGATE_ON_CLICK, true);
+//    }
+
     private void setupGUI() {
         setLayout(new GridLayout(1, 1));
         this.add(bdv.getViewerPanel());
@@ -110,6 +116,10 @@ public final class BigDataViewerTopComponent extends TopComponent {
 
     void readProperties(java.util.Properties p) {
         String version = p.getProperty("version");
+    }
+
+    static boolean isNavigateOnClick() {
+        return FrameworkAccess.getModelProperty(OptionConstants.NAVIGATE_ON_CLICK, true);
     }
 
 }
