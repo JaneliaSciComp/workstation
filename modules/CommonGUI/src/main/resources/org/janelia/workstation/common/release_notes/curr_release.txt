@@ -1,10 +1,10 @@
 // 9.8
 
-Data Browser
-* Factored LM functionality into separate modules
-* Unified actions between the grid view and Sample view
-* Fixed bug with "Customize titles" feature
-* Added CMTK-based merge option for reprocessing
+FlyLight
+* Added new CMTK-based merge option for reprocessing
+* Support for LSMs located on Nearline storage
+* When applying Line Publishing Names, only show publishing names which are marked for publishing
+* Bug fixes to allow publishing older data
 
 Horta
 * Added Services -> Load Horta Data to automatically discover MouseLight data
@@ -14,5 +14,11 @@ Horta
 * Behind-the-scenes refactoring to support janeliaHortaCloud
 * "Go to ..." button can now be assigned a keyboard shortcut
 
-Workstation Installer
+Data Browser
+* Unified actions between the grid view and Sample view
+* Fixed bug with "Customize titles" feature
+
+Platform
+* Factored LM functionality into separate modules
+* Fixed SSLHandshakeException with newer versions of JDK 8
 * Fixed installer on Mac when there is a JDK 11+ installed
