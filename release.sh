@@ -58,7 +58,8 @@ git commit -a -m "Updated module version to ${NEW_MOD}"
 echo "Creating git tag for ${JWVER}"
 git tag ${JWVER}
 
-if [[ $LOCAL=="--local" ]]; then
+if [[ "$LOCAL" == "--local" ]]; then
+    echo "Skipping remote push due to --local flag"
     exit 0
 fi
 
