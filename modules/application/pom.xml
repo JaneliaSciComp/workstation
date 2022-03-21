@@ -58,7 +58,7 @@
             <artifactId>browser</artifactId>
         </dependency>
 
-        <!-- Data Browser -->
+        <!-- LM Data Browser -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>lmdatabrowser</artifactId>

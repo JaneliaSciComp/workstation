@@ -259,14 +259,14 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- DataBrowser --> 
+            <!-- Data Browser -->
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
                 <artifactId>browser</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- LMDataBrowser -->
+            <!-- LM Data Browser -->
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
                 <artifactId>lmdatabrowser</artifactId>

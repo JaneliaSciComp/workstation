@@ -47,6 +47,18 @@
             <artifactId>browser</artifactId>
         </dependency>
 
+        <!-- LM Data Browser -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>lmdatabrowser</artifactId>
+        </dependency>
+
+        <!-- Color Depth Search -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>colordepth</artifactId>
+        </dependency>
+
         <!-- NetBeans Modules -->
         <dependency>
             <groupId>org.netbeans.api</groupId>
