@@ -366,8 +366,8 @@ public final class NeuronTracerTopComponent extends TopComponent
         if (TmModelManager.getInstance().getCurrentSample()==null)
             return;
         initSampleLocation();
+        initColorModel();
         if (TmModelManager.getInstance().getCurrentWorkspace()!=null) {
-            initColorModel();
             initMeshes();
         }
         ViewerEventBus.registerForEvents(this);
@@ -478,7 +478,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             imageColorModel = new ImageColorModel();
             TmModelManager.getInstance().getCurrentView().setColorModel("default", imageColorModel);
             ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(this,
-                    tmWorkspace, imageColorModel);
+                    imageColorModel);
             ViewerEventBus.postEvent(modelEvent);
             return;
         }
@@ -502,7 +502,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
         TmModelManager.getInstance().getCurrentView().setColorModel("default", imageColorModel);
         ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(this,
-                tmWorkspace, imageColorModel);
+                 imageColorModel);
         ViewerEventBus.postEvent(modelEvent);
     }
 
@@ -1455,7 +1455,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             getNeuronMPRenderer().setIntensityBufferDirty();
                             imageColorModel.setUnmixParameters(TetVolumeActor.getInstance().getUnmixingParams());
                             ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(this,
-                                    TmModelManager.getInstance().getCurrentWorkspace(), imageColorModel);
+                                     imageColorModel);
                             ViewerEventBus.postEvent(modelEvent);
                             redrawNow();
                         }
@@ -1469,7 +1469,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             getNeuronMPRenderer().setIntensityBufferDirty();
                             imageColorModel.setUnmixParameters(TetVolumeActor.getInstance().getUnmixingParams());
                             ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(this,
-                                    TmModelManager.getInstance().getCurrentWorkspace(), imageColorModel);
+                                     imageColorModel);
                             ViewerEventBus.postEvent(modelEvent);
                             redrawNow();
                         }
@@ -1483,7 +1483,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             getNeuronMPRenderer().setIntensityBufferDirty();
                             imageColorModel.setUnmixParameters(TetVolumeActor.getInstance().getUnmixingParams());
                             ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(this,
-                                    TmModelManager.getInstance().getCurrentWorkspace(), imageColorModel);
+                                     imageColorModel);
                             ViewerEventBus.postEvent(modelEvent);
                             redrawNow();
                         }
@@ -1497,7 +1497,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             getNeuronMPRenderer().setIntensityBufferDirty();
                             imageColorModel.setUnmixParameters(TetVolumeActor.getInstance().getUnmixingParams());
                             ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(this,
-                                    TmModelManager.getInstance().getCurrentWorkspace(), imageColorModel);
+                                     imageColorModel);
                             ViewerEventBus.postEvent(modelEvent);
                             redrawNow();
                         }
@@ -1511,7 +1511,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             getNeuronMPRenderer().setIntensityBufferDirty();
                             imageColorModel.setUnmixParameters(TetVolumeActor.getInstance().getUnmixingParams());
                             ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(this,
-                                    TmModelManager.getInstance().getCurrentWorkspace(), imageColorModel);
+                                     imageColorModel);
                             ViewerEventBus.postEvent(modelEvent);
                             redrawNow();
                         }
