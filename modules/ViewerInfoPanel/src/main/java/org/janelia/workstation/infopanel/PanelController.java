@@ -14,6 +14,7 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.action.OpenTmSampleOrWorkspaceAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
@@ -118,7 +119,8 @@ public class PanelController {
         if (neurons==null)
             return;
         for (TmNeuronMetadata neuron : neurons) {
-            filteredAnnotationList.loadNeuron(neuron);
+            if (neuron.getOwnerKey().equals(AccessManager.getSubjectKey()))
+                filteredAnnotationList.loadNeuron(neuron);
             wsNeuronList.updateModel(neuron);
         }
     }
