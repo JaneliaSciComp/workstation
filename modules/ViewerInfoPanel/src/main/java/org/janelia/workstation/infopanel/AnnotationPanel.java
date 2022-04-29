@@ -108,7 +108,9 @@ public class AnnotationPanel extends JPanel
     }
 
     public void loadRecentWorkspace () {
-        panelController.loadRecentWorkspace();
+        // method once used to open previous workspace on startup; but around v9, it wasn't
+        //  hooked up properly, so is now entirely disconnected
+        // panelController.loadRecentWorkspace();
     }
 
     public TmModelManager getAnnotationModel() {
