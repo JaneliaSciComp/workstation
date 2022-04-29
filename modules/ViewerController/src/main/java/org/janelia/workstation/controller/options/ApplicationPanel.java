@@ -69,8 +69,9 @@ public class ApplicationPanel extends JPanel {
         loadLastCheckbox.addChangeListener(e -> controller.changed());
         JLabel titleLabel = new JLabel("Load last opened sample or workspace on startup: ");
         titleLabel.setLabelFor(loadLastCheckbox);
-        attrPanel.add(titleLabel,"gap para");
-        attrPanel.add(loadLastCheckbox,"gap para");
+        // this setting isn't working properly, so disable the ability to change it for now
+        // attrPanel.add(titleLabel,"gap para");
+        // attrPanel.add(loadLastCheckbox,"gap para");
 
         this.showColorSlidersOnOpen = new JCheckBox();
         showColorSlidersOnOpen.addChangeListener(e -> controller.changed());
@@ -240,11 +241,13 @@ public class ApplicationPanel extends JPanel {
     // End of variables declaration//GEN-END:variables
 
     public static boolean isLoadLastObject() {
+        // this is not working properly right now, so force it to false;
         String loadLastStr = FrameworkAccess.getLocalPreferenceValue(
                 ApplicationPanel.class,
                 ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT,
                 ApplicationPanel.PREFERENCE_LOAD_LAST_OBJECT_DEFAULT);
-        return Boolean.parseBoolean(loadLastStr);
+        // return Boolean.parseBoolean(loadLastStr);
+        return false;
     }
 
     public static boolean isLoadColorSliders() {
