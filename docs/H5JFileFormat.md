@@ -7,6 +7,8 @@ H5J is currently compatible with the following tools:
 * [VVD Viewer](https://github.com/takashi310/VVD_Viewer) (read)
 * [Vaa3D](https://github.com/Vaa3D/release) (read/write)
 * [Janelia Workstation](https://github.com/JaneliaSciComp/workstation) (read)
+* [web-vol-viewer](https://github.com/JaneliaSciComp/web-vol-viewer) (read)
+* [web-h5j-loader](https://github.com/JaneliaSciComp/web-h5j-loader) (read)
 
 
 ## Specification
