@@ -8,11 +8,16 @@ import java.awt.*;
 import javax.swing.*;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.real.FloatType;
+import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.files.N5Container;
+import org.janelia.saalfeldlab.n5.N5FSReader;
+import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.util.Refreshable;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.netbeans.api.settings.ConvertAsProperties;
 import org.openide.awt.ActionID;
@@ -66,15 +71,20 @@ public final class BigDataViewerTopComponent extends TopComponent {
         setupGUI();
     }
 
+    public static boolean isSupported(DomainObject domainObject) {
+        return domainObject instanceof N5Container;
+    }
+
 //    static boolean isNavigateOnClick() {
 //        return FrameworkAccess.getModelProperty(OptionConstants.NAVIGATE_ON_CLICK, true);
 //    }
 
     private void setupGUI() {
-        setLayout(new GridLayout(1, 1));
+        setLayout(new GridLayout(1, 2));
+
         this.add(bdv.getViewerPanel());
         // TODO to be added to side explorer
-        //  this.add(bdv.getCardPanel().getComponent());
+          this.add(bdv.getCardPanel().getComponent());
     }
 
     public void add(RandomAccessibleInterval<FloatType> img) {
@@ -122,5 +132,28 @@ public final class BigDataViewerTopComponent extends TopComponent {
         return FrameworkAccess.getModelProperty(OptionConstants.NAVIGATE_ON_CLICK, true);
     }
 
+    public void loadDomainObject(DomainObject domainObject) {
+        String filePath = ((N5Container) domainObject).getFilepath();
+
+            SimpleWorker worker = new SimpleWorker() {
+                @Override
+                protected void doStuff() throws Exception {
+                    N5Reader reader = new N5FSReader(filePath);
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    //Open it in gui
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+
+                }
+            };
+            worker.execute();
+
+
+    }
 }
 

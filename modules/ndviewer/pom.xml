@@ -5,7 +5,7 @@
     <parent>
         <artifactId>workstation</artifactId>
         <groupId>org.janelia</groupId>
-        <version>9.8-rc2</version>
+        <version>9.8.1</version>
         <relativePath>../..</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -14,7 +14,7 @@
     <name>NDViewerGUI</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>ndviewer</artifactId>
-    <version>9.8-rc2</version>
+    <version>9.8.1</version>
     <packaging>nbm</packaging>
 
     <repositories>
@@ -114,6 +114,11 @@
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>browser</artifactId>
+        </dependency>
+        <!-- CommonLibraries -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>libraries</artifactId>
         </dependency>
     </dependencies>
 
