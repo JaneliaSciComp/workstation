@@ -23,7 +23,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 1000)
+        @ActionReference(path = "Menu/Actions", position = 2500)
 })
 @NbBundle.Messages("CTL_OpenInBigDataViewerAction=Open in Big Data Viewer")
 public class OpenInBigDataViewerAction extends BaseContextualNodeAction {
@@ -51,7 +51,7 @@ public class OpenInBigDataViewerAction extends BaseContextualNodeAction {
 
     @Override
     public void performAction() {
-        BigDataViewerTopComponent viewer = ViewerUtils.provisionViewer(BigDataViewerManager.getInstance(), "editor");
+        BigDataViewerTopComponent viewer = ViewerUtils.createNewViewer(BigDataViewerManager.getInstance(), "editor");
         viewer.loadDomainObject(this.domainObject);
     }
 }
