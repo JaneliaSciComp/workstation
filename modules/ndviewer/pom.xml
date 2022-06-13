@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
     <parent>
         <artifactId>workstation</artifactId>
         <groupId>org.janelia</groupId>
         <version>9.8.1</version>
         <relativePath>../..</relativePath>
     </parent>
-    <modelVersion>4.0.0</modelVersion>
-
 
     <name>NDViewerGUI</name>
     <groupId>org.janelia.workstation</groupId>
@@ -24,14 +22,8 @@
         </repository>
     </repositories>
 
-
     <dependencies>
-        <!-- BigDataViewer   -->
-        <dependency>
-            <groupId>sc.fiji</groupId>
-            <artifactId>bigdataviewer-vistools</artifactId>
-            <version>1.0.0-beta-29</version>
-        </dependency>
+
         <!-- CommonLibraries -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
@@ -54,6 +46,19 @@
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>core</artifactId>
+        </dependency>
+
+        <!-- Data Browser -->
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>browser</artifactId>
+        </dependency>
+
+        <!-- N5 Viewer -->
+        <dependency>
+            <groupId>org.janelia.saalfeldlab</groupId>
+            <artifactId>n5-viewer_fiji</artifactId>
+            <version>5.5.1-SNAPSHOT</version>
         </dependency>
 
         <!-- NetBeans Modules -->
@@ -110,15 +115,6 @@
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-libs-junit4</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>browser</artifactId>
-        </dependency>
-        <!-- CommonLibraries -->
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>libraries</artifactId>
         </dependency>
     </dependencies>
 

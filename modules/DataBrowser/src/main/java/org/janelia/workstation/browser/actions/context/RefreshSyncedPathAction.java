@@ -31,7 +31,7 @@ import java.util.concurrent.CancellationException;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 650)
+        @ActionReference(path = "Menu/Actions", position = 2510)
 })
 @NbBundle.Messages("CTL_RefreshSyncedPathAction=Refresh Synchronized Folder")
 public class RefreshSyncedPathAction extends BaseContextualNodeAction {

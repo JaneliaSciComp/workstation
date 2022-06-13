@@ -27,7 +27,7 @@ import org.openide.util.NbBundle;
         lazy = false
 )
 @ActionReferences({
-        @ActionReference(path = "Menu/Actions", position = 1000, separatorBefore = 999),
+        @ActionReference(path = "Menu/Actions", position = 5000, separatorBefore = 4999),
         @ActionReference(path = "Shortcuts", name = "SPACE")
 })
 @NbBundle.Messages("CTL_LightboxToggleAction=Show in Lightbox")
