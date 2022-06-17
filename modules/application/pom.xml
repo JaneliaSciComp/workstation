@@ -64,7 +64,7 @@
             <artifactId>lmdatabrowser</artifactId>
         </dependency>
 
-        <!--  ND Viewer -->
+        <!--  N5 Viewer -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>n5viewer</artifactId>
