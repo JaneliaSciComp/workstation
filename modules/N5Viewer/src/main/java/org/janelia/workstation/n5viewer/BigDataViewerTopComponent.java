@@ -1,9 +1,7 @@
-package org.janelia.workstation.ndviewer;
+package org.janelia.workstation.n5viewer;
 
-import bdv.ui.CardPanel;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.jacsstorage.newclient.JadeStorageService;
-import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.files.N5Container;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5TreeNode;
@@ -31,7 +29,7 @@ import java.util.Collections;
  * Top component which displays something.
  */
 @ConvertAsProperties(
-        dtd = "-//org.janelia.workstation.ndviewer//BigDataViewerTopComponent//EN",
+        dtd = "-//org.janelia.workstation.n5viewer//BigDataViewerTopComponent//EN",
         autostore = false
 )
 @TopComponent.Description(
@@ -39,7 +37,7 @@ import java.util.Collections;
         persistenceType = TopComponent.PERSISTENCE_ALWAYS
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
-@ActionID(category = "Window", id = "org.janelia.workstation.ndviewer.BigDataViewerTopComponent")
+@ActionID(category = "Window", id = "org.janelia.workstation.n5viewer.BigDataViewerTopComponent")
 @ActionReference(path = "Menu/Window/ND Viewer", position = 100)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_BigDataViewerTopComponentAction",

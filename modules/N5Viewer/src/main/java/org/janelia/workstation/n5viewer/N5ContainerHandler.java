@@ -1,4 +1,4 @@
-package org.janelia.workstation.ndviewer;
+package org.janelia.workstation.n5viewer;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.files.N5Container;

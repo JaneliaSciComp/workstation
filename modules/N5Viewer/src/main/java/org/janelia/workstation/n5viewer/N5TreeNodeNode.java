@@ -1,4 +1,4 @@
-package org.janelia.workstation.ndviewer;
+package org.janelia.workstation.n5viewer;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.janelia.model.domain.files.N5Container;

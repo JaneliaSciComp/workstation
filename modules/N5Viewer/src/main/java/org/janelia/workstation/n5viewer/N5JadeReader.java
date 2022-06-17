@@ -1,4 +1,4 @@
-package org.janelia.workstation.ndviewer;
+package org.janelia.workstation.n5viewer;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
