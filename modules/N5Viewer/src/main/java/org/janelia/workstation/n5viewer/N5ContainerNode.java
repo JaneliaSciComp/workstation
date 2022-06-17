@@ -1,4 +1,4 @@
-package org.janelia.workstation.ndviewer;
+package org.janelia.workstation.n5viewer;
 
 import org.janelia.jacsstorage.newclient.JadeStorageService;
 import org.janelia.jacsstorage.newclient.StorageService;

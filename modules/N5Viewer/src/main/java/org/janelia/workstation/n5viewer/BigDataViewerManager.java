@@ -1,4 +1,4 @@
-package org.janelia.workstation.ndviewer;
+package org.janelia.workstation.n5viewer;
 
 import org.janelia.workstation.browser.gui.components.ViewerManager;
 import org.janelia.workstation.core.events.Events;
