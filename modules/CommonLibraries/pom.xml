@@ -23,7 +23,7 @@
             ignoring FAIL_ON_UNKNOWN_PROPERTIES. We should revisit this later to see if it gets
             fixed in Jersey.
         -->
-        <jaxrs.jersey.version>2.21</jaxrs.jersey.version>
+        <jaxrs.jersey.version>2.35</jaxrs.jersey.version>
     </properties>
 
     <dependencies>
@@ -52,6 +52,10 @@
         <dependency>
             <groupId>org.janelia.jacs-model</groupId>
             <artifactId>jacs-model-rendering</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.jacs-storage</groupId>
+            <artifactId>jacsstorage-clients</artifactId>
         </dependency>
         <dependency>
             <groupId>org.janelia.legacy</groupId>
@@ -92,7 +96,7 @@
             <groupId>edu.wlu</groupId>
             <artifactId>kdtree</artifactId>
         </dependency>
-        
+
         <!-- Maven Central dependencies --> 
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -150,6 +154,11 @@
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-jaxb-annotations</artifactId>
+            <version>${janeliaws.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-joda</artifactId>
             <version>${janeliaws.jackson.version}</version>
         </dependency>
         <dependency>
@@ -248,13 +257,11 @@
             <artifactId>jersey-media-json-jackson</artifactId>
             <version>${jaxrs.jersey.version}</version>
         </dependency>
-        <!--
         <dependency>
 	    <groupId>org.glassfish.jersey.inject</groupId>
 	    <artifactId>jersey-hk2</artifactId>
             <version>${jaxrs.jersey.version}</version>
         </dependency>
-        -->
         <dependency>
             <groupId>gov.nist.math</groupId>
             <artifactId>jama</artifactId>
@@ -416,6 +423,10 @@
                         <publicPackage>com.fasterxml.jackson.dataformat.xml.ser</publicPackage>
                         <publicPackage>com.fasterxml.jackson.dataformat.xml.util</publicPackage>
                         <publicPackage>com.fasterxml.jackson.dataformat.yaml</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.datatype.joda</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.datatype.joda.cfg</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.datatype.joda.deser</publicPackage>
+                        <publicPackage>com.fasterxml.jackson.datatype.joda.ser</publicPackage>
                         <publicPackage>com.fasterxml.jackson.jaxrs.annotation</publicPackage>
                         <publicPackage>com.fasterxml.jackson.jaxrs.base</publicPackage>
                         <publicPackage>com.fasterxml.jackson.jaxrs.cfg</publicPackage>
@@ -542,7 +553,7 @@
                         <publicPackage>org.apache.commons.codec.language</publicPackage>
                         <publicPackage>org.apache.commons.codec.net</publicPackage>
                         <publicPackage>org.apache.commons.compress.archivers</publicPackage>
-                        <publicPackage>org.apache.commons.compress.archivers.ar</publicPackage>
+                        <publicPackage>org.apache.commons.compress.archivers.ar</publicPackage>F
                         <publicPackage>org.apache.commons.compress.archivers.arj</publicPackage>
                         <publicPackage>org.apache.commons.compress.archivers.cpio</publicPackage>
                         <publicPackage>org.apache.commons.compress.archivers.dump</publicPackage>
@@ -698,6 +709,7 @@
                         <publicPackage>org.janelia.model.security.dto</publicPackage>
                         <publicPackage>org.janelia.model.security.util</publicPackage>
                         <publicPackage>org.janelia.model.util</publicPackage>
+                        <publicPackage>org.janelia.jacsstorage.newclient</publicPackage>
                         <publicPackage>org.janelia.it.jacs.compute.access</publicPackage>
                         <publicPackage>org.janelia.it.jacs.compute.api</publicPackage>
                         <publicPackage>org.janelia.it.jacs.compute.api.support</publicPackage>

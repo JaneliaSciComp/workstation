@@ -1,27 +1,20 @@
-package org.janelia.workstation.browser.api.services;
+package org.janelia.workstation.ndviewer;
 
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.files.SyncedPath;
-import org.janelia.model.domain.files.SyncedRoot;
-import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
-import org.janelia.workstation.browser.nodes.SyncedPathNode;
-import org.janelia.workstation.browser.nodes.SyncedRootNode;
+import org.janelia.model.domain.files.N5Container;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
-import org.janelia.workstation.core.api.DomainMgr;
-import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Node;
 import org.openide.util.lookup.ServiceProvider;
 
 /**
- * Provides services for supporting SyncedRoots and SyncedPaths. This service exist at position 100 and can be
- * superseded.
+ * Provides services for supporting N5Containers.
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = DomainObjectHandler.class, position = 1000)
-public class SyncedPathObjectHandler implements DomainObjectHandler {
+@ServiceProvider(service = DomainObjectHandler.class, position = 200)
+public class N5ContainerHandler implements DomainObjectHandler {
 
     @Override
     public boolean isCompatible(DomainObject domainObject) {
@@ -30,24 +23,21 @@ public class SyncedPathObjectHandler implements DomainObjectHandler {
     
     @Override
     public boolean isCompatible(Class<? extends DomainObject> clazz) {
-        return SyncedPath.class.isAssignableFrom(clazz);
+        return N5Container.class.isAssignableFrom(clazz);
     }
 
     @Override
     public Node getNode(DomainObject domainObject, ChildFactory parentChildFactory) throws Exception {
-        if (domainObject instanceof SyncedRoot) {
-            return new SyncedRootNode(parentChildFactory, (SyncedRoot)domainObject);
-        }
-        else if (domainObject instanceof SyncedPath) {
-            return new SyncedPathNode((SyncedPath)domainObject);
+        if (domainObject instanceof N5Container) {
+            return new N5ContainerNode((N5Container)domainObject);
         }
         return null;
     }
 
     @Override
     public Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
-        if (domainObject instanceof SyncedRoot) {
-            return FilterEditorPanel.class;
+        if (domainObject instanceof N5Container) {
+            // TODO: create editor for opening N5 here
         }
         return null;
     }
@@ -59,16 +49,12 @@ public class SyncedPathObjectHandler implements DomainObjectHandler {
 
     @Override
     public boolean supportsRemoval(DomainObject domainObject) {
-        if (domainObject instanceof SyncedRoot) {
-            return true;
-        }
         return false;
     }
     
     @Override
     public void remove(DomainObject domainObject) throws Exception {
-        DomainModel model = DomainMgr.getDomainMgr().getModel();
-        model.remove((SyncedRoot)domainObject);
+        throw new UnsupportedOperationException();
     }
 
     @Override

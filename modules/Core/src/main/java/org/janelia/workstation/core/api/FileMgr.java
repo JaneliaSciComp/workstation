@@ -13,6 +13,8 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
+import org.janelia.jacsstorage.newclient.JadeStorageService;
+import org.janelia.jacsstorage.newclient.StorageService;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
@@ -48,7 +50,6 @@ public class FileMgr {
     private String webdavBaseUrl;
     private int webdavMaxConnsPerHost;
     private int webdavMaxTotalConnections;
-    private HttpClientProxy httpClient;
     private StorageClientMgr storageClientMgr;
     private LocalFileCache<WebdavCachedFileKey> webdavLocalFileCache;
 
@@ -69,7 +70,7 @@ public class FileMgr {
                 HttpConnectionManagerParams managerParams = mgr.getParams();
                 managerParams.setDefaultMaxConnectionsPerHost(webdavMaxConnsPerHost);
                 managerParams.setMaxTotalConnections(webdavMaxTotalConnections);
-                httpClient = new HttpClientProxy(new HttpClient(mgr));
+                HttpClientProxy httpClient = new HttpClientProxy(new HttpClient(mgr));
                 storageClientMgr = new StorageClientMgr(webdavBaseUrl, httpClient);
                 webdavLocalFileCache = new LocalFileCache<>(
                         LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
@@ -86,10 +87,6 @@ public class FileMgr {
                 );
             }
         });
-    }
-
-    public HttpClientProxy getHttpClient() {
-        return httpClient;
     }
 
     public WebDavUploader getFileUploader() {
@@ -137,4 +134,17 @@ public class FileMgr {
         return inputStream;
     }
 
+    /**
+     * Alternative API using the Jade Client.
+     * TODO: in the future, we should implement the same interface as this client,
+     * but using the caching implementation above.
+     * @return
+     */
+    public JadeStorageService getStorageService() {
+        String remoteStorageUrl = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
+        StorageService storageService = new StorageService(remoteStorageUrl, null);
+        JadeStorageService jadeStorage = new JadeStorageService(storageService,
+                AccessManager.getSubjectKey(), AccessManager.getAccessManager().getToken());
+        return jadeStorage;
+    }
 }
