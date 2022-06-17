@@ -6,6 +6,8 @@ import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.nodes.FilterNode;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.integration.spi.domain.DomainObjectHandler;
+import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
@@ -91,7 +93,10 @@ public class SyncedRootNode extends FilterNode<SyncedRoot> {
         @Override
         protected Node createNodeForKey(SyncedPath key) {
             try {
-                return new SyncedPathNode(key);
+                DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(key);
+                if (provider!=null) {
+                    return provider.getNode(key, this);
+                }
             }
             catch (Exception e) {
                 log.error("Error creating node for key " + key, e);

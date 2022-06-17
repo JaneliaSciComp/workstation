@@ -15,13 +15,6 @@
     <version>9.8.1</version>
     <packaging>nbm</packaging>
 
-    <repositories>
-        <repository>
-            <id>scijava.public</id>
-            <url>https://maven.scijava.org/content/groups/public</url>
-        </repository>
-    </repositories>
-
     <dependencies>
 
         <!-- CommonLibraries -->
@@ -59,6 +52,11 @@
             <groupId>org.janelia.saalfeldlab</groupId>
             <artifactId>n5-viewer_fiji</artifactId>
             <version>5.5.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.saalfeldlab</groupId>
+            <artifactId>n5</artifactId>
+            <version>2.5.1</version>
         </dependency>
 
         <!-- NetBeans Modules -->

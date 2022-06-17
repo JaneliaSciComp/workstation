@@ -144,7 +144,6 @@ public class RecentlyOpenedItemsNode extends IdentifiableNode {
                 if (provider!=null) {
                     return provider.getNode(key, this);
                 }
-                return null;
             }
             catch (Exception e) {
                 log.error("Error creating node for key " + key, e);

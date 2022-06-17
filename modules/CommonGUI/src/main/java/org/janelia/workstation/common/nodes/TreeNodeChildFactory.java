@@ -113,7 +113,6 @@ public class TreeNodeChildFactory extends ChildFactory<DomainObject> {
             if (provider!=null) {
                 return provider.getNode(key, this);
             }
-            return null;
         }
         catch (Exception e) {
             log.error("Error creating node for '"+key+"'", e);
