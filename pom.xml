@@ -224,10 +224,10 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!--  ND Viewer -->
+            <!--  N5 Viewer -->
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
-                <artifactId>nd5iewer</artifactId>
+                <artifactId>n5viewer</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
