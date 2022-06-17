@@ -67,7 +67,7 @@
         <!--  ND Viewer -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
-            <artifactId>ndviewer</artifactId>
+            <artifactId>n5viewer</artifactId>
         </dependency>
 
 
