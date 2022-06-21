@@ -475,7 +475,6 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void initColorModel() {
         TmWorkspace tmWorkspace = TmModelManager.getInstance().getCurrentWorkspace();
         if (tmWorkspace==null) {
-            imageColorModel = new ImageColorModel();
             TmModelManager.getInstance().getCurrentView().setColorModel("default", imageColorModel);
             ColorModelUpdateEvent modelEvent = new ColorModelUpdateEvent(this,
                     imageColorModel);
