@@ -1,24 +1,6 @@
-// 9.8.1
-
-FlyLight
-* Added new CMTK-based merge option for reprocessing
-* Support for LSMs located on Nearline storage
-* When applying Line Publishing Names, only show publishing names which are marked for publishing
-* Bug fixes to allow publishing older data
+// 9.9
 
 Horta
-* Added Services -> Load Horta Data to automatically discover MouseLight data
-* Fixed sync service so that it correctly marks unopenable samples with the error icon
-* Restored TM Sample as a search option on the Start Page
-* Moved "Show Horta Control Center on startup" option into the Horta options panel
-* Behind-the-scenes refactoring to support janeliaHortaCloud
-* "Go to ..." button can now be assigned a keyboard shortcut
-
-Data Browser
-* Unified actions between the grid view and Sample view
-* Fixed bug with "Customize titles" feature
-
-Platform
-* Factored LM functionality into separate modules
-* Fixed SSLHandshakeException with newer versions of JDK 8
-* Fixed installer on Mac when there is a JDK 11+ installed
+* Fixed issue with Sample not loading color sliders panel
+* Fixed issue with Workspace neurons from previously loaded workspace being shown in current workspace
+* Fixed Issue with Import/Export SWC shifting neurons outside of brain region
