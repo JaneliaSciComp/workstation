@@ -1,3 +1,14 @@
+// 9.9
+
+Horta
+* Fixed issue with Sample not loading color sliders panel
+* Fixed issue with Workspace neurons from previously loaded workspace being shown in current workspace
+* Fixed Issue with Import/Export SWC shifting neurons outside of brain region
+
+N5 Viewer
+* Added "Synchronized Folders" which can discover N5 and Zarr images on the file system
+* Added new module that embeds N5 Viewer (Saalfeld Lab) for viewing large images
+
 // 9.8.1
 
 FlyLight
