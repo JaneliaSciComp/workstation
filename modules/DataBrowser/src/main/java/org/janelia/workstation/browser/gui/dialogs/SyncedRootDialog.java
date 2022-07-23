@@ -2,6 +2,7 @@ package org.janelia.workstation.browser.gui.dialogs;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.files.DiscoveryAgentType;
 import org.janelia.model.domain.files.SyncedRoot;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
@@ -11,6 +12,7 @@ import org.janelia.workstation.core.api.web.AsyncServiceClient;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.janelia.workstation.core.workers.SimpleWorker;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,8 +22,8 @@ import java.util.concurrent.CancellationException;
 
 public class SyncedRootDialog extends ModalDialog {
 
-    private JTextField nameField;
     private JTextField pathTextField;
+    private JTextField nameField;
     private JTextField depthField;
     private SyncedRoot syncedRoot;
     private HashMap<DiscoveryAgentType, JCheckBox> agentTypeMap = new LinkedHashMap<>();
@@ -42,13 +44,13 @@ public class SyncedRootDialog extends ModalDialog {
 
         attrPanel.addItem(instructions);
 
-        this.nameField = new JTextField(50);
-        nameField.setToolTipText("Name of the Synchronized Folder in the Workstation");
-        attrPanel.addItem("Name", nameField);
-
         this.pathTextField = new JTextField(50);
         pathTextField.setToolTipText("The filepath must be accessible to the backend JADE service");
         attrPanel.addItem("Path", pathTextField);
+
+        this.nameField = new JTextField(50);
+        nameField.setToolTipText("Name of the Synchronized Folder in the Workstation. If blank, the filepath will be used.");
+        attrPanel.addItem("Name (optional)", nameField);
 
         this.depthField = new JTextField(20);
         depthField.setToolTipText("Depth of folders to traverse when discovering files");
@@ -119,9 +121,23 @@ public class SyncedRootDialog extends ModalDialog {
             syncedRoot = new SyncedRoot();
         }
 
-        syncedRoot.setName(nameField.getText());
         syncedRoot.setFilepath(pathTextField.getText());
-        syncedRoot.setDepth(Integer.parseInt(depthField.getText()));
+
+        if (StringUtils.isBlank(syncedRoot.getFilepath())) {
+            JOptionPane.showMessageDialog(this, "You must enter a filepath to continue", "No filepath given", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        syncedRoot.setName(StringUtils.isBlank(nameField.getText()) ? syncedRoot.getFilepath() : nameField.getText());
+
+        try {
+            syncedRoot.setDepth(Integer.parseInt(depthField.getText()));
+            if (syncedRoot.getDepth() < 1 || syncedRoot.getDepth() > 20) throw new NumberFormatException();
+        }
+        catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Enter a number between 1 and 20 for depth", "Invalid depth", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         for (DiscoveryAgentType agentType : DiscoveryAgentType.values()) {
             JCheckBox checkBox = agentTypeMap.get(agentType);
@@ -131,6 +147,11 @@ public class SyncedRootDialog extends ModalDialog {
             else {
                 syncedRoot.getDiscoveryAgents().remove(agentType);
             }
+        }
+
+        if (syncedRoot.getDiscoveryAgents().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Select one or more discovery agents", "No agents selected", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
         refreshSyncedRoot(syncedRoot);

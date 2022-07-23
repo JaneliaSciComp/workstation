@@ -2,7 +2,9 @@ package org.janelia.workstation.browser.nodes;
 
 import org.janelia.model.domain.files.SyncedPath;
 import org.janelia.model.domain.files.SyncedRoot;
+import org.janelia.model.domain.workspace.Node;
 import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.common.nodes.FilterNode;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -11,7 +13,6 @@ import org.janelia.workstation.integration.spi.domain.ServiceAcceptorHelper;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.nodes.ChildFactory;
 import org.openide.nodes.Children;
-import org.openide.nodes.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,7 @@ import java.util.List;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class SyncedRootNode extends FilterNode<SyncedRoot> {
+public class SyncedRootNode extends AbstractDomainObjectNode<SyncedRoot> {
 
     private final static Logger log = LoggerFactory.getLogger(SyncedRootNode.class);
 
@@ -32,7 +33,7 @@ public class SyncedRootNode extends FilterNode<SyncedRoot> {
     }
 
     private SyncedRootNode(ChildFactory<?> parentChildFactory, final SyncedPathFactory childFactory, SyncedRoot library) {
-        super(parentChildFactory, library.getPaths().getCount()==0 ? Children.LEAF : Children.create(childFactory, false), library);
+        super(parentChildFactory, library.getChildren().size()==0 ? Children.LEAF : Children.create(childFactory, false), library);
     }
 
     @Override
@@ -76,7 +77,6 @@ public class SyncedRootNode extends FilterNode<SyncedRoot> {
         protected boolean createKeys(java.util.List<SyncedPath> list) {
             try {
                 log.debug("Creating children keys for SyncedRootNode");
-                int c = 0;
                 List<SyncedPath> children = DomainMgr.getDomainMgr().getModel().getChildren(syncedRoot);
                 for (SyncedPath syncedPath : children) {
                     if (syncedPath.isExistsInStorage()) {
@@ -91,7 +91,8 @@ public class SyncedRootNode extends FilterNode<SyncedRoot> {
         }
 
         @Override
-        protected Node createNodeForKey(SyncedPath key) {
+        protected org.openide.nodes.Node createNodeForKey(SyncedPath key) {
+            log.debug("Creating node for '{}'",key.getName());
             try {
                 DomainObjectHandler provider = ServiceAcceptorHelper.findFirstHelper(key);
                 if (provider!=null) {

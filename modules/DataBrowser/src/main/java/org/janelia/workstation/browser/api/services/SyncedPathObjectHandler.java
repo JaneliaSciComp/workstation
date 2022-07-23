@@ -4,6 +4,7 @@ import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.files.SyncedPath;
 import org.janelia.model.domain.files.SyncedRoot;
 import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
+import org.janelia.workstation.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.workstation.browser.nodes.SyncedPathNode;
 import org.janelia.workstation.browser.nodes.SyncedRootNode;
 import org.janelia.workstation.common.gui.editor.ParentNodeSelectionEditor;
@@ -47,7 +48,7 @@ public class SyncedPathObjectHandler implements DomainObjectHandler {
     @Override
     public Class<? extends ParentNodeSelectionEditor<? extends DomainObject,?,?>> getEditorClass(DomainObject domainObject) {
         if (domainObject instanceof SyncedRoot) {
-            return FilterEditorPanel.class;
+            return TreeNodeEditorPanel.class;
         }
         return null;
     }

@@ -2,7 +2,6 @@ package org.janelia.workstation.browser.actions.context;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.janelia.model.domain.files.SyncedPath;
 import org.janelia.model.domain.files.SyncedRoot;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.api.ClientDomainUtils;
@@ -36,32 +35,31 @@ import java.util.concurrent.CancellationException;
 @NbBundle.Messages("CTL_RefreshSyncedPathAction=Refresh Synchronized Folder")
 public class RefreshSyncedPathAction extends BaseContextualNodeAction {
 
-    private SyncedPath domainObject;
+    private SyncedRoot syncedRoot;
 
     @Override
     protected void processContext() {
-        this.domainObject = null;
+        this.syncedRoot = null;
         setEnabledAndVisible(false);
-        if (getNodeContext().isSingleObjectOfType(SyncedPath.class)) {
-            this.domainObject = getNodeContext().getSingleObjectOfType(SyncedPath.class);
+        if (getNodeContext().isSingleObjectOfType(SyncedRoot.class)) {
+            this.syncedRoot = getNodeContext().getSingleObjectOfType(SyncedRoot.class);
         }
-        if (domainObject != null) {
+        if (syncedRoot != null) {
             setVisible(true);
-            setEnabled(ClientDomainUtils.hasWriteAccess(domainObject));
+            setEnabled(ClientDomainUtils.hasWriteAccess(syncedRoot));
         }
     }
 
     @Override
     public void performAction() {
-        refreshSyncedRoot(domainObject);
+        refreshSyncedRoot(syncedRoot);
     }
 
-    public static void refreshSyncedRoot(SyncedPath syncedPath) {
+    public static void refreshSyncedRoot(SyncedRoot syncedRoot) {
 
         BackgroundWorker worker = new AsyncServiceMonitoringWorker() {
 
-            private SyncedRoot syncedRoot;
-            private String taskDisplayName = "Synchronizing Folder "+syncedPath.getName();
+            private String taskDisplayName = "Synchronizing Folder "+syncedRoot.getName();
 
             @Override
             public String getName() {
@@ -70,13 +68,6 @@ public class RefreshSyncedPathAction extends BaseContextualNodeAction {
 
             @Override
             protected void doStuff() throws Exception {
-
-                if (syncedPath instanceof SyncedRoot) {
-                    syncedRoot = (SyncedRoot)syncedPath;
-                }
-                else {
-                    syncedRoot = DomainMgr.getDomainMgr().getModel().getDomainObject(syncedPath.getRootRef());
-                }
 
                 setSuccessCallback(() -> {
                     SimpleWorker.runInBackground(() -> DomainMgr.getDomainMgr().getModel().invalidateAll());

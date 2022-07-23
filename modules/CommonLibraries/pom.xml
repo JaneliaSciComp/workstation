@@ -55,6 +55,14 @@
         </dependency>
         <dependency>
             <groupId>org.janelia.jacs-storage</groupId>
+            <artifactId>jacsstorage-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.jacs-storage</groupId>
+            <artifactId>jacsstorage-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.janelia.jacs-storage</groupId>
             <artifactId>jacsstorage-clients</artifactId>
         </dependency>
         <dependency>
@@ -709,6 +717,7 @@
                         <publicPackage>org.janelia.model.security.dto</publicPackage>
                         <publicPackage>org.janelia.model.security.util</publicPackage>
                         <publicPackage>org.janelia.model.util</publicPackage>
+                        <publicPackage>org.janelia.jacsstorage.datarequest</publicPackage>
                         <publicPackage>org.janelia.jacsstorage.newclient</publicPackage>
                         <publicPackage>org.janelia.it.jacs.compute.access</publicPackage>
                         <publicPackage>org.janelia.it.jacs.compute.api</publicPackage>
