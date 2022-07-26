@@ -176,10 +176,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public SWCDataConverter getSwcDataConverter() {
         if (swcDataConverter == null) {
             swcDataConverter = new SWCDataConverter();
-            TmSample sample = TmModelManager.getInstance().getCurrentSample();
             swcDataConverter.setSWCExchanger(new MatrixDrivenSWCExchanger(
-                    MatrixUtilities.deserializeMatrix(sample.getMicronToVoxMatrix(), "micronToVoxMatrix"),
-                    MatrixUtilities.deserializeMatrix(sample.getVoxToMicronMatrix(), "voxToMicronMatrix")));
+                    TmModelManager.getInstance().getMicronToVoxMatrix(),
+                    TmModelManager.getInstance().getVoxToMicronMatrix()));
         }
         return swcDataConverter;
     }
