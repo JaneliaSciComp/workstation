@@ -2,13 +2,15 @@ package org.janelia.workstation.integration.spi.domain;
 
 import com.google.common.collect.ComparisonChain;
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.workspace.Workspace;
 import org.openide.util.Lookup;
 import org.openide.util.lookup.ServiceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Delegate class to facilitate dealing with finding compatible acceptors

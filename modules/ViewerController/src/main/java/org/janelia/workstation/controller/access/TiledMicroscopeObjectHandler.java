@@ -16,7 +16,7 @@ import org.openide.util.lookup.ServiceProvider;
  * 
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-@ServiceProvider(service = DomainObjectHandler.class)
+@ServiceProvider(service = DomainObjectHandler.class, position = 500)
 public class TiledMicroscopeObjectHandler implements DomainObjectHandler {
 
     @Override

@@ -12,7 +12,6 @@ import org.janelia.workstation.core.api.web.AsyncServiceClient;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
 import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.integration.util.FrameworkAccess;
 
 import javax.swing.*;
 import java.awt.*;
@@ -74,15 +73,20 @@ public class SyncedRootDialog extends ModalDialog {
         cancelButton.setToolTipText("Close dialog without doing anything");
         cancelButton.addActionListener(e -> setVisible(false));
 
+        JButton saveButton = new JButton("Save");
+        saveButton.setToolTipText("Save the changes and close the dialog");
+        saveButton.addActionListener(e -> saveAndClose(false));
+
         JButton okButton = new JButton("Save and Synchronize");
-        okButton.setToolTipText("Close dialog and begin data synchronization");
-        okButton.addActionListener(e -> saveAndClose());
+        okButton.setToolTipText("Save the changes and begin data synchronization");
+        okButton.addActionListener(e -> saveAndClose(true));
 
         JPanel buttonPane = new JPanel();
         buttonPane.setLayout(new BoxLayout(buttonPane, BoxLayout.LINE_AXIS));
         buttonPane.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
         buttonPane.add(Box.createHorizontalGlue());
         buttonPane.add(cancelButton);
+        buttonPane.add(saveButton);
         buttonPane.add(okButton);
 
         add(buttonPane, BorderLayout.SOUTH);
@@ -115,7 +119,7 @@ public class SyncedRootDialog extends ModalDialog {
         packAndShow();
     }
 
-    private void saveAndClose() {
+    private void saveAndClose(boolean sync) {
 
         if (syncedRoot == null) {
             syncedRoot = new SyncedRoot();
@@ -154,7 +158,9 @@ public class SyncedRootDialog extends ModalDialog {
             return;
         }
 
-        refreshSyncedRoot(syncedRoot);
+        if (sync) {
+            refreshSyncedRoot(syncedRoot);
+        }
 
         setVisible(false);
     }

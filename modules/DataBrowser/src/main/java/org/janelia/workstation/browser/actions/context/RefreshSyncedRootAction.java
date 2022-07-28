@@ -23,17 +23,17 @@ import java.util.concurrent.CancellationException;
  */
 @ActionID(
         category = "actions",
-        id = "RefreshSyncedPathAction"
+        id = "RefreshSyncedRootAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_RefreshSyncedPathAction",
+        displayName = "#CTL_RefreshSyncedRootAction",
         lazy = false
 )
 @ActionReferences({
         @ActionReference(path = "Menu/Actions", position = 2510)
 })
-@NbBundle.Messages("CTL_RefreshSyncedPathAction=Refresh Synchronized Folder")
-public class RefreshSyncedPathAction extends BaseContextualNodeAction {
+@NbBundle.Messages("CTL_RefreshSyncedRootAction=Refresh Synchronized Folder")
+public class RefreshSyncedRootAction extends BaseContextualNodeAction {
 
     private SyncedRoot syncedRoot;
 

@@ -3,6 +3,7 @@ package org.janelia.workstation.browser.nodes;
 import org.janelia.model.domain.files.SyncedPath;
 import org.janelia.model.domain.files.SyncedRoot;
 import org.janelia.model.domain.workspace.Node;
+import org.janelia.workstation.browser.actions.NewSyncedRootAction;
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.nodes.AbstractDomainObjectNode;
 import org.janelia.workstation.common.nodes.FilterNode;
@@ -16,7 +17,11 @@ import org.openide.nodes.Children;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**

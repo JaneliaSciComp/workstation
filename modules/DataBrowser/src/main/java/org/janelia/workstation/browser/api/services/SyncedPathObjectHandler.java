@@ -3,7 +3,6 @@ package org.janelia.workstation.browser.api.services;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.files.SyncedPath;
 import org.janelia.model.domain.files.SyncedRoot;
-import org.janelia.workstation.browser.gui.editor.FilterEditorPanel;
 import org.janelia.workstation.browser.gui.editor.TreeNodeEditorPanel;
 import org.janelia.workstation.browser.nodes.SyncedPathNode;
 import org.janelia.workstation.browser.nodes.SyncedRootNode;
