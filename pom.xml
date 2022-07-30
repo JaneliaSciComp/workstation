@@ -113,7 +113,7 @@
 
         <janeliaws.jacs-messaging.version>2.5.0</janeliaws.jacs-messaging.version>
 
-        <janeliaws.jacs-storage.version>1.17.8.SNAPSHOT</janeliaws.jacs-storage.version>
+        <janeliaws.jacs-storage.version>1.18.0.RELEASE</janeliaws.jacs-storage.version>
 
         <!--==== Plugin Versions ==================================================================================-->
 
