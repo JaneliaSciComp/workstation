@@ -2,10 +2,13 @@ package org.janelia.workstation.controller.action;
 
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.tiledMicroscope.TmMappedNeuron;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.controller.TmViewerManager;
+import org.janelia.workstation.core.api.DomainMgr;
+import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -50,6 +53,10 @@ public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {
             domainObject = getNodeContext().getSingleObjectOfType(TmWorkspace.class);
             setEnabledAndVisible(true);
         }
+        else if (getNodeContext().isSingleObjectOfType(TmMappedNeuron.class)) {
+            domainObject = getNodeContext().getSingleObjectOfType(TmMappedNeuron.class);
+            setEnabledAndVisible(true);
+        }
         else {
             domainObject = null;
             setEnabledAndVisible(false);
@@ -69,8 +76,38 @@ public class OpenTmSampleOrWorkspaceAction extends BaseContextualNodeAction {
             return;
         }
 
-        TmViewerManager.getInstance().loadProject(domainObject);
-        FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(domainObject));
+        if (domainObject instanceof TmMappedNeuron) {
+            TmMappedNeuron neuron = (TmMappedNeuron) this.domainObject;
 
+            SimpleWorker worker = new SimpleWorker() {
+
+                private TmWorkspace workspace;
+
+                @Override
+                protected void doStuff() throws Exception {
+                    workspace = DomainMgr.getDomainMgr().getModel().getDomainObject(neuron.getWorkspaceRef());
+                }
+
+                @Override
+                protected void hadSuccess() {
+                    openProject(workspace);
+                }
+
+                @Override
+                protected void hadError(Throwable error) {
+                    FrameworkAccess.handleException(error);
+                }
+            };
+
+            worker.execute();
+        }
+        else {
+            openProject(domainObject);
+        }
+    }
+
+    private void openProject(DomainObject project) {
+        TmViewerManager.getInstance().loadProject(project);
+        FrameworkAccess.getBrowsingController().updateRecentlyOpenedHistory(Reference.createFor(project));
     }
 }
