@@ -5,8 +5,11 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.model.domain.files.DiscoveryAgentType;
 import org.janelia.model.domain.files.SyncedRoot;
+import org.janelia.model.security.Subject;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.common.gui.support.GroupedKeyValuePanel;
+import org.janelia.workstation.common.gui.support.SubjectComboBox;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.web.AsyncServiceClient;
 import org.janelia.workstation.core.workers.AsyncServiceMonitoringWorker;
@@ -17,13 +20,19 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
+import java.util.stream.Collectors;
 
 public class SyncedRootDialog extends ModalDialog {
 
     private JTextField pathTextField;
     private JTextField nameField;
     private JTextField depthField;
+    private JPanel subjectPanel;
+    private SubjectComboBox subjectCombobox;
+    private JTextField subjectTextField;
     private SyncedRoot syncedRoot;
     private HashMap<DiscoveryAgentType, JCheckBox> agentTypeMap = new LinkedHashMap<>();
 
@@ -55,6 +64,16 @@ public class SyncedRootDialog extends ModalDialog {
         depthField.setToolTipText("Depth of folders to traverse when discovering files");
         depthField.setText("2");
         attrPanel.addItem("Depth", depthField);
+
+        subjectCombobox = new SubjectComboBox();
+        subjectCombobox.setToolTipText("User or group who should own the samples");
+
+        this.subjectTextField = new JTextField(20);
+        subjectTextField.setEditable(false);
+        subjectTextField.setToolTipText("Owner cannot be changed after creation");
+
+        this.subjectPanel = new JPanel();
+        attrPanel.addItem("Owner", subjectPanel);
 
         final JPanel agentPanel = new JPanel();
         agentPanel.setLayout(new BoxLayout(agentPanel, BoxLayout.PAGE_AXIS));
@@ -100,11 +119,20 @@ public class SyncedRootDialog extends ModalDialog {
 
         this.syncedRoot = syncedRoot;
 
+        // Decide which subjects we are allowed to write with
+        Map<String, Subject> subjectsByKey = DomainMgr.getDomainMgr().getSubjectsByKey();
+        List<Subject> writeableSubjects = AccessManager.getAccessManager().getActualWriterSet()
+                .stream().map(subjectsByKey::get).collect(Collectors.toList());
+        subjectCombobox.setItems(writeableSubjects, AccessManager.getAccessManager().getActualSubject());
+
         if (syncedRoot != null) {
             setTitle("Edit Synchronized Folder");
             pathTextField.setText(syncedRoot.getFilepath());
             nameField.setText(syncedRoot.getName());
             depthField.setText(syncedRoot.getDepth()+"");
+
+            subjectTextField.setText(syncedRoot.getOwnerKey());
+            subjectPanel.add(subjectTextField);
 
             for (DiscoveryAgentType agentType : DiscoveryAgentType.values()) {
                 JCheckBox checkBox = agentTypeMap.get(agentType);
@@ -113,6 +141,7 @@ public class SyncedRootDialog extends ModalDialog {
         }
         else {
             setTitle("Add Synchronized Folder");
+            subjectPanel.add(subjectCombobox);
         }
 
         // Show dialog and wait
@@ -133,6 +162,14 @@ public class SyncedRootDialog extends ModalDialog {
         }
 
         syncedRoot.setName(StringUtils.isBlank(nameField.getText()) ? syncedRoot.getFilepath() : nameField.getText());
+
+        if (syncedRoot.getId() == null) {
+            // Creating new object, who should own it?
+            final Subject subject = subjectCombobox.getSelectedItem();
+            if (subject != null) {
+                syncedRoot.setOwnerKey(subject.getKey());
+            }
+        }
 
         try {
             syncedRoot.setDepth(Integer.parseInt(depthField.getText()));

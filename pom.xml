@@ -109,11 +109,11 @@
 
         <janeliaws.jetty.version>9.4.46.v20220331</janeliaws.jetty.version>
 
-        <janeliaws.jacs-model.version>2.60.14</janeliaws.jacs-model.version>
+        <janeliaws.jacs-model.version>2.60.15</janeliaws.jacs-model.version>
 
         <janeliaws.jacs-messaging.version>2.5.0</janeliaws.jacs-messaging.version>
 
-        <janeliaws.jacs-storage.version>1.17.7.SNAPSHOT</janeliaws.jacs-storage.version>
+        <janeliaws.jacs-storage.version>1.17.8.SNAPSHOT</janeliaws.jacs-storage.version>
 
         <!--==== Plugin Versions ==================================================================================-->
 

@@ -125,10 +125,9 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
 
     @Override
     public List<DomainObject> getChildren(Node node, String sortCriteria, int page, int pageSize) throws Exception {
-        String currentPrincipal = AccessManager.getSubjectKey();
         WebTarget target = service.path("data/node/children");
         Response response = target
-                .queryParam("subjectKey", currentPrincipal)
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("nodeRef", Reference.createFor(node))
                 .queryParam("sortCriteria", sortCriteria)
                 .queryParam("page", page)
@@ -203,10 +202,9 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
 
     @Override
     public List<SyncedRoot> getSyncedRoots() throws Exception {
-        String currentPrincipal = AccessManager.getSubjectKey();
         WebTarget target = service.path("data/syncedRoot");
         Response response = target
-                .queryParam("subjectKey", currentPrincipal)
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .request(MediaType.APPLICATION_JSON)
                 .get();
         checkBadResponse(target, response);
@@ -215,10 +213,9 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
 
     @Override
     public List<SyncedPath> getChildren(SyncedRoot root) throws Exception {
-        String currentPrincipal = AccessManager.getSubjectKey();
         WebTarget target = service.path("data/syncedRoot/children");
         Response response = target
-                .queryParam("subjectKey", currentPrincipal)
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("syncedRootId", root.getId())
                 .request(MediaType.APPLICATION_JSON)
                 .get();
@@ -230,7 +227,13 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
     public SyncedRoot create(SyncedRoot syncedRoot) throws Exception {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(syncedRoot);
-        query.setSubjectKey(AccessManager.getSubjectKey());
+        // We need to be able to create SyncedRoots on behalf of groups
+        if (syncedRoot.getOwnerKey() != null) {
+            query.setSubjectKey(syncedRoot.getOwnerKey());
+        }
+        else {
+            query.setSubjectKey(AccessManager.getSubjectKey());
+        }
         WebTarget target = service.path("data/syncedRoot");
         Response response = target
                 .request(MediaType.APPLICATION_JSON)
@@ -254,10 +257,9 @@ public class WorkspaceFacadeImpl extends RESTClientBase implements WorkspaceFaca
 
     @Override
     public void remove(SyncedRoot syncedRoot) throws Exception {
-        String currentPrincipal = AccessManager.getSubjectKey();
         WebTarget target = service.path("data/syncedRoot");
         Response response = target
-                .queryParam("subjectKey", currentPrincipal)
+                .queryParam("subjectKey", AccessManager.getSubjectKey())
                 .queryParam("syncedRootId", syncedRoot.getId())
                 .request(MediaType.APPLICATION_JSON)
                 .delete();
