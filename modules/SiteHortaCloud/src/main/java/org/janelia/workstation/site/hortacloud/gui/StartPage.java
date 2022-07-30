@@ -2,11 +2,11 @@ package org.janelia.workstation.site.hortacloud.gui;
 
 import com.google.common.eventbus.Subscribe;
 import net.miginfocom.swing.MigLayout;
+import org.janelia.model.domain.tiledMicroscope.TmMappedNeuron;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.browser.actions.NewFilterActionListener;
 import org.janelia.workstation.common.gui.support.ViewerToolbar;
-import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.events.model.DomainObjectInvalidationEvent;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.options.OptionConstants;
@@ -100,9 +100,17 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         button2.addActionListener(e -> searchClass = TmWorkspace.class);
         group.add(button2);
 
+        JToggleButton button3 = new JToggleButton("Neurons");
+        button3.setFont(mediumFont);
+        button3.setMargin(new Insets(5,5,5,5));
+        button3.addActionListener(e -> searchClass = TmMappedNeuron.class);
+        group.add(button3);
+
         buttonsPanel.add(button1);
         buttonsPanel.add(Box.createRigidArea(new Dimension(5,0)));
         buttonsPanel.add(button2);
+        buttonsPanel.add(Box.createRigidArea(new Dimension(5,0)));
+        buttonsPanel.add(button3);
         
         // Default search button
         button1.setSelected(true);
@@ -145,14 +153,8 @@ public class StartPage extends JPanel implements PropertyChangeListener {
     }
 
     private void refresh() {
-        
         log.info("Refreshing start page");
-
         mainPanel.updateUI();
-
-        if (!AccessManager.loggedIn()) {
-            return;
-        }
     }
 
     @Subscribe
