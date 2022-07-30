@@ -19,7 +19,7 @@ import org.openide.util.actions.CallableSystemAction;
 @ActionReferences({
     @ActionReference(path = "Menu/File/New", position = 1400)
 })
-@Messages("CTL_NewTiledMicroscopeSampleAction=Tiled Microscope Sample")
+@Messages("CTL_NewTiledMicroscopeSampleAction=Horta Sample")
 public final class NewTiledMicroscopeSampleAction extends CallableSystemAction {
 
     public NewTiledMicroscopeSampleAction() {
@@ -27,7 +27,7 @@ public final class NewTiledMicroscopeSampleAction extends CallableSystemAction {
 
     @Override
     public String getName() {
-        return "Tiled Microscope Sample";
+        return "Horta Sample";
     }
 
     @Override

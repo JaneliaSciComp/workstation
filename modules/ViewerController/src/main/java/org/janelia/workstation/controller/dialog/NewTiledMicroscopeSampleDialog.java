@@ -26,7 +26,7 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 
 	public NewTiledMicroscopeSampleDialog() {
 
-		setTitle("Add Tiled Microscope Sample");
+		setTitle("Add Horta Sample");
 
 		JPanel mainPanel = new JPanel();
 		mainPanel.setLayout(new VerticalLayout(5));

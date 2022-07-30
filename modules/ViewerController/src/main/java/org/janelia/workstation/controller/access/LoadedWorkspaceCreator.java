@@ -179,7 +179,7 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
             @Override
             protected void doStuff() throws Exception {
                 String taskName = new File(swcFolder).getName();
-                taskDisplayName = taskName + " for 3D tiled microscope sample " + sampleId;
+                taskDisplayName = taskName + " for Horta Sample " + sampleId;
 
                 setStatus("Submitting task " + taskDisplayName);
 

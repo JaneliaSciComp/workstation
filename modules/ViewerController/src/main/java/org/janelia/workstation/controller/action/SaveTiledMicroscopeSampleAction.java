@@ -16,7 +16,7 @@ import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 
 /**
- * Create any "Tiled Microscope Sample" items (buttons, menu items, etc.) based upon this.
+ * Create any "Horta Sample" items (buttons, menu items, etc.) based upon this.
  */
 public class SaveTiledMicroscopeSampleAction extends AbstractAction {
 
@@ -30,7 +30,7 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
 
     public SaveTiledMicroscopeSampleAction(TmSample sample, String name, String octreePath, String ktxPath, String rawPath,
                                            boolean rawCompressed) {
-        super("Create Tiled Microscope Sample");
+        super("Create Horta Sample");
         this.sample = sample;
         this.name = name;
         this.octreePath = octreePath;
@@ -83,13 +83,13 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
                         sb.append(" Some of the specified paths could not be accessed. Check that paths exist and try again.");
                     }
                     JOptionPane.showMessageDialog(mainFrame, sb.toString(),
-                            "Add New Tiled Microscope Sample", JOptionPane.PLAIN_MESSAGE, null);
+                            "Add New Horta Sample", JOptionPane.PLAIN_MESSAGE, null);
                     DomainMgr.getDomainMgr().getModel().invalidateAll();
                 }
                 else {
                     JOptionPane.showMessageDialog(mainFrame, "Error saving sample " + name +
                                     ". Check that paths exist. If you continue to experience problems please contact support.",
-                            "Failed to Add Tiled Microscope Sample", JOptionPane.ERROR_MESSAGE, null);
+                            "Failed to Add Horta Sample", JOptionPane.ERROR_MESSAGE, null);
                 }
             }
             

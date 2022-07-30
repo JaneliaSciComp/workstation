@@ -113,7 +113,7 @@ public final class LargeVolumeViewerTopComponent extends TopComponent {
     public void componentOpened() {
         if (TmModelManager.getInstance().getCurrentSample()==null) {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "You can't open Horta 2D without a tiled microscope sample being selected.",
+                    "You can't open Horta 2D without a Horta Sample being selected.",
                     "No Sample Loaded",
                     JOptionPane.INFORMATION_MESSAGE);
             close();
