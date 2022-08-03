@@ -51,7 +51,7 @@
         <dependency>
             <groupId>org.janelia.saalfeldlab</groupId>
             <artifactId>n5-viewer_fiji</artifactId>
-            <version>5.0.0-kr</version>
+            <version>5.1.0-kr</version>
         </dependency>
         <dependency>
             <groupId>org.janelia.saalfeldlab</groupId>
