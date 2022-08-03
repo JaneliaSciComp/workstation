@@ -38,7 +38,7 @@ import java.util.Collections;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.workstation.n5viewer.BigDataViewerTopComponent")
-@ActionReference(path = "Menu/Window/ND Viewer", position = 100)
+@ActionReference(path = "Menu/Window/N5 Viewer", position = 100)
 @TopComponent.OpenActionRegistration(
         displayName = "#CTL_BigDataViewerTopComponentAction",
         preferredID = BigDataViewerTopComponent.PREFERRED_ID
