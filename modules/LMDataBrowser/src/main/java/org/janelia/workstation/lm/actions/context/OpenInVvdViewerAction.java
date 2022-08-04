@@ -28,13 +28,8 @@ import java.util.Arrays;
 @ActionReferences({
         @ActionReference(path = "Menu/Actions", position = 240)
 })
-@NbBundle.Messages("CTL_OpenInVvdViewerAction=Open With VVD Viewer")
+@NbBundle.Messages("CTL_OpenInVvdViewerAction=View In VVD Viewer")
 public class OpenInVvdViewerAction extends BaseOpenExternallyAction {
-
-    @Override
-    public String getName() {
-        return OpenInToolAction.getName(ToolMgr.TOOL_VVD, null);
-    }
 
     @Override
     protected String getFilepath(HasFiles fileProvider, FileType fileType) {

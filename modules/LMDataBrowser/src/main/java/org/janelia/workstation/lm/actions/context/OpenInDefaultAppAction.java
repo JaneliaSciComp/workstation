@@ -1,9 +1,5 @@
 package org.janelia.workstation.lm.actions.context;
 
-import java.io.File;
-
-import javax.swing.JOptionPane;
-
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.workstation.common.gui.support.DesktopApi;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
@@ -15,6 +11,9 @@ import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
+
+import javax.swing.*;
+import java.io.File;
 
 /**
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -36,7 +35,10 @@ public class OpenInDefaultAppAction extends BaseOpenExternallyAction {
     @Override
     public void performAction() {
         String filepath = getFilepath();
-        if (filepath == null) return;
+        if (filepath == null) {
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                    "No suitable filepath could be found", "Error", JOptionPane.ERROR_MESSAGE);
+        }
         try {
             ActivityLogHelper.logUserAction("OpenInFinderAction.doAction", filepath);
             Utils.processStandardFilepath(filepath, new FileCallable() {

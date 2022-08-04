@@ -72,8 +72,8 @@ public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction 
             }
         }
 
-        // Enable the option if any filepath is available, we'll clarify it later.
-        setEnabledAndVisible(filepath != null);
+        // Enable the option if any filepath is available or if we can clarify it later
+        setEnabledAndVisible(filepath != null || needsClarity(rd));
     }
 
     /**
@@ -162,7 +162,7 @@ public abstract class BaseOpenExternallyAction extends BaseContextualNodeAction 
             ArtifactDescriptor rd = resultButton.getResultDescriptor();
             Sample sample = (Sample) selectedObject;
             HasFiles fileProvider = DescriptorUtils.getLatestResult(sample, rd);
-            this.filepath = DomainUtils.getDefault3dImageFilePath(fileProvider);
+            this.filepath = getFilepath(fileProvider, FileType.FirstAvailable3d);
             return filepath;
         }
 

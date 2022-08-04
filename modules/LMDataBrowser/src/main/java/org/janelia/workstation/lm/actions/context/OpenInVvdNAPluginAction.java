@@ -25,7 +25,7 @@ import org.openide.util.NbBundle;
 @ActionReferences({
         @ActionReference(path = "Menu/Actions", position = 241)
 })
-@NbBundle.Messages("CTL_OpenInVvdNAPluginAction=Open With VVD Viewer (Neurons)")
+@NbBundle.Messages("CTL_OpenInVvdNAPluginAction=View In VVD Viewer (Neuron Annotator Plugin)")
 public class OpenInVvdNAPluginAction extends BaseContextualNodeAction {
 
     protected NeuronSeparation neuronSeparation;
