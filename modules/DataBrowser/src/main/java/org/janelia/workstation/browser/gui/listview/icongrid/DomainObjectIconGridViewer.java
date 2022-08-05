@@ -614,7 +614,7 @@ public class DomainObjectIconGridViewer
 
     @Override
     protected boolean isMustHaveImage() {
-        boolean defaultValue = false;
+        final boolean defaultValue = false;
         Boolean preference;
         try {
             preference = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, DomainConstants.PREFERENCE_CATEGORY_MUST_HAVE_IMAGE, defaultValue);

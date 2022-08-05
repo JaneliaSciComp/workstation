@@ -5,13 +5,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import javax.swing.BorderFactory;
@@ -22,10 +16,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-
-import org.janelia.workstation.integration.util.FrameworkAccess;
 
 import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.api.DomainMgr;
@@ -362,7 +352,6 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         return resultsTable.getTableColumnIndex(getColumn(columnName));
     }
 
-    @SuppressWarnings({ "unchecked" })
     public void setSortColumn(String columnName, boolean ascending) {
         if (StringUtils.isEmpty(columnName)) {
             getTable().getRowSorter().setSortKeys(new ArrayList<>());
@@ -370,7 +359,8 @@ public abstract class TableViewerPanel<T,S> extends JPanel {
         else {
             int index = getColumnIndex(columnName);
             if (index >= 0) {
-                getTable().getRowSorter().setSortKeys(Arrays.asList(new RowSorter.SortKey(index, ascending ? SortOrder.ASCENDING : SortOrder.DESCENDING)));
+                getTable().getRowSorter().setSortKeys(Collections.singletonList(
+                        new RowSorter.SortKey(index, ascending ? SortOrder.ASCENDING : SortOrder.DESCENDING)));
             } 
             else {
                 log.error("Sort column does not exist: " + columnName);
