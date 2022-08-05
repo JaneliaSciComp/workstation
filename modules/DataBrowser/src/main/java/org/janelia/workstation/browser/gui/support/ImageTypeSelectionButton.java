@@ -19,11 +19,7 @@ import org.janelia.workstation.core.model.descriptors.DescriptorUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.ButtonGroup;
-import javax.swing.JMenuItem;
-import javax.swing.JRadioButtonMenuItem;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import javax.swing.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -149,12 +145,10 @@ public class ImageTypeSelectionButton extends DropDownButton {
                 boolean selected = fileType.equals(currImageType);
                 if (selected) oneSelected = true;
                 JMenuItem menuItem = new JRadioButtonMenuItem(typeLabel, selected);
-                menuItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        setImageType(fileType);
-                        imageTypeChanged(fileType);
-                        ActivityLogHelper.logUserAction("ImageTypeSelectionButton.imageTypeChanged", fileType.getLabel());
-                    }
+                menuItem.addActionListener(e -> {
+                    setImageType(fileType);
+                    imageTypeChanged(fileType);
+                    ActivityLogHelper.logUserAction("ImageTypeSelectionButton.imageTypeChanged", fileType.getLabel());
                 });
                 addMenuItem(menuItem);
                 group.add(menuItem);

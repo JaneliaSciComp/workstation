@@ -1,15 +1,11 @@
 package org.janelia.workstation.browser.gui.listview.table;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-
-import javax.swing.JButton;
-
 import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.common.gui.support.MouseForwarder;
-import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.common.gui.support.ViewerToolbar;
+import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 
+import javax.swing.*;
 
 /**
  * Tool bar for table viewer panels.
@@ -21,8 +17,13 @@ public abstract class TableViewerToolbar extends ViewerToolbar {
     protected JButton chooseColumnsButton;
     protected JButton exportButton;
 
+    protected int firstComponentIndex;
+    protected int customComponentIndex;
+
     public TableViewerToolbar() {
         super();
+
+        firstComponentIndex = toolbar.getComponentCount();
 
         chooseColumnsButton = new JButton("Columns");
         chooseColumnsButton.setIcon(Icons.getIcon("cog.png"));
@@ -47,6 +48,8 @@ public abstract class TableViewerToolbar extends ViewerToolbar {
         toolbar.add(exportButton);
 
         addSeparator();
+
+        customComponentIndex = toolbar.getComponentCount();
     }
 
     public JButton getChooseColumnsButton() {
@@ -55,6 +58,18 @@ public abstract class TableViewerToolbar extends ViewerToolbar {
 
     public JButton getExportButton() {
         return exportButton;
+    }
+
+    /**
+     * Add a component after the refresh button.
+     * @param component
+     */
+    public void addComponentInFront(JComponent component) {
+        toolbar.add(component, null, firstComponentIndex);
+    }
+
+    public void addCustomComponent(JComponent component) {
+        toolbar.add(component, null, customComponentIndex++);
     }
 
     public abstract void chooseColumnsButtonPressed();

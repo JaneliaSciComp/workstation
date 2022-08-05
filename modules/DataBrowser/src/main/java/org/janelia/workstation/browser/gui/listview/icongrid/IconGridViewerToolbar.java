@@ -24,11 +24,14 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
     protected JSlider imageSizeSlider;
 
     protected int currImageSize;
+    protected int firstComponentIndex;
     protected int customComponentIndex;
     private JCheckBoxMenuItem mustHaveImageMenuItem;
     
     public IconGridViewerToolbar() {
         super();
+
+        firstComponentIndex = toolbar.getComponentCount();
 
         Boolean showTitles = FrameworkAccess.getModelProperty(
                 OptionConstants.ICON_GRID_VIEWER_SHOW_TITLES, true);
@@ -138,6 +141,10 @@ public abstract class IconGridViewerToolbar extends ViewerToolbar {
 
     public int getCurrImageSize() {
         return currImageSize;
+    }
+
+    public void addComponentInFront(JComponent component) {
+        toolbar.add(component, null, firstComponentIndex);
     }
     
     public void addCustomComponent(JComponent component) {

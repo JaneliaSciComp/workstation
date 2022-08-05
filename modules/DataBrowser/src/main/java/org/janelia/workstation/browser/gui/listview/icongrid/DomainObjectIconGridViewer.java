@@ -1,20 +1,11 @@
 package org.janelia.workstation.browser.gui.listview.icongrid;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.DomainObjectAttribute;
-import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.*;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
-import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
-import org.janelia.workstation.browser.actions.ExportPickedGUIDs;
-import org.janelia.workstation.browser.actions.ExportPickedLineNames;
-import org.janelia.workstation.browser.actions.ExportPickedNames;
-import org.janelia.workstation.browser.actions.ExportPickedToSplitGenWebsite;
-import org.janelia.workstation.browser.actions.RemoveItemsActionListener;
+import org.janelia.workstation.browser.actions.*;
 import org.janelia.workstation.browser.gui.dialogs.DomainDetailsDialog;
 import org.janelia.workstation.browser.gui.dialogs.IconGridViewerConfigDialog;
 import org.janelia.workstation.browser.gui.hud.Hud;
@@ -22,6 +13,7 @@ import org.janelia.workstation.browser.gui.inspector.DomainInspectorPanel;
 import org.janelia.workstation.browser.gui.support.ImageTypeSelectionButton;
 import org.janelia.workstation.browser.gui.support.ResultSelectionButton;
 import org.janelia.workstation.browser.gui.support.SampleUIUtils;
+import org.janelia.workstation.browser.gui.support.SortCriteriaButton;
 import org.janelia.workstation.common.gui.listview.ListViewer;
 import org.janelia.workstation.common.gui.listview.ListViewerActionListener;
 import org.janelia.workstation.common.gui.listview.ListViewerState;
@@ -48,15 +40,8 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JToggleButton;
-import javax.swing.SwingUtilities;
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -75,6 +60,7 @@ public class DomainObjectIconGridViewer
     private static final Logger log = LoggerFactory.getLogger(DomainObjectIconGridViewer.class);
 
     // UI Components
+    private final SortCriteriaButton sortCriteriaButton;
     private final ResultSelectionButton resultButton;
     private final ImageTypeSelectionButton typeButton;
     private final JToggleButton editModeButton;
@@ -83,7 +69,6 @@ public class DomainObjectIconGridViewer
     
     // Configuration
     private IconGridViewerConfiguration config;
-    @SuppressWarnings("unused")
     private SearchProvider searchProvider;
     
     // State
@@ -138,7 +123,11 @@ public class DomainObjectIconGridViewer
 
     public DomainObjectIconGridViewer() {
         setImageModel(imageModel);
-        
+
+        this.sortCriteriaButton = new SortCriteriaButton();
+        sortCriteriaButton.setFocusable(false);
+        getToolbar().addComponentInFront(sortCriteriaButton);
+
         this.resultButton = new ResultSelectionButton(true) {
             @Override
             protected void resultChanged(ArtifactDescriptor resultDescriptor) {
@@ -206,7 +195,7 @@ public class DomainObjectIconGridViewer
             new ExportPickedToSplitGenWebsite(getPickedItems()).actionPerformed(e);
         });
         editOkButton.addMenuItem(splitGenMenuItem);
-        
+
         getToolbar().addCustomComponent(resultButton);
         getToolbar().addCustomComponent(typeButton);
         getToolbar().addCustomComponent(editModeButton);
@@ -367,12 +356,15 @@ public class DomainObjectIconGridViewer
         add(helpPanel, BorderLayout.CENTER);
         updateUI();
     }
-    
+
     @Override
     public void show(AnnotatedObjectList<DomainObject,Reference> objects, final Callable<Void> success) {
 
         this.domainObjectList = objects;
         log.debug("show(objects={})",DomainUtils.abbr(domainObjectList.getObjects()));
+
+        List<DomainObjectAttribute> displayAttrs = DomainUtils.getDisplayAttributes(domainObjectList.getObjects());
+        sortCriteriaButton.populate(searchProvider, displayAttrs);
 
         SimpleWorker worker = new SimpleWorker() {
             
@@ -518,12 +510,13 @@ public class DomainObjectIconGridViewer
             return null;
         });
     }
-    
+
+
     @Override
     protected DomainObjectContextMenu getContextualPopupMenu() {
         return getPopupMenu(getSelectedObjects());
     }
-    
+
     private DomainObjectContextMenu getPopupMenu(List<DomainObject> domainObjectList) {
         DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(
                 selectionModel,

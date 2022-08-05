@@ -546,7 +546,7 @@ public abstract class PaginatedResultsPanel<T,S> extends JPanel implements FindC
     
     protected List<T> getPageObjects(List<S> selectedRefs) {
         final List<T> objects = new ArrayList<>();
-        for(S id : selectionModel.getSelectedIds()) {
+        for(S id : selectedRefs) {
             try {
                 T object = resultPage.getObjectById(id);
                 if (object!=null) {

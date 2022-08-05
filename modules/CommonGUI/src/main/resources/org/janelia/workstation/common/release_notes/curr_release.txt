@@ -1,6 +1,7 @@
 // 9.10
 
 Browser
+* Added a sorting button that makes it easier to sort results from both image and table views
 * Sorting criteria is now global instead of per-folder
 
 FlyLight

@@ -8,6 +8,15 @@ package org.janelia.workstation.common.gui.support;
 public interface SearchProvider {
 
 	/**
+	 * Returns the sort field's name, without the sort direction.
+	 * @return
+	 */
+	default String getSortFieldName() {
+		String sortCriteria = getSortField();
+		return (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
+	}
+
+	/**
 	 * Get the sort field. The field name may be prefixed with a +/- to control the sort direction.
 	 */
 	String getSortField();

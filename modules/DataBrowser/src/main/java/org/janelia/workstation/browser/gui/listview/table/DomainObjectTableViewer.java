@@ -2,11 +2,7 @@ package org.janelia.workstation.browser.gui.listview.table;
 
 
 import org.apache.commons.lang3.StringUtils;
-import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.DomainObjectAttribute;
-import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.DynamicDomainObjectProxy;
-import org.janelia.model.domain.Reference;
+import org.janelia.model.domain.*;
 import org.janelia.model.domain.ontology.Annotation;
 import org.janelia.model.domain.workspace.Node;
 import org.janelia.workstation.browser.actions.DomainObjectContextMenu;
@@ -14,6 +10,7 @@ import org.janelia.workstation.browser.actions.RemoveItemsActionListener;
 import org.janelia.workstation.browser.gui.dialogs.TableViewerConfigDialog;
 import org.janelia.workstation.browser.gui.hud.Hud;
 import org.janelia.workstation.browser.gui.support.SampleUIUtils;
+import org.janelia.workstation.browser.gui.support.SortCriteriaButton;
 import org.janelia.workstation.common.gui.listview.ListViewer;
 import org.janelia.workstation.common.gui.listview.ListViewerActionListener;
 import org.janelia.workstation.common.gui.listview.ListViewerState;
@@ -33,27 +30,15 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.JLabel;
-import javax.swing.JMenuItem;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.RowSorter;
-import javax.swing.SortOrder;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.table.TableModel;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 /**
@@ -67,6 +52,9 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
     private static final String COLUMN_KEY_ANNOTATIONS = "annotations";
 
+    // UI Components
+    private final SortCriteriaButton sortCriteriaButton;
+
     // Configuration
     private TableViewerConfiguration config;
     private final DomainObjectAttribute annotationAttr = new DomainObjectAttribute(COLUMN_KEY_ANNOTATIONS,"Annotations",null,null,true,null,null);
@@ -77,7 +65,7 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     private AnnotatedObjectList<DomainObject,Reference> domainObjectList;
     private ChildSelectionModel<DomainObject, Reference> selectionModel;
     private SearchProvider searchProvider;
-    private List<DomainObjectAttribute> attrs;
+    private List<DomainObjectAttribute> attrs = new ArrayList<>();
 
     // UI state
     private String sortField;
@@ -125,6 +113,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
     
     public DomainObjectTableViewer() {
         setImageModel(imageModel);
+
+        this.sortCriteriaButton = new SortCriteriaButton();
+        sortCriteriaButton.setFocusable(false);
+
+        getToolbar().addComponentInFront(sortCriteriaButton);
     }
 
     @Override
@@ -197,7 +190,11 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         attributeMap.clear();
 
-        attrs = DomainUtils.getDisplayAttributes(domainObjectList.getObjects());
+        List<DomainObjectAttribute> displayAttrs = DomainUtils.getDisplayAttributes(domainObjectList.getObjects());
+        sortCriteriaButton.populate(searchProvider, displayAttrs);
+
+        attrs.clear();
+        attrs.addAll(displayAttrs);
         attrs.add(0, annotationAttr);
 
         getDynamicTable().clearColumns();
@@ -227,7 +224,6 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
 
         List<Reference> ids = selectionModel.getSelectedIds();
         try {
-            List<DomainObject> selected = DomainMgr.getDomainMgr().getModel().getDomainObjects(ids);
             // TODO: should this use the same result as the icon grid viewer?
             DomainObjectContextMenu popupMenu = new DomainObjectContextMenu(
                     selectionModel,
@@ -250,12 +246,9 @@ public class DomainObjectTableViewer extends TableViewerPanel<DomainObject,Refer
                     popupMenu.add(titleMenuItem);
 
                     JMenuItem copyMenuItem = new JMenuItem("Copy Value To Clipboard");
-                    copyMenuItem.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            Transferable t = new StringSelection(label);
-                            Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
-                        }
+                    copyMenuItem.addActionListener(e -> {
+                        Transferable t = new StringSelection(label);
+                        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(t, null);
                     });
                     popupMenu.add(copyMenuItem);
                     
