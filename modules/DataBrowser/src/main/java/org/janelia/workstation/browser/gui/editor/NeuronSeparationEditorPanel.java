@@ -62,7 +62,6 @@ public class NeuronSeparationEditorPanel
 
     // Constants
     private final static Logger log = LoggerFactory.getLogger(NeuronSeparationEditorPanel.class);
-    private final static String PREFERENCE_KEY = "NeuronSeparationEditor";
     private final static String DEFAULT_SORT_CRITERIA = "number";
     
     // Utilities
@@ -405,7 +404,9 @@ public class NeuronSeparationEditorPanel
     private void saveSortCriteria() {
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
-            FrameworkAccess.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
+            FrameworkAccess.setRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, sortCriteria);
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);
@@ -415,8 +416,8 @@ public class NeuronSeparationEditorPanel
     private String loadSortCriteria() {
         try {
             return FrameworkAccess.getRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, 
-                    PREFERENCE_KEY, DEFAULT_SORT_CRITERIA);
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, DEFAULT_SORT_CRITERIA);
         }
         catch (Exception e) {
             log.error("Could not load sort criteria",e);

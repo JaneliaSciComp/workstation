@@ -664,7 +664,8 @@ public class GroupedFolderEditorPanel extends JPanel implements
         if (groupedFolder==null || groupedFolder.getId()==null) return;
         try {
             sortCriteria = (String) FrameworkAccess.getRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, groupedFolder.getId().toString(), null);
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, null);
             log.debug("Loaded sort criteria preference: {}",sortCriteria);
         }
         catch (Exception e) {
@@ -676,7 +677,8 @@ public class GroupedFolderEditorPanel extends JPanel implements
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
             FrameworkAccess.setRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, groupedFolder.toString(), sortCriteria);
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, sortCriteria);
             log.debug("Saved sort criteria preference: {}",sortCriteria);
         }
         catch (Exception e) {

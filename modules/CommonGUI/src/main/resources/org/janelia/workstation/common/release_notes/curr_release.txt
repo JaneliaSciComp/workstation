@@ -1,8 +1,12 @@
 // 9.10
 
+Browser
+* Sorting criteria is now global instead of per-folder
+
 FlyLight
 * Added "FLEW" to Target Websites for publishing Gen1GAL4 images
 * Fixed issue with "View in VVD Viewer" right-click option not appearing in some cases
+* Fixed issue with sorting being reset after marking samples for reprocessing
 
 Horta
 * Added "Horta Sample" discovery option to Synchronized Folders

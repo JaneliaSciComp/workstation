@@ -733,9 +733,9 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         if (search==null || search.getId()==null) return;
         if (mask==null || mask.getId()==null) return;
         try {
-            String key = search.getId() + "~" + mask.getId();
-            sortCriteria = (String) FrameworkAccess.getRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, key, null);
+            sortCriteria = FrameworkAccess.getRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, null);
             log.debug("Loaded sort criteria preference: {}",sortCriteria);
         }
         catch (Exception e) {
@@ -748,9 +748,9 @@ public class ColorDepthResultPanel extends JPanel implements SearchProvider, Pre
         if (mask==null || mask.getId()==null) return;
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
-            String key = search.getId() + "~" + mask.getId();
             FrameworkAccess.setRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, key, sortCriteria);
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, sortCriteria);
             log.debug("Saved sort criteria preference: {}",sortCriteria);
         }
         catch (Exception e) {

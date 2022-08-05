@@ -85,7 +85,6 @@ public class SampleEditorPanel
     private final static Logger log = LoggerFactory.getLogger(SampleEditorPanel.class);
 
     // Constants
-    private final static String PREFERENCE_KEY = "SampleEditor";
     private final static String MODE_LSMS = "LSMs";
     private final static String MODE_RESULTS = "Pipeline Results";
     private final static String MODE_COLOR_DEPTH = "Color Depth MIPs";
@@ -442,7 +441,9 @@ public class SampleEditorPanel
     private void loadPreferences() {
         if (sample.getId()==null) return;
         try {
-            sortCriteria = FrameworkAccess.getRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, null);
+            sortCriteria = FrameworkAccess.getRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, null);
         }
         catch (Exception e) {
             log.error("Could not load sort criteria",e);
@@ -452,7 +453,9 @@ public class SampleEditorPanel
     private void savePreferences() {
         if (StringUtils.isEmpty(sortCriteria)) return;
         try {
-            FrameworkAccess.setRemotePreferenceValue(DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, PREFERENCE_KEY, sortCriteria);
+            FrameworkAccess.setRemotePreferenceValue(
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, sortCriteria);
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);

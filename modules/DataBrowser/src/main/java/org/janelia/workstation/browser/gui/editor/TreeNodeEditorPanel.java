@@ -105,7 +105,8 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             return;
         }
 
-        log.info("loadDomainObject({})",node.getName());
+        log.info("loadDomainObject({}) - {}", node, node.getName());
+
         final StopWatch w = new StopWatch();
         resultsPanel.showLoadingIndicator();
 
@@ -119,7 +120,7 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
             protected void doStuff() throws Exception {
                 loadPreferences();
                 searchResults = queryConfiguration.performSearch();
-                log.info("Got results: "+searchResults);
+                log.info("Got results: {}", searchResults);
             }
 
             @Override
@@ -173,7 +174,6 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
     private void reload() throws Exception {
         
         if (node==null) {
-            // Nothing to reload
             return;
         }
 
@@ -301,7 +301,8 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
         if (node==null || node.getId()==null) return;
         try {
             String sortCriteriaPref = FrameworkAccess.getRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, node.getId().toString(), null);
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, null);
 
             if (sortCriteriaPref!=null) {
                 log.info("Loaded sort criteria preference: {}", sortCriteriaPref);
@@ -318,7 +319,8 @@ public class TreeNodeEditorPanel extends DomainObjectEditorPanel<Node,DomainObje
         if (node==null || node.getId()==null || StringUtils.isEmpty(sortCriteria)) return;
         try {
             FrameworkAccess.setRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, node.getId().toString(), sortCriteria);
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, sortCriteria);
             log.debug("Saved sort criteria preference: {}", sortCriteria);
         }
         catch (Exception e) {

@@ -299,53 +299,34 @@ public class FilterEditorPanel
             return;
         }
 
-        log.info("Loading '{}' ({})", filter.getName(), filter);
+        log.info("loadDomainObject({}) - {}", filter, filter.getName());
+
+        final StopWatch w = new StopWatch();
+        resultsPanel.showLoadingIndicator();
 
         if (filter.getName()==null) {
             filter.setName(DEFAULT_FILTER_NAME);
             // Do not run a new search automatically
         }
-        
-        log.debug("loadDomainObject(Filter:{})",filter.getName());
-        final StopWatch w = new StopWatch();
 
-        getSelectionModel().setParentObject(filter);
         this.dirty = false;
         setFilter(filter);
-        loadPreferences();
+        getSelectionModel().setParentObject(filter);
 
-        try {
-            updateView();
-            
-            configPanel.removeAllTitleComponents();
-            if (ClientDomainUtils.hasWriteAccess(filter)) {
-	            configPanel.addTitleComponent(saveButton, false, true);
-            }
-            configPanel.addTitleComponent(saveAsButton, false, true);
-            configPanel.setExpanded(filter.getId()==null);
-
-            refreshSearchResults(isUserDriven, () -> {
-                searchBox.requestFocus();
-                debouncer.success();
-                return null;
-            }, () -> {
-                debouncer.failure();
-                return null;
-            });
-        }
-        catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
+        refreshSearchResults(isUserDriven, () -> {
+            searchBox.requestFocus();
+            debouncer.success();
+            return null;
+        }, () -> {
+            debouncer.failure();
+            return null;
+        });
 
         ActivityLogHelper.logElapsed("FilterEditorPanel.loadDomainObject", filter, w);
     }
     
     private void refreshSearchResults(boolean isUserDriven) {
-        refreshSearchResults(isUserDriven, null);
-    }
-    
-    private void refreshSearchResults(boolean isUserDriven, final Callable<Void> success) {
-        refreshDebouncer.queue(success);
+        refreshDebouncer.queue(null);
         refreshSearchResults(isUserDriven, () -> {
             refreshDebouncer.success();
             return null;
@@ -381,22 +362,21 @@ public class FilterEditorPanel
 
             @Override
             protected void doStuff() throws Exception {
+                loadPreferences();
                 searchResults = searchConfig.performSearch();
+                log.info("Got results: {}", searchResults);
             }
 
             @Override
             protected void hadSuccess() {
-                try {
-                    resultsPanel.showSearchResults(searchResults, isUserDriven, () -> {
-                        updateView();
-                        ConcurrentUtils.invokeAndHandleExceptions(success);
-                        ActivityLogHelper.logElapsed("FilterEditorPanel.performSearch", w);
-                        return null;
-                    });
-                }
-                catch (Exception e) {
-                    hadError(e);
-                }
+                log.info("Displaying results: "+searchResults);
+                resultsPanel.showSearchResults(searchResults, isUserDriven, () -> {
+                    updateView();
+                    log.info("Displayed results: "+searchResults);
+                    ConcurrentUtils.invokeAndHandleExceptions(success);
+                    ActivityLogHelper.logElapsed("FilterEditorPanel.performSearch", w);
+                    return null;
+                });
             }
 
             @Override
@@ -437,7 +417,14 @@ public class FilterEditorPanel
         }
 
         configPanel.setTitle(filter.getName());
-        
+
+        configPanel.removeAllTitleComponents();
+        if (ClientDomainUtils.hasWriteAccess(filter)) {
+            configPanel.addTitleComponent(saveButton, false, true);
+        }
+        configPanel.addTitleComponent(saveAsButton, false, true);
+        configPanel.setExpanded(filter.getId()==null);
+
         // Update filters
         configPanel.removeAllConfigComponents();
         configPanel.addConfigComponent(typeCriteriaButton);
@@ -538,27 +525,25 @@ public class FilterEditorPanel
             if (found) continue;
             
             JMenuItem menuItem = new JMenuItem(attr.getLabel());
-            menuItem.addActionListener(new ActionListener() {
-                public void actionPerformed(ActionEvent e) {
-                    
-                    AttributeCriteria criteria;
-                    Class<?> attrClass = attr.getGetter().getReturnType();
-                    if (attrClass.equals(Date.class)) {
-                        criteria = new DateRangeCriteria();
-                    }
-                    else {
-                        criteria = new AttributeValueCriteria();
-                    }
-                    
-                    criteria.setAttributeName(attr.getName());
-                    EditCriteriaDialog dialog = new EditCriteriaDialog();
-                    criteria = (AttributeCriteria)dialog.showForCriteria(criteria, attr.getLabel());
-                    
-                    if (criteria!=null) {
-                        filter.addCriteria(criteria);
-                        dirty = true;
-                        refreshSearchResults(true);
-                    }
+            menuItem.addActionListener(e -> {
+
+                AttributeCriteria criteria;
+                Class<?> attrClass = attr.getGetter().getReturnType();
+                if (attrClass.equals(Date.class)) {
+                    criteria = new DateRangeCriteria();
+                }
+                else {
+                    criteria = new AttributeValueCriteria();
+                }
+
+                criteria.setAttributeName(attr.getName());
+                EditCriteriaDialog dialog = new EditCriteriaDialog();
+                criteria = (AttributeCriteria)dialog.showForCriteria(criteria, attr.getLabel());
+
+                if (criteria!=null) {
+                    filter.addCriteria(criteria);
+                    dirty = true;
+                    refreshSearchResults(true);
                 }
             });
             addCriteriaButton.addMenuItem(menuItem);
@@ -575,12 +560,10 @@ public class FilterEditorPanel
         facetButton.removeAll();
 
         final JMenuItem removeMenuItem = new JMenuItem("Remove");
-        removeMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                removeTreeNodeCriteria(criteria.getTreeNodeName());
-                dirty = true;
-                refreshSearchResults(true);
-            }
+        removeMenuItem.addActionListener(e -> {
+            removeTreeNodeCriteria(criteria.getTreeNodeName());
+            dirty = true;
+            refreshSearchResults(true);
         });
         facetButton.addMenuItem(removeMenuItem);
 
@@ -608,24 +591,20 @@ public class FilterEditorPanel
         facetButton.removeAll();
         
         final JMenuItem editMenuItem = new JMenuItem("Edit");
-        editMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                EditCriteriaDialog dialog = new EditCriteriaDialog();
-                if (dialog.showForCriteria(criteria, attr.getLabel())!=null) {
-                    dirty = true;
-                    refreshSearchResults(true);
-                }
+        editMenuItem.addActionListener(e -> {
+            EditCriteriaDialog dialog = new EditCriteriaDialog();
+            if (dialog.showForCriteria(criteria, attr.getLabel())!=null) {
+                dirty = true;
+                refreshSearchResults(true);
             }
         });
         facetButton.addMenuItem(editMenuItem);
         
         final JMenuItem removeMenuItem = new JMenuItem("Remove");
-        removeMenuItem.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                removeAttributeCriteria(criteria.getAttributeName());
-                dirty = true;
-                refreshSearchResults(true);
-            }
+        removeMenuItem.addActionListener(e -> {
+            removeAttributeCriteria(criteria.getAttributeName());
+            dirty = true;
+            refreshSearchResults(true);
         });
         facetButton.addMenuItem(removeMenuItem);
         
@@ -747,9 +726,13 @@ public class FilterEditorPanel
     }
 
     private void reload() throws Exception {
-        
-        if (filter==null || filter.getId()==null) {
-            // Nothing to reload, just rerun the search
+
+        if (filter==null) {
+            return;
+        }
+
+        if (filter.getId()==null) {
+            // No object to reload, just rerun the search
             restoreState(saveState(), null);
             return;
         }
@@ -783,6 +766,7 @@ public class FilterEditorPanel
                 else {
                     // The filter no longer exists, or we no longer have access to it (perhaps running as a different user?)
                     // Either way, there's nothing to show.
+                    log.warn("Filter no longer exists: {}", filter);
                     showNothing();
                     reloadDebouncer.success();
                 }
@@ -880,10 +864,10 @@ public class FilterEditorPanel
     }
 
     private void loadPreferences() {
-        if (filter.getId()==null) return;
         try {
             String sortCriteriaPref = FrameworkAccess.getRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), null);
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, null);
             if (sortCriteriaPref!=null) {
                 log.info("Loaded sort criteria preference: {}", sortCriteriaPref);
                 searchConfig.setSortCriteria(sortCriteriaPref);
@@ -895,11 +879,13 @@ public class FilterEditorPanel
     }
 
     private void savePreferences() {
-        if (filter.getId()==null || StringUtils.isEmpty(searchConfig.getSortCriteria())) return;
+        String sortCriteria = searchConfig.getSortCriteria();
+        if (StringUtils.isEmpty(sortCriteria)) return;
         try {
             FrameworkAccess.setRemotePreferenceValue(
-                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, filter.getId().toString(), searchConfig.getSortCriteria());
-            log.info("Saved sort criteria preference: {}",searchConfig.getSortCriteria());
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA,
+                    DomainConstants.PREFERENCE_CATEGORY_SORT_CRITERIA, sortCriteria);
+            log.info("Saved sort criteria preference: {}",sortCriteria);
         }
         catch (Exception e) {
             log.error("Could not save sort criteria",e);
