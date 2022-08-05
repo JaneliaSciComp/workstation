@@ -266,6 +266,7 @@ public class SampleEditorPanel
                     currentPanelResultType = colorDepthPanel.getFileType();
                     Events.getInstance().postOnEventBus(new PipelineResultSelectionEvent(this, colorDepthPanel.getAlignmentResult(), colorDepthPanel.getFileType(), isUserDriven));
                 }
+                Events.getInstance().postOnEventBus(new ViewerContextChangeEvent(this, getViewerContext()));
             }
             
             @Override
