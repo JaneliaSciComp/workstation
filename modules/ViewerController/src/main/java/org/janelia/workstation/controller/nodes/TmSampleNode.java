@@ -90,7 +90,7 @@ public class TmSampleNode extends AbstractDomainObjectNode<TmSample> {
         
     @Override
     public Image getIcon(int type) {
-        if (!getSample().isFilesystemSync()) {
+        if (!getSample().isExistsInStorage()) {
             return Icons.getIcon("error.png").getImage();
         }
         if (ClientDomainUtils.isOwner(getSample())) {

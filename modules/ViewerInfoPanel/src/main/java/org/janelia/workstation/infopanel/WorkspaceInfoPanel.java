@@ -1,19 +1,11 @@
 package org.janelia.workstation.infopanel;
 
-import java.awt.Dimension;
-
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
-import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.workstation.core.api.ClientDomainUtils;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.core.api.ClientDomainUtils;
+
+import javax.swing.*;
+import java.awt.*;
 
 
 /**

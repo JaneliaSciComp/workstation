@@ -1,6 +1,5 @@
 package org.janelia.workstation.controller.model;
 
-import Jama.Matrix;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
@@ -79,15 +78,6 @@ public class TmModelManager {
 
     public SpatialIndexManager getSpatialIndexManager() {
         return spatialIndexManager;
-    }
-
-    public void setSampleMatrices(Matrix micronToVoxMatrix, Matrix voxToMicronMatrix) throws Exception {
-        if (currentSample==null) {
-            throw new IllegalStateException("Sample is not loaded");
-        }
-        currentSample.setMicronToVoxMatrix(MatrixUtilities.serializeMatrix(micronToVoxMatrix, "micronToVoxMatrix"));
-        currentSample.setVoxToMicronMatrix(MatrixUtilities.serializeMatrix(voxToMicronMatrix, "voxToMicronMatrix"));
-        tmDomainMgr.save(currentSample);
     }
 
     public Jama.Matrix getVoxToMicronMatrix() {

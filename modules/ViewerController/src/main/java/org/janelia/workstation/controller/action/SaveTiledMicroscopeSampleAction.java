@@ -79,7 +79,7 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
                 if (null != newSample) {
                     StringBuilder sb = new StringBuilder();
                     sb.append("Sample ").append(newSample.getName()).append(" saved successfully.");
-                    if (!newSample.isFilesystemSync()) {
+                    if (!newSample.isExistsInStorage()) {
                         sb.append(" Some of the specified paths could not be accessed. Check that paths exist and try again.");
                     }
                     JOptionPane.showMessageDialog(mainFrame, sb.toString(),
