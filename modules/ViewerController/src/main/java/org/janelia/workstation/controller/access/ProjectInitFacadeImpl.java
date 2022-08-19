@@ -1,19 +1,23 @@
 package org.janelia.workstation.controller.access;
 
 import org.janelia.model.domain.DomainObject;
+import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.MatrixUtilities;
 import org.janelia.rendering.utils.ClientProxy;
-import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.TmViewerManager;
-import org.janelia.workstation.controller.eventbus.*;
+import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.eventbus.LoadMetadataEvent;
+import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
+import org.janelia.workstation.controller.eventbus.UnloadProjectEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
 import org.janelia.workstation.controller.tileimagery.*;
+import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.options.ApplicationOptions;
@@ -96,6 +100,9 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 });
                 sharedVolumeImage.loadURL(url);
 
+                // TODO: Why is this happening in the client???
+                //       This kind of caching logic should be encapsulated in the services,
+                //       and it shouldn't depend on the user having write access to the sample.
                 if (sample.getVoxToMicronMatrix()==null) {
                     // init sample from tileformat
                     sample.setVoxToMicronMatrix(MatrixUtilities.serializeMatrix(
@@ -104,7 +111,9 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                     sample.setMicronToVoxMatrix(MatrixUtilities.serializeMatrix(
                             tileFormat.getMicronToVoxMatrix(),
                             "micronToVoxMatrix"));
-                    TiledMicroscopeDomainMgr.getDomainMgr().save(sample);
+                    if (DomainUtils.hasWriteAccess(sample, AccessManager.getWriterSet())) {
+                        TiledMicroscopeDomainMgr.getDomainMgr().save(sample);
+                    }
                 }
                 modelManager.updateVoxToMicronMatrices();
                 BoundingBox3d box = sharedVolumeImage.getBoundingBox3d();
