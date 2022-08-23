@@ -51,8 +51,7 @@ public class ApplicationOptions {
     }
 
     public boolean isShowStartPageOnStartup() {
-        return prefs().getBoolean(OptionConstants.SHOW_START_PAGE_ON_STARTUP,
-                ConsoleProperties.getBoolean(SHOW_START_PAGE_DEFAULT, true));
+        return prefs().getBoolean(OptionConstants.SHOW_START_PAGE_ON_STARTUP,true);
     }
 
     public void setAutoDownloadUpdates(boolean autoDownload) {
