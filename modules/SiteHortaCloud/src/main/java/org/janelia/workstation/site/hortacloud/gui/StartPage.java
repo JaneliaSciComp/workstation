@@ -46,7 +46,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
 
     public StartPage() {
 
-        JLabel titleLabel = new JLabel("Welcome to janeliaHortaCloud");
+        JLabel titleLabel = new JLabel("Welcome to HortaCloud");
         
         titleFont = titleLabel.getFont().deriveFont(Font.BOLD, 20);
         largeFont = titleLabel.getFont().deriveFont(Font.BOLD, 16);
