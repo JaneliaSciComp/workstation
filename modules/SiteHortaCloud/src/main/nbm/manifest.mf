@@ -1,4 +1,5 @@
 Manifest-Version: 1.0
+OpenIDE-Module-Layer: org/janelia/workstation/site/hortacloud/layer.xml
 OpenIDE-Module-Localizing-Bundle: org/janelia/workstation/site/hortacloud/Bundle.properties
 OpenIDE-Module-Specification-Version: ${janeliaws.modules.specification.version}
 OpenIDE-Module-Implementation-Version: ${buildNumber}

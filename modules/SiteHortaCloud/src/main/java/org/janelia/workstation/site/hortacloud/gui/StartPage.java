@@ -87,12 +87,12 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         ButtonGroup group = new ButtonGroup();
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.X_AXIS));
-                
-        JToggleButton button1 = new JToggleButton("Samples");
-        button1.setFont(mediumFont);
-        button1.setMargin(new Insets(5,5,5,5));
-        button1.addActionListener(e -> searchClass = TmSample.class);
-        group.add(button1);
+
+        JToggleButton button3 = new JToggleButton("Samples");
+        button3.setFont(mediumFont);
+        button3.setMargin(new Insets(5,5,5,5));
+        button3.addActionListener(e -> searchClass = TmSample.class);
+        group.add(button3);
 
         JToggleButton button2 = new JToggleButton("Workspaces");
         button2.setFont(mediumFont);
@@ -100,11 +100,11 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         button2.addActionListener(e -> searchClass = TmWorkspace.class);
         group.add(button2);
 
-        JToggleButton button3 = new JToggleButton("Neurons");
-        button3.setFont(mediumFont);
-        button3.setMargin(new Insets(5,5,5,5));
-        button3.addActionListener(e -> searchClass = TmMappedNeuron.class);
-        group.add(button3);
+        JToggleButton button1 = new JToggleButton("Neurons");
+        button1.setFont(mediumFont);
+        button1.setMargin(new Insets(5,5,5,5));
+        button1.addActionListener(e -> searchClass = TmMappedNeuron.class);
+        group.add(button1);
 
         buttonsPanel.add(button1);
         buttonsPanel.add(Box.createRigidArea(new Dimension(5,0)));
@@ -114,7 +114,7 @@ public class StartPage extends JPanel implements PropertyChangeListener {
         
         // Default search button
         button1.setSelected(true);
-        searchClass = TmSample.class;
+        searchClass = TmMappedNeuron.class;
 
         searchPanel = new JPanel();
         searchPanel.setLayout(new MigLayout(

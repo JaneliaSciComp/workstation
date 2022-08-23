@@ -273,6 +273,7 @@ public class FilterEditorPanel
 
     private void setFilter(Filtering canonicalFilter) {
 
+        log.info("Setting filter to search for: "+canonicalFilter.getSearchString());
         // Clone the filter so that we don't modify the one in the cache
         this.filter = DomainUtils.cloneFilter(canonicalFilter);
         filter.setName(canonicalFilter.getName());
@@ -312,6 +313,9 @@ public class FilterEditorPanel
         this.dirty = false;
         setFilter(filter);
         getSelectionModel().setParentObject(filter);
+
+        // This must get called before refreshSearchResults, so that search text is populated in the search box
+        updateView();
 
         refreshSearchResults(isUserDriven, () -> {
             searchBox.requestFocus();
