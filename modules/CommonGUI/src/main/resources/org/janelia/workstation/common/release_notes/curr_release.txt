@@ -14,3 +14,4 @@ Horta
 * Added "Horta Sample" discovery option to Synchronized Folders
 * Removed superseded "Load Horta Data" menu option from "Services"
 * Automatically create workspaces with published neurons when discovering samples on HortaCloud
+* You can now search for ML Neuron Browser neurons in both Horta Workspaces and Horta Neurons
