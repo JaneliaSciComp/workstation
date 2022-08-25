@@ -194,10 +194,8 @@ public class DomainMgr {
         if (preferenceMap == null) {
             this.preferenceMap = new HashMap<>();
             for (Preference preference : subjectFacade.getPreferences()) {
-                if (preference.getSubjectKey().equals(DomainMgr.getPreferenceSubject())) {
-                    log.info("Loaded preference: {}", preference);
-                    preferenceMap.put(getPreferenceMapKey(preference), preference);
-                }
+                log.info("Loaded preference: {}", preference);
+                preferenceMap.put(getPreferenceMapKey(preference), preference);
             }
             log.info("Loaded {} user preferences for {}", preferenceMap.size(), DomainMgr.getPreferenceSubject());
         }

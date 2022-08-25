@@ -3,6 +3,7 @@
 Browser
 * Added a sorting button that makes it easier to sort results from both image and table views
 * Sorting criteria is now global instead of per-folder
+* Restored default presets for Color Depth Search
 
 FlyLight
 * Added "FLEW" to Target Websites for publishing Gen1GAL4 images
