@@ -261,11 +261,16 @@ public class RefreshHandler implements MessageHandler {
                             // update model or process request
                             switch (action) {
                                 case NEURON_CREATE:
-                                   // handleNeuronCreate(neuron, n -> annotationModel.getNeuronModel().addNeuron(n));
+                                    handleNeuronCreate(neuron, n -> annotationModel.getNeuronModel().addNeuron(n));
                                     break;
                                 case NEURON_SAVE_NEURONDATA:
                                     if (!user.equals(AccessManager.getSubjectKey())) {
-                                       handleNeuronChanged(neuron);
+                                        if (annotationModel.getNeuronModel().getNeuronById(neuron.getId())==null) {
+                                            annotationModel.getNeuronModel().addNeuron(neuron);
+                                            updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE);
+                                            annotationModel.fireNeuronCreated(neuron);
+                                        } else
+                                            handleNeuronChanged(neuron);
                                     }
                                     break;
                                 case NEURON_DELETE:
