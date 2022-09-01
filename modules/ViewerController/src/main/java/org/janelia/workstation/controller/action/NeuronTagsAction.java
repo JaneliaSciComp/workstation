@@ -155,7 +155,11 @@ public class NeuronTagsAction extends EditAction {
      * create a new tag and apply it to the target neuron
      */
     private void onAddNewTag() {
-        addTag(newTagField.getText());
+        if (newTagField.getText().isEmpty()) {
+            showError("Please provide a tag before clicking 'New tag'!", "Empty tag field");
+        } else {
+            addTag(newTagField.getText());
+        }
     }
 
     /**
