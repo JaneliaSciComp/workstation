@@ -55,7 +55,7 @@ public class NeuronSetRadiusAction extends AbstractAction {
         Map<Long, TmGeoAnnotation> map = neuron.getGeoAnnotationMap();
         if (!map.isEmpty()) {
              TmGeoAnnotation ann = map.values().iterator().next();
-             if (ann!=null) {
+             if (ann != null && ann.getRadius() != null) {
                  defaultRadius = ann.getRadius();
              }
         }
