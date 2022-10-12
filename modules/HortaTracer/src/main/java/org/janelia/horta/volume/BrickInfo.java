@@ -23,4 +23,6 @@ public interface BrickInfo {
     Texture3d loadBrick(double maxEdgePadWidth, String fileExtension) throws IOException;
     boolean isSameBrick(BrickInfo other);
     Matrix getStageCoordToTexCoord(); // Matrix that transforms stage coordinates to local texture coordinates
+    void setColorChannelIndex(int colorChannel);
+    int getColorChannelIndex();
 }

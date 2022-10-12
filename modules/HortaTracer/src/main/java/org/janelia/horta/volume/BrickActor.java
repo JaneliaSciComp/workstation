@@ -16,10 +16,10 @@ import org.janelia.horta.actors.BrainTileMesh;
  * @author Christopher Bruns
  */
 public class BrickActor extends MeshActor implements DepthSlabClipper {
-    private final BrainTileInfo brainTile;
+    private final BrickInfo brainTile;
     private final BrickMaterial brickMaterial;
 
-    public BrickActor(BrainTileInfo brainTile,
+    public BrickActor(BrickInfo brainTile,
                       ImageColorModel brightnessModel,
                       VolumeState volumeState,
                       int colorChannel) throws IOException {
@@ -31,7 +31,7 @@ public class BrickActor extends MeshActor implements DepthSlabClipper {
     }
 
     // Constructor version that uses preloaded Texture3d
-    public BrickActor(BrainTileInfo brainTile,
+    public BrickActor(BrickInfo brainTile,
                       Texture3d texture3d,
                       ImageColorModel brightnessModel,
                       VolumeState volumeState) {
@@ -46,7 +46,7 @@ public class BrickActor extends MeshActor implements DepthSlabClipper {
         brickMaterial.setOpaqueDepthTexture(depthTexture);
     }
 
-    public BrainTileInfo getBrainTile() {
+    public BrickInfo getBrainTile() {
         return brainTile;
     }
 
@@ -56,7 +56,7 @@ public class BrickActor extends MeshActor implements DepthSlabClipper {
 
     private static class BrickMaterial extends VolumeMipMaterial {
 
-        private BrickMaterial(BrainTileInfo brainTile,
+        private BrickMaterial(BrickInfo brainTile,
                               ImageColorModel imageColorModel,
                               VolumeState volumeState,
                               int colorChannel) throws IOException {
@@ -64,8 +64,9 @@ public class BrickActor extends MeshActor implements DepthSlabClipper {
             setVolumeState(volumeState);
         }
 
-        private static Texture3d safeLoadBrick(BrainTileInfo brainTile, int colorChannel) throws IOException {
-            Texture3d brick = brainTile.loadBrick(10, colorChannel, null);
+        private static Texture3d safeLoadBrick(BrickInfo brainTile, int colorChannel) throws IOException {
+            brainTile.setColorChannelIndex(colorChannel);
+            Texture3d brick = brainTile.loadBrick(10, null);
             if (brick == null) {
                 throw new IOException("Load was interrupted");
             }

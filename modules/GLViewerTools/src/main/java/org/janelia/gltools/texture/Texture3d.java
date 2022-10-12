@@ -1,21 +1,23 @@
 
 package org.janelia.gltools.texture;
 
-import java.awt.image.ColorModel;
-import java.awt.image.DataBufferUShort;
-import java.awt.image.Raster;
-import java.awt.image.RenderedImage;
+import java.awt.*;
+import java.awt.color.ColorSpace;
+import java.awt.image.*;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+import javax.imageio.ImageIO;
 import javax.media.opengl.GL3;
 
 import com.sun.media.jai.codec.ImageCodec;
@@ -28,6 +30,9 @@ import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.gltools.GL3Resource;
 import org.janelia.gltools.MJ2Parser;
 import org.janelia.gltools.activity_logging.ActivityLogHelper;
+import org.janelia.saalfeldlab.n5.DataBlock;
+import org.janelia.saalfeldlab.n5.DatasetAttributes;
+import org.janelia.saalfeldlab.n5.N5FSReader;
 import org.janelia.workstation.core.options.ApplicationOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -163,6 +168,46 @@ public class Texture3d extends BasicTexture implements GL3Resource {
 
                 float t1 = timer.reportMsAndRestart();
                 LOG.info(">>> loadTiffStack() total time = {} ms", (t1));
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Unable to parse", e);
+        }
+    }
+
+    public boolean loadN5Block(int[] blockIndex) throws IOException {
+        String datasetName = "Z:/lightsheet/2021-02-12/021221_JChandrashekar_HHMI/S1-2.n5/maxfusion_Ch488nm_cam1__reSlice";
+        N5FSReader n5 = new N5FSReader(datasetName);
+        final DatasetAttributes info = n5.getDatasetAttributes("s0");
+        int x = blockIndex[0], y = blockIndex[2], z = blockIndex[2];
+        Raster[] slices = new Raster[128];
+        DataBlock testData = n5.readBlock("s0", info, x, y, z);
+        ByteBuffer rawData = testData.toByteBuffer();
+        LOG.info("Grid:x="+x+",y="+y+",z="+z);
+        for (int i = 0; i < 128; i++) {
+            int offset = i * 128 * 128;
+            int length = 128 * 128;
+            short[] n5slice = new short[length];
+            rawData.asShortBuffer().get(n5slice, 0, length);
+            ComponentSampleModel csm = new ComponentSampleModel(DataBuffer.TYPE_USHORT, 128, 128, 1,
+                    128, new int[] { 0 });
+            DataBuffer db = new DataBufferUShort((short[]) n5slice, 128);
+            slices[i] = Raster.createRaster(csm, db, null);
+        }
+
+        try {
+
+            if (slices.length > 0) {
+                depth = slices.length;
+                width = slices[0].getWidth();
+                height = slices[0].getHeight();
+                ColorModel cm = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_GRAY),
+                        new int[]{16}, false, false,
+                        Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
+                loadStack(slices, cm);
                 return true;
             } else {
                 return false;

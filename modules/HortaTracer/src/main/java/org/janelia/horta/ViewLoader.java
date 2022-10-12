@@ -15,6 +15,9 @@ import com.google.common.base.Objects;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
+import org.janelia.gltools.texture.Texture3d;
+import org.janelia.horta.volume.VolumeMipMaterial;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.workstation.controller.tileimagery.OsFilePathRemapper;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
@@ -85,32 +88,45 @@ public class ViewLoader {
                     }
                     RenderedVolume renderedVolume = getVolumeInfo(url.toURI());
 
-                    if (nttc.isPreferKtx()) {
-                        // for KTX tile the camera must be set before the tiles are loaded in order for them to be displayed first time
-                        progress.setDisplayName("Centering on location...");
-                        setCameraLocation(syncZoom, syncLocation);
-                        // use ktx tiles
-                        KtxOctreeBlockTileSource ktxSource = createKtxSource(url, sample);
-                        nttc.setKtxSource(ktxSource);
-                        // start loading ktx tiles
-                        progress.switchToIndeterminate(); // TODO: enhance tile loading with a progress listener
-                        progress.setDisplayName("Loading KTX brain tile image...");
-                        if (nttc.doesUpdateVolumeCache()) {
-                            loader.loadTransientKtxTileAtCurrentFocus(nttc.getKtxSource());
-                        } else {
-                            loader.loadPersistentKtxTileAtCurrentFocus(nttc.getKtxSource());
-                        }
-                    } else {
-                        // use raw tiles, which are handled by the StaticVolumeBrickSource
-                        StaticVolumeBrickSource volumeBrickSource = createStaticVolumeBrickSource(renderedVolume, sample, progress);
-                        nttc.setVolumeSource(volumeBrickSource);
-                        // start loading raw tiles
-                        progress.switchToIndeterminate();
-                        progress.setDisplayName("Loading brain tile image...");
-                        loader.loadTileAtCurrentFocus(volumeBrickSource, 0);
-                        // for raw tiles the camera needs to be set after the tile began loading in order to trigger the display
-                        progress.setDisplayName("Centering on location...");
-                        setCameraLocation(syncZoom, syncLocation);
+                    switch (nttc.getFileFormat()) {
+                        case KTX:
+                            // for KTX tile the camera must be set before the tiles are loaded in order for them to be displayed first time
+                            progress.setDisplayName("Centering on location...");
+                            setCameraLocation(syncZoom, syncLocation);
+                            // use ktx tiles
+                            KtxOctreeBlockTileSource ktxSource = createKtxSource(url, sample);
+                            nttc.setKtxSource(ktxSource);
+                            // start loading ktx tiles
+                            progress.switchToIndeterminate(); // TODO: enhance tile loading with a progress listener
+                            progress.setDisplayName("Loading KTX brain tile image...");
+                            if (nttc.doesUpdateVolumeCache()) {
+                                loader.loadTransientKtxTileAtCurrentFocus(nttc.getKtxSource());
+                            } else {
+                                loader.loadPersistentKtxTileAtCurrentFocus(nttc.getKtxSource());
+                            }
+                            break;
+                        case RAW:
+                            // use raw tiles, which are handled by the StaticVolumeBrickSource
+                            StaticVolumeBrickSource volumeBrickSource = createStaticVolumeBrickSource(renderedVolume, sample, progress);
+                            nttc.setVolumeSource(volumeBrickSource);
+                            // start loading raw tiles
+                            progress.switchToIndeterminate();
+                            progress.setDisplayName("Loading brain tile image...");
+                            loader.loadTileAtCurrentFocus(volumeBrickSource, 0);
+                            // for raw tiles the camera needs to be set after the tile began loading in order to trigger the display
+                            progress.setDisplayName("Centering on location...");
+                            setCameraLocation(syncZoom, syncLocation);
+                            break;
+                        case N5:
+                            // start loading N5 tiles
+                            progress.switchToIndeterminate();
+                            progress.setDisplayName("Loading N5 Tile Set at Location...");
+                            Texture3d texture = new Texture3d();
+                            texture.loadN5Block(new int[] {150,75,35});
+                            loader.loadN5BlocksAtCurrentFocus(texture, syncLocation);
+                            // for raw tiles the camera needs to be set after the tile began loading in order to trigger the display
+                            progress.setDisplayName("Centering on location...");
+                            setCameraLocation(syncZoom, syncLocation);
                     }
 
                     nttc.redrawNow();

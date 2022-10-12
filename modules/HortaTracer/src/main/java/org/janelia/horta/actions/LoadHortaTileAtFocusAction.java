@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import org.janelia.horta.NeuronTracerTopComponent;
+import org.janelia.horta.util.FILE_FORMAT;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -35,7 +36,7 @@ public final class LoadHortaTileAtFocusAction implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         try {
             LOG.info("Load KTX Central Tile Action invoked");
-            context.setPreferKtx(true);
+            context.setFileFormat(FILE_FORMAT.KTX);
             context.loadPersistentTileAtFocus();
         } catch (IOException ex) {
             LOG.info("Tile load failed", ex);

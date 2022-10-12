@@ -35,6 +35,8 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 
 import org.janelia.geometry3d.ObservableInterface;
+import org.janelia.gltools.texture.Texture3d;
+import org.janelia.horta.util.FILE_FORMAT;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.controller.dialog.NeuronColorDialog;
 import org.janelia.workstation.controller.listener.ColorModelListener;
@@ -845,7 +847,9 @@ public final class NeuronTracerTopComponent extends TopComponent
         setCubifyVoxels(prefs.getBoolean("bCubifyVoxels", doCubifyVoxels));
         volumeCache.setUpdateCache(
                 prefs.getBoolean("bCacheHortaTiles", doesUpdateVolumeCache()));
-        setPreferKtx(prefs.getBoolean("bPreferKtxTiles", isPreferKtx()));
+        if (prefs.getBoolean("bPreferKtxTiles", true)) {
+            setFileFormat(FILE_FORMAT.KTX);
+        }
     }
 
     public void initMeshes() {
@@ -926,7 +930,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         prefs.putInt("startupRenderFilter", volumeState.filteringOrder);
         prefs.putBoolean("bCubifyVoxels", doCubifyVoxels);
         prefs.putBoolean("bCacheHortaTiles", doesUpdateVolumeCache());
-        prefs.putBoolean("bPreferKtxTiles", isPreferKtx());
+        prefs.putBoolean("bPreferKtxTiles", getFileFormat()==FILE_FORMAT.KTX);
     }
 
     private void initialize3DViewer() {
@@ -1823,6 +1827,14 @@ public final class NeuronTracerTopComponent extends TopComponent
         return new BrickActor(brainTile, imageColorModel, volumeState, colorChannel);
     }
 
+    GL3Actor createBrickActor(BrainTileInfo brainTile, Texture3d texture3D) throws IOException {
+        return new BrickActor(brainTile, texture3D, imageColorModel, volumeState);
+    }
+
+    GL3Actor createN5BrickActor(N5TileInfo brainTile, Texture3d texture3D) throws IOException {
+        return new BrickActor(brainTile, texture3D, imageColorModel, volumeState);
+    }
+
     double[] getStageLocation() {
         if (mouseStageLocation == null) {
             return null;
@@ -2022,7 +2034,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     public void clearAllTiles() {
         // this is a workaround for clearing RAW tiles until we can clean up the controllers for Horta
-        setPreferKtx(true);
+        setFileFormat(FILE_FORMAT.KTX);
         TetVolumeActor.getInstance().setAutoUpdate(false);
         reloadSampleLocation();
     }
@@ -2241,12 +2253,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                 v, 150);
     }
 
-    boolean isPreferKtx() {
-        return ktxBlockMenuBuilder.isPreferKtx();
+    FILE_FORMAT getFileFormat() {
+        return ktxBlockMenuBuilder.getFileFormat();
     }
 
-    public void setPreferKtx(boolean doPreferKtx) {
-        ktxBlockMenuBuilder.setPreferKtx(doPreferKtx);
+    public void setFileFormat(FILE_FORMAT format) {
+        ktxBlockMenuBuilder.setFileFormat(format);
     }
 
     public NeuronMPRenderer getNeuronMPRenderer() {

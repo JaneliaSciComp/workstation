@@ -1,10 +1,14 @@
 
 package org.janelia.horta;
 
+import Jama.Matrix;
+import org.janelia.gltools.texture.Texture3d;
 import org.janelia.horta.render.NeuronMPRenderer;
 import java.io.IOException;
 import java.util.Observable;
 import java.util.Observer;
+
+import org.janelia.horta.volume.*;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.geometry.util.PerformanceTimer;
 import org.janelia.geometry3d.PerspectiveCamera;
@@ -15,10 +19,8 @@ import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.KtxBlockLoadRunner;
 import org.janelia.horta.blocks.KtxOctreeBlockTileKey;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
-import org.janelia.horta.volume.BrickActor;
-import org.janelia.horta.volume.BrickInfo;
-import org.janelia.horta.volume.BrickInfoSet;
-import org.janelia.horta.volume.StaticVolumeBrickSource;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
+import org.janelia.workstation.geom.Vec3;
 import org.openide.awt.StatusDisplayer;
 
 /**
@@ -111,6 +113,20 @@ public class NeuronTraceLoader {
 
         BrickInfoSet brickInfoSet = volumeSource.getAllBrickInfoForResolution(brickResolution);
         return brickInfoSet;
+    }
+
+    void loadN5BlocksAtCurrentFocus (Texture3d imageData, Vec3 location) throws IOException {
+        int[] origin = new int[]{(int)location.getX(),(int)location.getY(),(int)location.getZ()};
+        int[] pixelDims = new int[]{128,128,128};
+
+        N5TileInfo tileInfo = new N5TileInfo(origin, pixelDims, 2);
+
+        GL3Actor boxMesh = nttc.createN5BrickActor(tileInfo, imageData);
+        nttc.registerLoneDisplayedTile((BrickActor) boxMesh);
+
+        // Clear, so only one tiles is shown at a time (two tiles are in memory during transition)
+        neuronMPRenderer.clearVolumeActors();
+        neuronMPRenderer.addVolumeActor(boxMesh);
     }
 
     /**

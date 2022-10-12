@@ -412,7 +412,7 @@ public class HortaVolumeCache {
         return false;
     }
 
-    private void uploadToGpu(BrainTileInfo brick) {
+    private void uploadToGpu(BrickInfo brick) {
         if (! doUpdateCache)
             return;
         if (actualDisplayTiles.containsKey(brick))
@@ -422,11 +422,11 @@ public class HortaVolumeCache {
         
         Texture3d texture3d = nearVolumeInRam.get(brick);
         if (texture3d == null) {
-            LOG.error("Volume should be loaded but isn't: "+brick.getTileRelativePath());
+            //LOG.error("Volume should be loaded but isn't: "+brick.getTileRelativePath());
             return; // Sorry, that volume is not loaded FIXME: error handling here
         }
 
-        LOG.info("Loading to GPU: "+brick.getTileRelativePath());
+        //LOG.info("Loading to GPU: "+brick.getTileRelativePath());
 
         final BrickActor actor = new BrickActor(brick, texture3d, imageColorModel, volumeState);
         actualDisplayTiles.put(brick, actor);

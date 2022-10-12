@@ -2,14 +2,12 @@ package org.janelia.horta;
 
 import java.awt.event.ActionEvent;
 import java.io.IOException;
-import javax.swing.AbstractAction;
-import javax.swing.JCheckBoxMenuItem;
-import javax.swing.JMenu;
-import javax.swing.JMenuItem;
-import javax.swing.JPopupMenu;
+import javax.swing.*;
 
 import org.janelia.horta.actions.LoadHortaTileAtFocusAction;
 import org.janelia.horta.actors.TetVolumeActor;
+import org.janelia.horta.util.FILE_FORMAT;
+import org.janelia.horta.volume.VolumeMipMaterial;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,17 +16,16 @@ import org.slf4j.LoggerFactory;
  * @author brunsc
  */
 class KtxBlockMenuBuilder {
-
-    private boolean preferKtx = true;
+    private FILE_FORMAT fileFormat = FILE_FORMAT.KTX;
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    boolean isPreferKtx() {
-        return preferKtx;
+    FILE_FORMAT getFileFormat() {
+        return fileFormat;
     }
 
-    void setPreferKtx(boolean doPreferKtx) {
-        preferKtx = doPreferKtx;
+    void setFileFormat(FILE_FORMAT preference) {
+        fileFormat = preference;
     }
     
     void populateMenus(final HortaMenuContext context) {
@@ -43,7 +40,7 @@ class KtxBlockMenuBuilder {
                 if (nttc == null)
                     return;
                 try {
-                    nttc.setPreferKtx(true);
+                    nttc.setFileFormat(FILE_FORMAT.KTX);
                     nttc.loadPersistentTileAtLocation(context.mouseXyz);
                 } catch (IOException ex) {
                     logger.info("Tile load failed");
@@ -62,24 +59,53 @@ class KtxBlockMenuBuilder {
         });
         
         tilesMenu.add(new JPopupMenu.Separator());
-        
-        /* */
-        JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
-                "Prefer rendered Ktx tiles", preferKtx);
-        tilesMenu.add(enableVolumeCacheMenu);
-        enableVolumeCacheMenu.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                JCheckBoxMenuItem item = (JCheckBoxMenuItem)e.getSource();
-                preferKtx = item.isSelected();
-                NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
-                item.setSelected(preferKtx);
-                nttc.reloadSampleLocation();
-            }
-        });
-        /* */
-        
+
+        JMenu fileFormatMenu = new JMenu("Tile Imagery Format");
+        tilesMenu.add(fileFormatMenu);
+        fileFormatMenu.add(new JRadioButtonMenuItem(
+                new AbstractAction("N5 Format") {
+                    {
+                        putValue(Action.SELECTED_KEY,
+                                fileFormat == fileFormat.N5);
+                    }
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        fileFormat = FILE_FORMAT.N5;
+                        NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
+                        nttc.reloadSampleLocation();
+                    }
+                }));
+        fileFormatMenu.add(new JRadioButtonMenuItem(
+                new AbstractAction("KTX Format") {
+                    {
+                        putValue(Action.SELECTED_KEY,
+                                fileFormat == FILE_FORMAT.KTX);
+                    }
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        fileFormat = FILE_FORMAT.KTX;
+                        NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
+                        nttc.reloadSampleLocation();
+                    }
+                }));
+
+        fileFormatMenu.add(new JRadioButtonMenuItem(
+                new AbstractAction("RAW (TIFF/MJ2) Format") {
+                    {
+                        putValue(Action.SELECTED_KEY,
+                                fileFormat == FILE_FORMAT.RAW);
+                    }
+
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        fileFormat = FILE_FORMAT.RAW;
+                        NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
+                        nttc.reloadSampleLocation();
+                    }
+                }));
+
         tilesMenu.add(new JMenuItem(
                 new AbstractAction("Clear all Volume Blocks")
         {

@@ -184,11 +184,13 @@ public class BrainTileInfo implements BrickInfo {
     }
 
     // TODO - remove this hack after we can show more than one channel at a time
-    int getColorChannelIndex() {
+    @Override
+    public int getColorChannelIndex() {
         return this.colorChannelIndex;
     }
-    
-    private void setColorChannelIndex(int index) {
+
+    @Override
+    public void setColorChannelIndex(int index) {
         this.colorChannelIndex = index;
     }
 
