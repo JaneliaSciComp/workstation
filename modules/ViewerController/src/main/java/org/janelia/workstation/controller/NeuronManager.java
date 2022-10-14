@@ -323,6 +323,11 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public TmNeuronMetadata getNeuronFromNeuronID(Long neuronID) {
+        // trying to track down a bug
+        if (neuronID == null) {
+            log.warn("getNeuronFromNeuronID: neuronID is null");
+        }
+
         TmNeuronMetadata foundNeuron = neuronModel.getNeuronById(neuronID);
         if (foundNeuron == null) {
             // This happens, for example, when a new workspace is loaded and we try to find the previous nextParent anchor.
