@@ -46,10 +46,7 @@ public class TiledMicroscopeDomainMgr {
         return instance;
     }
 
-    private TiledMicroscopeRestClient client;
-    
     private TiledMicroscopeDomainMgr() {
-        this.client = new TiledMicroscopeRestClient();
     }
 
     private DomainModel getModel() {
@@ -68,6 +65,7 @@ public class TiledMicroscopeDomainMgr {
 
     public TmSample createSample(String name, String filepath, String ktxPath, String rawPath) throws Exception {
         LOG.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         Map<String,Object> constants = client.getTmSampleConstants(filepath);
         if (constants != null) {
             TreeNode tmSampleFolder = getModel().getDefaultWorkspaceFolder(DomainConstants.NAME_TM_SAMPLE_FOLDER, true);
@@ -98,6 +96,8 @@ public class TiledMicroscopeDomainMgr {
     public TmSample save(TmSample sample) throws Exception {
         LOG.debug("save({})",sample);
         TmSample canonicalObject;
+
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         synchronized (this) {
             canonicalObject = getModel().putOrUpdate(sample.getId()==null ? client.create(sample) : client.update(sample));
         }
@@ -112,11 +112,13 @@ public class TiledMicroscopeDomainMgr {
 
     public void remove(TmSample sample) throws Exception {
         LOG.debug("remove({})",sample);
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         client.remove(sample);
         getModel().notifyDomainObjectRemoved(sample);
     }
 
     public List<TmWorkspace> getWorkspacesSortedByCurrentPrincipal(Long sampleId) throws Exception {
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         Collection<TmWorkspace> workspaces = client.getTmWorkspacesForSample(sampleId);
         List<TmWorkspace> canonicalObjects = DomainMgr.getDomainMgr().getModel().putOrUpdate(workspaces, false);
         // Sorting this when the data is queried is a bit tricky
@@ -168,6 +170,7 @@ public class TiledMicroscopeDomainMgr {
 
         TreeNode defaultWorkspaceFolder = getModel().getDefaultWorkspaceFolder(DomainConstants.NAME_TM_WORKSPACE_FOLDER, true);
 
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         TmWorkspace workspaceCopy = client.copy(workspace, name, assignOwner);
 
         // Server should have put the new workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
@@ -182,6 +185,7 @@ public class TiledMicroscopeDomainMgr {
     public TmWorkspace save(TmWorkspace workspace) throws Exception {
         LOG.debug("save({})", workspace);
         TmWorkspace canonicalObject;
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         synchronized (this) {
             canonicalObject = getModel().putOrUpdate(workspace.getId()==null ? client.create(workspace) : client.update(workspace));
         }
@@ -196,6 +200,7 @@ public class TiledMicroscopeDomainMgr {
 
     public void remove(TmWorkspace workspace) throws Exception {
         LOG.debug("remove({})", workspace);
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         client.remove(workspace);
         getModel().notifyDomainObjectRemoved(workspace);
     }
@@ -234,6 +239,7 @@ public class TiledMicroscopeDomainMgr {
                 return tasks.stream().flatMap(subtask -> subtask.join());
             } else {
                 LOG.info("Retrieving results - Neuron block: {} - {}", start, end);
+                TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
                 return client.getWorkspaceNeurons(workspaceId, start, end - start).stream();
             }
         }
@@ -241,6 +247,7 @@ public class TiledMicroscopeDomainMgr {
     
     public Stream<TmNeuronMetadata> streamWorkspaceNeurons(Long workspaceId) {
         LOG.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         long neuronCount = client.getWorkspaceNeuronCount(workspaceId);
         ForkJoinPool pool = new ForkJoinPool(NUM_PARALLEL_NEURONSTREAMS);
         Stream<TmNeuronMetadata> neurons = pool.invoke(new RetrieveNeuronsTask(workspaceId, 0, (int)neuronCount));
@@ -250,6 +257,7 @@ public class TiledMicroscopeDomainMgr {
     public TmNeuronMetadata saveMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
         LOG.debug("save({})", neuronMetadata);
         TmNeuronMetadata savedMetadata;
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         if (neuronMetadata.getId()==null) {
             savedMetadata = client.create(neuronMetadata);
             getModel().notifyDomainObjectCreated(savedMetadata);
@@ -268,6 +276,7 @@ public class TiledMicroscopeDomainMgr {
                 throw new IllegalArgumentException("Bulk neuron creation is currently unsupported");
             }
         }
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         List<TmNeuronMetadata> updatedMetadata = client.update(neuronList);
         for(TmNeuronMetadata tmNeuronMetadata : updatedMetadata) {
             getModel().notifyDomainObjectChanged(tmNeuronMetadata);
@@ -278,6 +287,7 @@ public class TiledMicroscopeDomainMgr {
     public TmNeuronMetadata createWithId(TmNeuronMetadata neuronMetadata) throws Exception {
         LOG.debug("save({})", neuronMetadata);
         TmNeuronMetadata savedMetadata;
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         savedMetadata = client.create(neuronMetadata);
         getModel().notifyDomainObjectCreated(savedMetadata);
         return savedMetadata;
@@ -286,6 +296,7 @@ public class TiledMicroscopeDomainMgr {
     public TmNeuronMetadata save(TmNeuronMetadata neuronMetadata) throws Exception {
         LOG.debug("save({})", neuronMetadata);
         TmNeuronMetadata savedMetadata;
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         if (neuronMetadata.getId()==null) {
             savedMetadata = client.create(neuronMetadata);
             getModel().notifyDomainObjectCreated(savedMetadata);
@@ -302,6 +313,7 @@ public class TiledMicroscopeDomainMgr {
     
     public TmReviewTask save(TmReviewTask reviewTask) throws Exception {
         LOG.debug("save({})", reviewTask);
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         if (reviewTask.getId()==null) {
             reviewTask = client.create(reviewTask);
         } else {
@@ -313,11 +325,13 @@ public class TiledMicroscopeDomainMgr {
     
     public void remove(TmReviewTask reviewTask) throws Exception {
         LOG.debug("remove({})", reviewTask);
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         client.remove(reviewTask);
         getModel().notifyDomainObjectRemoved(reviewTask);
     }
     
     public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate, Long workspaceId) throws Exception {
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         client.updateNeuronStyles(bulkNeuronStyleUpdate, workspaceId);
     }
     
@@ -325,6 +339,7 @@ public class TiledMicroscopeDomainMgr {
         LOG.debug("remove({})", tmNeuron);
         TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
         neuronMetadata.setId(tmNeuron.getId());
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         client.remove(neuronMetadata);
         getModel().notifyDomainObjectRemoved(neuronMetadata);
     }
@@ -337,21 +352,25 @@ public class TiledMicroscopeDomainMgr {
 
     public void bulkEditNeuronTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) throws Exception {
         LOG.debug("bulkEditTags({})", neurons);
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         client.changeTags(neurons, tags, tagState);
     }
 
     public CoordinateToRawTransform getCoordToRawTransform(String basePath) throws Exception {
         LOG.debug("getCoordToRawTransform({})", basePath);
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         return client.getLvvCoordToRawTransform(basePath);
     }
 
     public byte[] getRawTextureBytes(String basePath, int[] viewerCoord, int[] dimensions, int channel) throws Exception {
         LOG.debug("getTextureBytes({}, viewerCoord={}, dimensions={})", basePath, viewerCoord, dimensions);
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         return client.getRawTextureBytes(basePath, viewerCoord, dimensions, channel);
     }
 
     public String getNearestChannelFilesURL(String basePath, int[] viewerCoord) {
         LOG.debug("getNearestChannelFilesURL({}, viewerCoord={})", basePath, viewerCoord);
+        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         return client.getNearestChannelFilesURL(basePath, viewerCoord);
     }
 }

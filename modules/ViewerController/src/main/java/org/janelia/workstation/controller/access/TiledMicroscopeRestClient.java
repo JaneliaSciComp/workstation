@@ -44,22 +44,18 @@ import org.slf4j.LoggerFactory;
 public class TiledMicroscopeRestClient extends RESTClientBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(TiledMicroscopeRestClient.class);
-    private WebTarget service;
-    private String remoteApiUrl;
-    private String remoteStorageUrl;
+
+    private final WebTarget service;
+    private final String remoteApiUrl;
+    private final String remoteStorageUrl;
 
     public TiledMicroscopeRestClient() {
-        this(ConsoleProperties.getInstance().getProperty("mouselight.rest.url"),
-                ConsoleProperties.getInstance().getProperty("jadestorage.rest.url"));
-    }
-
-    public TiledMicroscopeRestClient(String remoteApiUrl, String remoteStorageUrl) {
         super(LOG);
-        LOG.info("Using server URL: {}",remoteApiUrl);
-        this.service = RestJsonClientManager.getInstance().getTarget(remoteApiUrl, true);
+        this.remoteApiUrl = ConsoleProperties.getInstance().getProperty("mouselight.rest.url");
+        this.remoteStorageUrl = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
+        LOG.info("Using server URL: {}", this.remoteApiUrl);
+        this.service = RestJsonClientManager.getInstance().getTarget(this.remoteApiUrl, true);
         // TODO: convert the methods using these variables to reuse targets instead
-        this.remoteApiUrl = remoteApiUrl;
-        this.remoteStorageUrl = remoteStorageUrl;
     }
 
     private WebTarget getMouselightDataEndpoint(String suffix) {
