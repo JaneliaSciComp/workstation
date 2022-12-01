@@ -296,8 +296,10 @@ public class BrandingConfig {
 
         String systemValue = systemSettings.get(DEFAULT_OPTIONS_PROP);
         String brandingValue = brandingSettings.get(DEFAULT_OPTIONS_PROP);
-        String customDefaultOpts = systemValue;
-        log.info("Original systemValue="+systemValue);
+        String customDefaultOpts = brandingValue != null && brandingValue.trim().length() > 0
+                ? brandingValue
+                : systemValue;
+        log.info("Original systemValue=" + systemValue + "; brandingValue=" + brandingValue);
         
         // What should the default options be?
         if (maxMemoryMB != null) {
