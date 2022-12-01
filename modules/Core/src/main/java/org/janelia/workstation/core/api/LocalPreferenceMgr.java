@@ -7,17 +7,14 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.file.Paths;
 import java.util.TreeMap;
 
 import javax.swing.JOptionPane;
 
-import org.janelia.filecacheutils.LocalFileCacheStorage;
 import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.util.StringUtilsExtra;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
-import org.apache.commons.lang3.StringUtils;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ApplicationClosing;
 import org.janelia.workstation.core.events.prefs.LocalPreferenceChanged;
@@ -167,7 +164,7 @@ public class LocalPreferenceMgr {
     public String getApplicationOutputDirectory() {
         return prefsDir;
     }
-    
+
     public Object setModelProperty(Object key, Object newValue) {
         if (modelProperties == null) throw new IllegalStateException("Local preferences have not yet been initialized");
         Object oldValue = modelProperties.put(key, newValue);

@@ -95,7 +95,7 @@ public class BrandingConfig {
     /**
      * This loads the default configuration file.
      */
-    private final void loadSystemConfig() {
+    private void loadSystemConfig() {
         try {
             // Find the current bona-fide production config
             final String configFile = "config/janeliaws.conf";
@@ -155,7 +155,7 @@ public class BrandingConfig {
     /**
      * This loads the user-customized configuration file.
      */
-    private final void loadBrandingConfig() {
+    private void loadBrandingConfig() {
         
         try {
             File userSettingsDir = new File(Places.getUserDirectory(), ETC_SUBPATH);
@@ -178,7 +178,7 @@ public class BrandingConfig {
         }
     }
 
-    private final void loadBrandingMemorySetting() {
+    private void loadBrandingMemorySetting() {
         String javaMemoryOption = getJavaMemOption();
         if (javaMemoryOption==null) return;
         log.info("Found existing memory option: "+javaMemoryOption);
@@ -195,7 +195,7 @@ public class BrandingConfig {
         log.info("Loaded existing branding memory setting: "+maxMemoryMB);
     }
 
-    private final void loadBrandingCheckUpdatesSetting() {
+    private void loadBrandingCheckUpdatesSetting() {
 //        String checkUpdatesOption = getCheckUpdatesOption();
 //        if (checkUpdatesOption==null) return;
 //        final int numberStartPt = CHECK_UPDATES_PREFIX.length();
