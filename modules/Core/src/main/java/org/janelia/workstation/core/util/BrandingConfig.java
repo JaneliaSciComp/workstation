@@ -177,7 +177,7 @@ public class BrandingConfig {
             log.error("Error loading branding config",e);
         }
     }
-    
+
     private final void loadBrandingMemorySetting() {
         String javaMemoryOption = getJavaMemOption();
         if (javaMemoryOption==null) return;
@@ -210,7 +210,7 @@ public class BrandingConfig {
         return needsRestart;
     }
 
-    private final String getJavaMemOption() {
+    private String getJavaMemOption() {
         String defaultOptions = brandingSettings.get(DEFAULT_OPTIONS_PROP);
         String[] defaultOptionsArr = defaultOptions == null ? new String[0] : defaultOptions.split(" ");
         for (String defaultOption : defaultOptionsArr) {
@@ -221,7 +221,7 @@ public class BrandingConfig {
         return null;
     }
 
-    private final String getCheckUpdatesOption() {
+    private String getCheckUpdatesOption() {
         String defaultOptions = brandingSettings.get(DEFAULT_OPTIONS_PROP);
         String[] defaultOptionsArr = defaultOptions == null ? new String[0] : defaultOptions.split(" ");
         for (String defaultOption : defaultOptionsArr) {
