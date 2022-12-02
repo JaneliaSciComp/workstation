@@ -56,8 +56,6 @@ public class BrandingConfig {
         return instance;
     }
 
-    public static final String appnameToken = "janeliaws";  // TODO: Get this from NetBeans framework somehow
-    
     private static final String NETBEANS_IDE_SETTING_NAME_PREFIX = "netbeans_";
     private static final String MEMORY_SETTING_PREFIX = "-J-Xmx";
     private static final String CHECK_UPDATES_PREFIX = "-J-Dplugin.manager.check.updates=";
@@ -68,7 +66,8 @@ public class BrandingConfig {
     private final Map<String,String> brandingSettings = new LinkedHashMap<>();
     
     private final boolean devMode;
-    private File fqBrandingConfig; 
+    public final String appnameToken;
+    private File fqBrandingConfig;
     private Integer maxMemoryMB = null;
     private Boolean checkUpdates = null;
     private boolean needsRestart = false;
@@ -76,9 +75,10 @@ public class BrandingConfig {
 
     private BrandingConfig() {
         this.devMode = Places.getUserDirectory().toString().contains("target/userdir");
+        this.appnameToken = System.getProperty("branding.token", "janeliaws");
         if (devMode) {
-            // TODO: It would be nice to get this working in development, but NetBeans does things very differently in dev mode, 
-            // and it's not clear if it's even possible to have a branding config. Maybe someday we'll investigate this further. 
+            // TODO: It would be nice to get this working in development, but NetBeans does things very differently in dev mode,
+            // and it's not clear if it's even possible to have a branding config. Maybe someday we'll investigate this further.
             log.info("Branding config is disabled in development. Memory preference will have no effect. "
                     + "To change the max memory in development, temporarily edit the nbproject/project.properties file directly.");
         }
@@ -98,9 +98,9 @@ public class BrandingConfig {
     private void loadSystemConfig() {
         try {
             // Find the current bona-fide production config
-            final String configFile = "config/janeliaws.conf";
+            final String configFile = "config/" + appnameToken + ".conf";
             File sysWideConfig = InstalledFileLocator.getDefault().locate(configFile, "org.janelia.workstation", false);
-            log.debug("Trying system config at {}", sysWideConfig);
+            log.info("Trying system config at {}", sysWideConfig);
             
             if (sysWideConfig != null && sysWideConfig.canRead()) {
                 loadProperties(sysWideConfig, systemSettings);
@@ -119,7 +119,6 @@ public class BrandingConfig {
      * This loads the user-customized configuration file.
      */
     private void loadBrandingConfig() {
-        
         try {
             File userSettingsDir = new File(Places.getUserDirectory(), ETC_SUBPATH);
             if (!userSettingsDir.exists()) {
@@ -127,7 +126,7 @@ public class BrandingConfig {
             }
             final String configFile = appnameToken + ".conf";
             this.fqBrandingConfig = new File(userSettingsDir, configFile);
-            log.debug("Trying branding config at {}", fqBrandingConfig);
+            log.info("Trying branding config at {}", fqBrandingConfig);
     
             if (fqBrandingConfig.exists()) {
                 loadProperties(fqBrandingConfig, brandingSettings);
