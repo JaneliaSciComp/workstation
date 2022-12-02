@@ -718,7 +718,7 @@
                         <publicPackage>org.janelia.model.security.util</publicPackage>
                         <publicPackage>org.janelia.model.util</publicPackage>
                         <publicPackage>org.janelia.jacsstorage.datarequest</publicPackage>
-                        <publicPackage>org.janelia.jacsstorage.newclient</publicPackage>
+                        <publicPackage>org.janelia.jacsstorage.clients.api</publicPackage>
                         <publicPackage>org.janelia.it.jacs.compute.access</publicPackage>
                         <publicPackage>org.janelia.it.jacs.compute.api</publicPackage>
                         <publicPackage>org.janelia.it.jacs.compute.api.support</publicPackage>

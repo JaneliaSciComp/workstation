@@ -2,10 +2,10 @@ package org.janelia.workstation.n5viewer;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
-import org.janelia.jacsstorage.newclient.JadeStorageService;
-import org.janelia.jacsstorage.newclient.StorageLocation;
-import org.janelia.jacsstorage.newclient.StorageObject;
-import org.janelia.jacsstorage.newclient.StorageObjectNotFoundException;
+import org.janelia.jacsstorage.clients.api.JadeStorageService;
+import org.janelia.jacsstorage.clients.api.StorageLocation;
+import org.janelia.jacsstorage.clients.api.StorageObject;
+import org.janelia.jacsstorage.clients.api.StorageObjectNotFoundException;
 import org.janelia.saalfeldlab.n5.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,7 @@ public class N5JadeReader extends AbstractGsonReader {
 		super(gsonBuilder);
 		this.jadeStorage = jadeStorage;
 		this.basePath = basePath;
-		this.storageLocation = jadeStorage.getStorageObjectByPath(basePath);
+		this.storageLocation = jadeStorage.getStorageLocationByPath(basePath);
 
 		if (storageLocation == null) {
 			throw new IOException("Could not find Jade location for path: "+basePath);

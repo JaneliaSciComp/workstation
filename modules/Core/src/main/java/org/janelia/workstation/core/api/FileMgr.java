@@ -13,8 +13,7 @@ import org.apache.commons.httpclient.MultiThreadedHttpConnectionManager;
 import org.apache.commons.httpclient.params.HttpConnectionManagerParams;
 import org.janelia.filecacheutils.FileProxy;
 import org.janelia.filecacheutils.LocalFileCache;
-import org.janelia.jacsstorage.newclient.JadeStorageService;
-import org.janelia.jacsstorage.newclient.StorageService;
+import org.janelia.jacsstorage.clients.api.JadeStorageService;
 import org.janelia.workstation.core.api.http.HttpClientProxy;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
@@ -142,9 +141,7 @@ public class FileMgr {
      */
     public JadeStorageService getStorageService() {
         String remoteStorageUrl = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
-        StorageService storageService = new StorageService(remoteStorageUrl, null);
-        JadeStorageService jadeStorage = new JadeStorageService(storageService,
+        return new JadeStorageService(remoteStorageUrl, null,
                 AccessManager.getSubjectKey(), AccessManager.getAccessManager().getToken());
-        return jadeStorage;
     }
 }

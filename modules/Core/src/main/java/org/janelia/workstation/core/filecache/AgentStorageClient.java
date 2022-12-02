@@ -111,9 +111,6 @@ class AgentStorageClient extends AbstractStorageClient {
     /**
      * Save the specified stream to the server.
      *
-     * This method is protected (instead of private) so that it can
-     * be used for testing.
-     *
      * @param  url         server URL for the new file.
      * @param  fileStream  file contents to save.
      *

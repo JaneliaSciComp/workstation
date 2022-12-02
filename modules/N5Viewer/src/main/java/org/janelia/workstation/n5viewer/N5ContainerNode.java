@@ -1,7 +1,6 @@
 package org.janelia.workstation.n5viewer;
 
-import org.janelia.jacsstorage.newclient.JadeStorageService;
-import org.janelia.jacsstorage.newclient.StorageService;
+import org.janelia.jacsstorage.clients.api.JadeStorageService;
 import org.janelia.model.domain.files.N5Container;
 import org.janelia.saalfeldlab.n5.N5DatasetDiscoverer;
 import org.janelia.saalfeldlab.n5.N5Reader;
@@ -88,12 +87,11 @@ public class N5ContainerNode extends AbstractDomainObjectNode<N5Container> {
                 log.debug("Creating children keys for N5ContainerNode");
 
                 String remoteStorageUrl = ConsoleProperties.getInstance().getProperty("jadestorage.rest.url");
-                StorageService storageService = new StorageService(remoteStorageUrl, null);
-                JadeStorageService jadeStorage = new JadeStorageService(storageService,
+                JadeStorageService jadeStorage = new JadeStorageService(remoteStorageUrl, null,
                         AccessManager.getSubjectKey(), AccessManager.getAccessManager().getToken());
 
                 // TODO: use this after we implement server side discovery
-//                StorageLocation storageLocation = jadeStorage.getStorageObjectByPath(n5Container.getFilepath());
+//                StorageLocation storageLocation = jadeStorage.getStorageLocationByPath(n5Container.getFilepath());
 //                String relativePath = storageLocation.getRelativePath(n5Container.getFilepath());
 //                N5TreeNode n5RootNode = jadeStorage.getN5Tree(storageLocation, relativePath);
 
