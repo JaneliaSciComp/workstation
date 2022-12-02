@@ -1,7 +1,7 @@
 package org.janelia.workstation.n5viewer;
 
 import com.google.common.eventbus.Subscribe;
-import org.janelia.jacsstorage.newclient.JadeStorageService;
+import org.janelia.jacsstorage.clients.api.JadeStorageService;
 import org.janelia.model.domain.files.N5Container;
 import org.janelia.saalfeldlab.n5.N5Reader;
 import org.janelia.saalfeldlab.n5.N5TreeNode;
