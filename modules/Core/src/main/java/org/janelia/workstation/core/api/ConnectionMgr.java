@@ -41,17 +41,22 @@ public class ConnectionMgr {
     }
 
     public String getConnectionString() {
-
-        String defaultValue = ConsoleProperties.getString("api.gateway", null);
-        log.debug("hardcoded network.gateway string: {}", defaultValue);
-
-        defaultValue = System.getProperty("api.gateway", defaultValue);
-        log.debug("System property api.gateway string: {}", defaultValue);
-
-        defaultValue = FrameworkAccess.getLocalPreferenceValue(ConnectionMgr.class, CONNECTION_STRING_PREF, defaultValue);
-        log.debug("final connection string: {}", defaultValue);
-
-        return defaultValue;
+        String systemApiGateway = System.getProperty("api.gateway");
+        if (StringUtils.isNotBlank(systemApiGateway)) {
+            // this takes priority because it typically comes from the command line
+            log.debug("Use connect string '{}' defined in system properties", systemApiGateway);
+            return systemApiGateway;
+        }
+        String persistedApiGateway = FrameworkAccess.getLocalPreferenceValue(ConnectionMgr.class, CONNECTION_STRING_PREF, null);
+        if (StringUtils.isNotBlank(persistedApiGateway)) {
+            // next check if there are persisted user preferences
+            log.debug("Use connect string '{}' persisted in user preferences", persistedApiGateway);
+            return persistedApiGateway;
+        } else {
+            String defaultApiGateway = ConsoleProperties.getString("api.gateway");
+            log.debug("Use connect string '{}' from application config", defaultApiGateway);
+            return defaultApiGateway;
+        }
     }
 
     public ConnectionResult connect(String connectionString) {
@@ -81,13 +86,12 @@ public class ConnectionMgr {
                 try (InputStream in = method.getResponseBodyAsStream()) {
                     properties.load(in);
                     log.info("Retrieved {} runtime properties from server", properties.size());
+                    // Add the API Gateway property, but only if the retrieve was successful
+                    properties.put("api.gateway", connectionString);
                 }
                 catch (Exception ex) {
                     log.error("Failed to load additional runtime properties", ex);
                 }
-
-                // Add the API Gateway property, which is just the bare connection string
-                properties.put("api.gateway", connectionString);
 
                 FrameworkAccess.setLocalPreferenceValue(ConnectionMgr.class, CONNECTION_STRING_PREF, connectionString);
                 Events.getInstance().postOnEventBus(new ConnectionEvent(connectionString, properties));

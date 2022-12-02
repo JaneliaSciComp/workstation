@@ -143,6 +143,8 @@ public class ConnectDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
+                // since this is user set - persist it as a system property
+                System.setProperty("api.gateway", connectionString);
                 connectionResult = ConnectionMgr.getConnectionMgr().connect(connectionString);
             }
 
