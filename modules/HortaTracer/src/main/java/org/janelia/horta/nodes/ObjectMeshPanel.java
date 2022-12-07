@@ -1,5 +1,7 @@
 package org.janelia.horta.nodes;
 
+import org.janelia.workstation.common.gui.support.Icons;
+import org.janelia.workstation.controller.action.LoadMeshAction;
 import org.janelia.workstation.controller.widgets.SimpleIcons;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.workstation.controller.eventbus.*;
@@ -18,6 +20,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;

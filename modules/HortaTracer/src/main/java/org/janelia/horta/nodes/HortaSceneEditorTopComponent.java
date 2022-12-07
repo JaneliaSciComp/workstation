@@ -3,7 +3,9 @@ package org.janelia.horta.nodes;
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.common.gui.support.Icons;
 import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.action.LoadMeshAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.openide.awt.ActionID;
@@ -14,6 +16,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  *
@@ -57,6 +62,24 @@ public class HortaSceneEditorTopComponent extends TopComponent {
         meshInfoPanel = new ObjectMeshPanel();
         scrollPane = new JScrollPane(mainPanel);
         setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+        LoadMeshAction loadMeshAction = new LoadMeshAction();
+        final JPopupMenu meshToolMenu = new JPopupMenu();
+        meshToolMenu.add(loadMeshAction);
+
+        final JButton meshToolButton = new JButton();
+        String gearIconFilename = "cog.png";
+        ImageIcon gearIcon = Icons.getIcon(gearIconFilename);
+        meshToolButton.setIcon(gearIcon);
+        meshToolButton.setHideActionText(true);
+        meshToolButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent ev) {
+                meshToolMenu.show(meshToolButton,
+                        0,
+                        meshToolButton.getBounds().height);
+            }
+        });
+        add(meshToolButton);
+
         add(scrollPane);
 
         mainPanel.add(meshInfoPanel);
