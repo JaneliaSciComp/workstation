@@ -44,17 +44,17 @@ public class ConnectionMgr {
         String systemApiGateway = System.getProperty("api.gateway");
         if (StringUtils.isNotBlank(systemApiGateway)) {
             // this takes priority because it typically comes from the command line
-            log.debug("Use connect string '{}' defined in system properties", systemApiGateway);
+            log.info("Use connect string '{}' defined in system properties", systemApiGateway);
             return systemApiGateway;
         }
         String persistedApiGateway = FrameworkAccess.getLocalPreferenceValue(ConnectionMgr.class, CONNECTION_STRING_PREF, null);
         if (StringUtils.isNotBlank(persistedApiGateway)) {
             // next check if there are persisted user preferences
-            log.debug("Use connect string '{}' persisted in user preferences", persistedApiGateway);
+            log.info("Use connect string '{}' persisted in user preferences", persistedApiGateway);
             return persistedApiGateway;
         } else {
             String defaultApiGateway = ConsoleProperties.getString("api.gateway");
-            log.debug("Use connect string '{}' from application config", defaultApiGateway);
+            log.info("Use connect string '{}' from application config", defaultApiGateway);
             return defaultApiGateway;
         }
     }
