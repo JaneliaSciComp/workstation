@@ -34,13 +34,13 @@ public class ConsoleProperties extends ConfigProperties {
             // properties are being loaded.
             synchronized (me) {
                 load(CONSOLE_PROPERTIES, me);
-                log.info("network.gateway={}", getString("api.gateway"));
+                log.info("api.gateway={}", getString("api.gateway"));
                 if (additionalProperties != null) {
                     load(additionalProperties, me);
-                    log.info("network.gateway={}", getString("api.gateway"));
+                    log.info("api.gateway={}", getString("api.gateway"));
                 }
                 load(DEVELOPER_PROPERTIES, me);
-                log.info("network.gateway={}", getString("api.gateway"));
+                log.info("api.gateway={}", getString("api.gateway"));
             }
         }
         return me;
