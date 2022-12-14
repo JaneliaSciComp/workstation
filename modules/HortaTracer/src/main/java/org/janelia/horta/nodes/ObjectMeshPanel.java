@@ -40,6 +40,7 @@ public class ObjectMeshPanel extends JPanel {
 
     private static final int NARROW_COLUNN_WIDTH = 50;
     private JLabel meshLabel;
+    private JFileChooser meshLocChooser;
 
     public ObjectMeshPanel() {
         setupUI();
