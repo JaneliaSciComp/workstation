@@ -126,7 +126,8 @@ public class ChangeDataSetAction extends BaseContextualNodeAction {
         int result = JOptionPane.showConfirmDialog(FrameworkAccess.getMainFrame(),
                 "Are you sure you want to change the data set for these samples to "+newDataSet+"?\n" +
                         "This will affect all the images in these sample in both the Workstation and SAGE, " +
-                        "and may also move files on disk, if the owner of the sample changes.",
+                        "and may also move files on disk, if the owner of the sample changes." +
+                        "Please note that LSMs will not move if they have already been archived.",
                 "Are you sure?", JOptionPane.OK_CANCEL_OPTION);
         if (result != 0) return;
 
