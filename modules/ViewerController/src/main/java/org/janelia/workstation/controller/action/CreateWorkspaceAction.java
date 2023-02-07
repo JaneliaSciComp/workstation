@@ -33,7 +33,12 @@ public class CreateWorkspaceAction extends AbstractAction {
     public void createWorkspace() {
         TmSample sample = TmModelManager.getInstance().getCurrentSample();
         if (sample == null) {
-            FrameworkAccess.handleException(new Throwable("You must load a brain sample entity before creating a workspace!"));
+            JOptionPane.showMessageDialog(
+                null,
+                "You must open a sample before creating a workspace!",
+                "No sample!",
+                JOptionPane.ERROR_MESSAGE
+                );
             return;
         }
 
