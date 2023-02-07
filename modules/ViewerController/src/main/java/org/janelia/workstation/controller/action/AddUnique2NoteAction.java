@@ -33,6 +33,10 @@ implements ActionListener
     public void actionPerformed(ActionEvent e) {
         NeuronManager neuronManager = NeuronManager.getInstance();
         TmSelectionState state = TmSelectionState.getInstance();
+        if (state.getCurrentVertex() == null) {
+            // no vertex selected
+            return;
+        }
         SimpleWorker setter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
