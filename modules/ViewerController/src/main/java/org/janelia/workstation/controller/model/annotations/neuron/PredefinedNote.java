@@ -82,6 +82,10 @@ public enum PredefinedNote {
      */
     public boolean isValid(TmNeuronMetadata neuron, Long annotationID) {
         TmGeoAnnotation ann = neuron.getGeoAnnotationMap().get(annotationID);
+        if (ann == null) {
+            // no annotation can't be valid, right?
+            return false;
+        }
         switch (this) {
             // these guys need to be actual ends:
             case TRACED_END:
