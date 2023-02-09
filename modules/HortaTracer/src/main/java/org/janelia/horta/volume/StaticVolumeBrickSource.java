@@ -18,7 +18,7 @@ import org.janelia.geometry3d.Box3;
 public interface StaticVolumeBrickSource 
 {
     public enum FileType {
-        MJ2 ("mj2"), TIFF ("tif");
+        MJ2 ("mj2"), TIFF ("tif"), ZARR("zarr");
 
         FileType(String ext) {
             extension = ext;

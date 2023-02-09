@@ -42,6 +42,21 @@ public class BrainTileInfo implements BrickInfo {
     // TODO  colorChannelIndex is a temporary hack that should be removed when we can show more than one channel at once
     private int colorChannelIndex = 0;
 
+    /**
+     * Primarily for subclassing.  There is a lot of existing code that assumes a BrainTileInfo instance rather than
+     * BrickInfo.  For adding Ome Zarr support, it is less intrusive for now to subclass BrainTileInfo and essentially
+     * override everything than to implement BrickInfo directly.
+     */
+    public BrainTileInfo() {
+        this.tileLoader = null;
+        this.basePath = "";
+        this.tileRelativePath = "";
+        this.bbOriginNanometers = null;
+        this.bbShapeNanometers = null;
+        this.pixelDims = null;
+        this.bytesPerIntensity = 0;
+    }
+
     BrainTileInfo(TileLoader tileLoader,
                   String basePath,
                   String tileRelativePath,
