@@ -1004,6 +1004,12 @@ public final class NeuronTracerTopComponent extends TopComponent
         neuronTraceLoader.loadTileAtCurrentFocus(volumeSource);
     }
 
+    public boolean loadDroppedOmeZarr(String sourceName) throws IOException {
+        setVolumeSource(new OmeZarrVolumeBrickSource(Paths.get(sourceName)));
+        neuronTraceLoader.loadTileAtCurrentFocus(volumeSource);
+        return true;
+    }
+
     private void setupDragAndDropYml() {
         final DroppedFileHandler droppedFileHandler = new DroppedFileHandler();
         droppedFileHandler.addLoader(new GZIPFileLoader());
@@ -1013,6 +1019,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         droppedFileHandler.addLoader(new TilebaseYamlLoader(this));
         droppedFileHandler.addLoader(new ObjMeshLoader(this));
         droppedFileHandler.addLoader(new HortaKtxLoader(this.getNeuronMPRenderer()));
+        droppedFileHandler.addLoader(new OmeZarrLoader(this));
 
         // Allow user to drop tilebase.cache.yml on this window
         setDropTarget(new DropTarget(this, new DropTargetListener() {
