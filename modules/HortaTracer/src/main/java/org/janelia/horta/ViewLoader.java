@@ -15,6 +15,7 @@ import com.google.common.base.Objects;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
+import org.janelia.horta.volume.OmeZarrVolumeBrickSource;
 import org.janelia.workstation.controller.tileimagery.OsFilePathRemapper;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
@@ -184,8 +185,22 @@ public class ViewLoader {
 
     private StaticVolumeBrickSource createStaticVolumeBrickSource(RenderedVolume renderedVolume, TmSample sample, ProgressHandle progress) {
         progress.switchToDeterminate(100);
-        List<RawImage> rawTiles = nttc.getRenderedVolumeLoader().loadVolumeRawImageTiles(renderedVolume.getVolumeLocation());
-        return new RawVolumeBrickSource(nttc.getTileLoader()).init(sample, rawTiles, progress::progress);
+
+        String rawFilePath = sample.getAcquisitionFilepath();
+
+        if (rawFilePath.toLowerCase().endsWith(".zarr")) {
+            try {
+                String fullPath = renderedVolume.getVolumeLocation().getContentURIFromAbsolutePath(rawFilePath);
+
+                return new OmeZarrVolumeBrickSource(Paths.get(rawFilePath));
+            } catch (Exception ex) {
+                return null;
+            }
+        } else {
+            List<RawImage> rawTiles = nttc.getRenderedVolumeLoader().loadVolumeRawImageTiles(renderedVolume.getVolumeLocation());
+
+            return new RawVolumeBrickSource(nttc.getTileLoader()).init(sample, rawTiles, progress::progress);
+        }
     }
 
     private void setCameraLocation(double zoom, Vec3 sampleLocation) {
