@@ -788,16 +788,19 @@ public class TracingInteractor extends MouseAdapter
             Point optimizedPoint = optimizePosition(hoverPoint);
             Vector3 cursorXyz = volumeProjection.worldXyzForScreenXy(optimizedPoint);
             Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
-            Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
-                    {cursorXyz.getX(),},
-                    {cursorXyz.getY(),},
-                    {cursorXyz.getZ(),},
-                    {1.0,},});
-            // NeuronVertex API requires coordinates in micrometers
-            Jama.Matrix voxLoc = m2v.times(micLoc);
-            Vector3 newLoc = new Vector3(voxLoc.get(0, 0), voxLoc.get(1, 0),
-                    voxLoc.get(2, 0));
-            setDensityCursor(newLoc, optimizedPoint);
+
+            if (m2v != null) {
+                Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
+                        {cursorXyz.getX(),},
+                        {cursorXyz.getY(),},
+                        {cursorXyz.getZ(),},
+                        {1.0,},});
+                // NeuronVertex API requires coordinates in micrometers
+                Jama.Matrix voxLoc = m2v.times(micLoc);
+                Vector3 newLoc = new Vector3(voxLoc.get(0, 0), voxLoc.get(1, 0),
+                        voxLoc.get(2, 0));
+                setDensityCursor(newLoc, optimizedPoint);
+            }
         }
         else {
             if (clearDensityCursor())
