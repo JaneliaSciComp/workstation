@@ -526,7 +526,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
      * annotation information that we do explicitly above
      */
     private void updateRowFilter() {
-        RowFilter<TableModel, String> rowFilter = RowFilter.regexFilter("");
+        // we're only filtering on name and owner columns
+        int[] filterColumns = {NeuronTableModel.COLUMN_NAME, NeuronTableModel.COLUMN_OWNER_NAME};
+        RowFilter<TableModel, String> rowFilter = RowFilter.regexFilter("", filterColumns);
         try {
             // old: get regex from one text field
             // rowFilter = RowFilter.regexFilter(filterField.getText());
@@ -545,8 +547,8 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
             //  ignore filter to prefixes so I can always force the pattern
             //  to be two characters, and it behaves predictably
 
-            RowFilter includeFilter = RowFilter.regexFilter(includeText);
-            RowFilter ignoreFilter = RowFilter.notFilter(RowFilter.regexFilter("^" + ignoreText));
+            RowFilter includeFilter = RowFilter.regexFilter(includeText, filterColumns);
+            RowFilter ignoreFilter = RowFilter.notFilter(RowFilter.regexFilter("^" + ignoreText, filterColumns));
 
             if (ignoreText.length() > 0 && includeText.length() > 0) {
                 List<RowFilter<Object,Object>> filters = new ArrayList<>();
