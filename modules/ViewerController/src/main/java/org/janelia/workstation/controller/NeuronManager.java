@@ -2040,7 +2040,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         if (neuronName.endsWith(SWCData.STD_SWC_EXTENSION)) {
             neuronName = neuronName.substring(0, neuronName.length() - SWCData.STD_SWC_EXTENSION.length());
         }
-        Consumer<Map<String,Object>> callback = this::finishBulkSWCData;
         Map<String,Object> parameters = new HashMap<String,Object>();
         parameters.put("swc", swcData);
         parameters.put("file", swcFile);
@@ -2122,39 +2121,45 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             if (notesFile.exists()) {
                 // read and parse
                 Map<Vec3, String> notes = parseNotesFile(notesFile);
-
-                // add notes to neuron; get a fresh copy that has updated ann IDs
-                neuron = neuronModel.getNeuronById(neuron.getId());
                 if (notes.size() > 0) {
-                    ObjectMapper mapper = new ObjectMapper();
+                    // add notes to neuron; get a fresh copy that has updated ann IDs
+                    neuron = neuronModel.getNeuronById(neuron.getId());
+                    if (neuron == null) {
+                        // this should really never happen...neuron was just imported, should never had any opportunity
+                        //  for a user to do anything with it...but if so, can't import notes; log warning
+                        log.warn("could not retrieve neuron ID {} while attaching notes during import", neuron.getId());
 
-                    // unfortunately, the only way to associate the notes with the nodes
-                    //  is through a brute-force search; we need to associate the locations
-                    //  with the annotation ID, but those IDs are changed during the save,
-                    //  and we can't track the mapping; the spatial index is built later
-                    //  and asynchronously, so we don't have access to it now
-                    // later testing: added a few random notes to a neuron with 28k nodes;
-                    //  import took ~1s with or without notes
-                    for (TmGeoAnnotation root : neuron.getRootAnnotations()) {
-                        for (TmGeoAnnotation ann : neuron.getSubTreeList(root)) {
-                            Vec3 loc = new Vec3(ann.getX(), ann.getY(), ann.getZ());
-                            if (notes.containsKey(loc)) {
-                                // fortunately, we only need the simplest case seen in setNotes():
-                                ObjectNode node = mapper.createObjectNode();
-                                node.put("note", notes.get(loc));
-                                neuronModel.addStructuredTextAnnotation(neuron, ann.getId(), mapper.writeValueAsString(node));
+                    } else {
+                        ObjectMapper mapper = new ObjectMapper();
+
+                        // unfortunately, the only way to associate the notes with the nodes
+                        //  is through a brute-force search; we need to associate the locations
+                        //  with the annotation ID, but those IDs are changed during the save,
+                        //  and we can't track the mapping; the spatial index is built later
+                        //  and asynchronously, so we don't have access to it now
+                        // later testing: added a few random notes to a neuron with 28k nodes;
+                        //  import took ~1s with or without notes
+                        for (TmGeoAnnotation root : neuron.getRootAnnotations()) {
+                            for (TmGeoAnnotation ann : neuron.getSubTreeList(root)) {
+                                Vec3 loc = new Vec3(ann.getX(), ann.getY(), ann.getZ());
+                                if (notes.containsKey(loc)) {
+                                    // fortunately, we only need the simplest case seen in setNotes():
+                                    ObjectNode node = mapper.createObjectNode();
+                                    node.put("note", notes.get(loc));
+                                    neuronModel.addStructuredTextAnnotation(neuron, ann.getId(), mapper.writeValueAsString(node));
+                                }
                             }
                         }
-                    }
-                    // now save again, with the note data
-                    neuronModel.saveNeuronData(neuron);
+                        // now save again, with the note data
+                        neuronModel.saveNeuronData(neuron);
 
-                    if (applyFilter) {
-                        NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
-                        updateFrags(updates);
+                        if (applyFilter) {
+                            NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                            updateFrags(updates);
+                        }
+                        fireNeuronChanged(neuron);
+                        fireNeuronSelected(neuron);
                     }
-                    fireNeuronChanged(neuron);
-                    fireNeuronSelected(neuron);
                 }
             }
 

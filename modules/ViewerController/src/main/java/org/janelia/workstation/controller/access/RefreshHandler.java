@@ -230,9 +230,11 @@ public class RefreshHandler implements MessageHandler {
                 boolean decision = MessagingUtils.getHeaderAsBoolean(msgHeaders, NeuronMessageConstants.Headers.DECISION);
                 if (decision) {
                     TmNeuronMetadata origNeuron = annotationModel.getNeuronModel().getNeuronById(neuron.getId());
-                    origNeuron.setOwnerKey(neuron.getOwnerKey());
-                    origNeuron.setWriters(neuron.getWriters());
-                    origNeuron.setReaders(neuron.getReaders());
+                    if (origNeuron != null) {
+                        origNeuron.setOwnerKey(neuron.getOwnerKey());
+                        origNeuron.setWriters(neuron.getWriters());
+                        origNeuron.setReaders(neuron.getReaders());
+                    }
                 }
                 annotationModel.getNeuronModel().completeOwnershipRequest(decision);
                 updateFilter(neuron, action);

@@ -50,7 +50,11 @@ public class NeuronModel {
     }
 
     public TmNeuronMetadata getNeuronById(Long id) {
-        return neuronMap.get(id);
+        if (id != null) {
+            return neuronMap.get(id);
+        } else {
+            return null;
+        }
     }
 
     public void clearMap() {
