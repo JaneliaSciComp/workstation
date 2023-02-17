@@ -1711,12 +1711,14 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public synchronized String getNote(Long annotationID, TmNeuronMetadata neuron) {
-        final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
-        if (textAnnotation != null) {
-            JsonNode rootNode = textAnnotation.getData();
-            JsonNode noteNode = rootNode.path("note");
-            if (!noteNode.isMissingNode()) {
-                return noteNode.asText();
+        if (annotationID != null && neuron != null) {
+            final TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annotationID);
+            if (textAnnotation != null) {
+                JsonNode rootNode = textAnnotation.getData();
+                JsonNode noteNode = rootNode.path("note");
+                if (!noteNode.isMissingNode()) {
+                    return noteNode.asText();
+                }
             }
         }
         return "";
