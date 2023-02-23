@@ -1,3 +1,22 @@
+// 9.10
+
+Browser
+* Added a sorting button that makes it easier to sort results from both image and table views
+* Sorting criteria is now global instead of per-folder
+* Restored default presets for Color Depth Search
+
+FlyLight
+* Added "FLEW" to Target Websites for publishing Gen1GAL4 images
+* Fixed issue with "View in VVD Viewer" right-click option not appearing in some cases
+* Fixed issue with sorting being reset after marking samples for reprocessing
+* Fixed issue with "Create Mask for Color Depth Search" action which was always selecting the first MIP when invoked from the sample viewer
+
+Horta
+* Added "Horta Sample" discovery option to Synchronized Folders
+* Removed superseded "Load Horta Data" menu option from "Services"
+* Automatically create workspaces with published neurons when discovering samples on HortaCloud
+* You can now search for ML Neuron Browser neurons in both Horta Workspaces and Horta Neurons
+
 // 9.9
 
 Horta
