@@ -29,8 +29,9 @@ public class MailHelper {
 
     public void sendEmail(String from, String to, String subject, String bodyText, File attachedFile, String filename) {
         try {
-
             String MAIL_SERVER = ConsoleProperties.getString("console.MailServer");
+            String smtpUser = ConsoleProperties.getString("console.SMTPUser", "");
+            String smtpPassword = ConsoleProperties.getString("console.SMTPPassword", "");
             String[] split = MAIL_SERVER.split(":");
             String host = split[0];
             String port = DEFAULT_SMTP_PORT;
@@ -41,8 +42,21 @@ public class MailHelper {
             Properties properties = new Properties();
             properties.put("mail.smtp.host", host);
             properties.put("mail.smtp.port", port);
+            Authenticator authenticator;
+            if (smtpUser.trim().length() > 0 && smtpPassword.trim().length() > 0) {
+                properties.put("mail.smtp.auth", "true");
+                properties.put("mail.smtp.starttls.enable", "true");
+                authenticator = new Authenticator() {
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(
+                                smtpUser, smtpPassword);
+                    }
+                };
+            } else {
+                authenticator = null;
+            }
 
-            Session session = Session.getDefaultInstance(properties, null);
+            Session session = Session.getDefaultInstance(properties, authenticator);
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(from));
             message.setRecipients(RecipientType.TO, InternetAddress.parse(to));
