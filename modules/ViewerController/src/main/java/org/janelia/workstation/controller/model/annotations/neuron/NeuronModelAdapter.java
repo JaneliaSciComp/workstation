@@ -1,26 +1,28 @@
 package org.janelia.workstation.controller.model.annotations.neuron;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.janelia.messaging.core.ConnectionManager;
 import org.janelia.messaging.core.MessageConnection;
 import org.janelia.messaging.core.MessageSender;
 import org.janelia.messaging.core.impl.MessageSenderImpl;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.model.TmHistoricalEvent;
-import org.janelia.workstation.controller.model.TmHistory;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
-//import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
