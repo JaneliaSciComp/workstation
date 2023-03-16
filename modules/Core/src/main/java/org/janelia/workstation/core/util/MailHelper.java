@@ -29,10 +29,10 @@ public class MailHelper {
 
     public void sendEmail(String from, String to, String subject, String bodyText, File attachedFile, String filename) {
         try {
-            String MAIL_SERVER = ConsoleProperties.getString("console.MailServer");
-            String smtpUser = ConsoleProperties.getString("console.SMTPUser", "");
-            String smtpPassword = ConsoleProperties.getString("console.SMTPPassword", "");
-            String[] split = MAIL_SERVER.split(":");
+            String mailServer = ConsoleProperties.getString("console.MailServer");
+            String mailUser = ConsoleProperties.getString("console.MailUser", "");
+            String mailPassword = ConsoleProperties.getString("console.MailPassword", "");
+            String[] split = mailServer.split(":");
             String host = split[0];
             String port = DEFAULT_SMTP_PORT;
             if (split.length > 1) {
@@ -43,13 +43,13 @@ public class MailHelper {
             properties.put("mail.smtp.host", host);
             properties.put("mail.smtp.port", port);
             Authenticator authenticator;
-            if (smtpUser.trim().length() > 0 && smtpPassword.trim().length() > 0) {
+            if (mailUser.trim().length() > 0 && mailPassword.trim().length() > 0) {
                 properties.put("mail.smtp.auth", "true");
                 properties.put("mail.smtp.starttls.enable", "true");
                 authenticator = new Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(
-                                smtpUser, smtpPassword);
+                                mailUser, mailPassword);
                     }
                 };
             } else {
