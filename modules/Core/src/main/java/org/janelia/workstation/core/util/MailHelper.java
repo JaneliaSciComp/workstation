@@ -44,9 +44,9 @@ public class MailHelper {
             properties.put("mail.smtp.port", port);
             Authenticator authenticator;
             if (mailUser.trim().length() > 0 && mailPassword.trim().length() > 0) {
-                properties.put("mail.transport.protocol", "smtp");
                 properties.put("mail.smtp.auth", "true");
                 properties.put("mail.smtp.starttls.enable", "true");
+                properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
                 authenticator = new Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(
