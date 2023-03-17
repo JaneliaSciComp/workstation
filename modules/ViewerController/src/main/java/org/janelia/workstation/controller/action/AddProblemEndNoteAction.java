@@ -1,9 +1,5 @@
 package org.janelia.workstation.controller.action;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.*;
-
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.NeuronManager;
@@ -13,30 +9,31 @@ import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNot
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
-import org.openide.util.NbBundle.Messages;
+import org.openide.util.NbBundle;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 
 @ActionID(
         category = "Horta",
-        id = "org.janelia.horta.actions.AddTracedEndNoteAction"
+        id = "org.janelia.horta.actions.AddProblemEndNoteAction"
 )
 @ActionRegistration(
-        displayName = "#CTL_AddTracedEndNote",
+        displayName = "#CTL_AddProblemEndNote",
         lazy = true
 )
-@ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "T")
-})
-@Messages("CTL_AddTracedEndNote=Add Traced End Note")
+@NbBundle.Messages("CTL_AddProblemEndNote=Add Problem End Note")
 
-public final class AddTracedEndNoteAction
-extends AbstractAction
-implements ActionListener
+
+public class AddProblemEndNoteAction
+        extends AbstractAction
+        implements ActionListener
 {
-    public AddTracedEndNoteAction() {
-        super("Add Traced End Note");
+    public AddProblemEndNoteAction() {
+        super("Add Problem End Note");
     }
 
     @Override
@@ -58,17 +55,17 @@ implements ActionListener
         }
         if (!PredefinedNote.TRACED_END.isValid(neuron, ann.getId())) {
             JOptionPane.showMessageDialog(
-                null,
-                "Can't apply 'Traced end' note to an annotation that is not an end!",
-                "Not an end!",
-                JOptionPane.OK_OPTION);
+                    null,
+                    "Can't apply 'Problem end' note to an annotation that is not an end!",
+                    "Not an end!",
+                    JOptionPane.OK_OPTION);
             return;
         }
 
         SimpleWorker setter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                neuronManager.setNote(state.getCurrentVertex(), PredefinedNote.TRACED_END.getNoteText());
+                neuronManager.setNote(state.getCurrentVertex(), PredefinedNote.PROBLEM_END.getNoteText());
             }
 
             @Override
@@ -84,3 +81,4 @@ implements ActionListener
         setter.execute();
     }
 }
+

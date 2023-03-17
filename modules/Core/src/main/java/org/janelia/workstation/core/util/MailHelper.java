@@ -42,10 +42,13 @@ public class MailHelper {
             Properties properties = new Properties();
             properties.put("mail.smtp.host", host);
             properties.put("mail.smtp.port", port);
+            String mailSSLProtocols = ConsoleProperties.getString("console.MailSSLProtocol", "");
             Authenticator authenticator;
             if (mailUser.trim().length() > 0 && mailPassword.trim().length() > 0) {
                 properties.put("mail.smtp.auth", "true");
                 properties.put("mail.smtp.starttls.enable", "true");
+                if (mailSSLProtocols.trim().length() > 0) properties.put("mail.smtp.ssl.protocols", mailSSLProtocols);
+                properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
                 authenticator = new Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(
