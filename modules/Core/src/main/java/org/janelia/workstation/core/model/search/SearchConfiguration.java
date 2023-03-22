@@ -154,15 +154,15 @@ public class SearchConfiguration {
     private SolrQueryBuilder getQueryBuilder() {
 
         SolrQueryBuilder builder = new SolrQueryBuilder();
-        
+
         for (String subjectKey : AccessManager.getReaderSet()) {
             log.trace("Adding query owner key: {}",subjectKey);
             builder.addOwnerKey(subjectKey);
         }
-        
-        if (filter.getSearchString()!=null) {
+
+        if (filter.getSearchString()!=null && filter.getSearchString().trim().length() > 0) {
             log.debug("Setting query string: {}",filter.getSearchString());
-            builder.setSearchString(filter.getSearchString());
+            builder.setSearchString(filter.getSearchString().trim());
         }
 
         StringBuilder aux = new StringBuilder();
