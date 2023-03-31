@@ -1,7 +1,9 @@
-// 9.12
+// 9.13
+
+FlyLight
+* Changed "Apply publishing names" to use new SAGE end point which fetches better default names
+* Fixed issue with the "EM Data Sets" note in the Data Explorer
 
 Horta
-* Fixed issue with setting neuron radius
-* Added basic load object mesh option to Horta3D Scene Editor
-* Fixed confusing neuron filter behavior; can properly filter by owner now
-* Other minor bug fixes
+* Fixed email error reporting so that it works in HortaCloud
+* Added "problem end" shortcut action; don't allow traced/problem end on non-ends

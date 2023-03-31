@@ -1,3 +1,11 @@
+// 9.12
+
+Horta
+* Fixed issue with setting neuron radius
+* Added basic load object mesh option to Horta3D Scene Editor
+* Fixed confusing neuron filter behavior; can properly filter by owner now
+* Other minor bug fixes
+
 // 9.10
 
 Browser
