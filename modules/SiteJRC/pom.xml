@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>9.12</version>
+        <version>9.13</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>SiteJRC</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>sitejrc</artifactId>
-    <version>9.12</version>
+    <version>9.13</version>
     <packaging>nbm</packaging>
 
     <dependencies>

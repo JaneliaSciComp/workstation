@@ -53,7 +53,7 @@ public class SageRestClient extends RESTClientBase {
     
     public Collection<String> getPublishingNames(String lineName) throws Exception {
         Set<String> names = new LinkedHashSet<>();
-        WebTarget target = service.path("/publishing");
+        WebTarget target = service.path("/publishing_names");
         Response response = target.queryParam("line", lineName)
                 .request("application/json")
                 .get();
@@ -65,13 +65,10 @@ public class SageRestClient extends RESTClientBase {
             checkBadResponse(target, response);
             JsonNode data = response.readEntity(new GenericType<JsonNode>() {});
             if (data!=null) {
-                JsonNode publishingData = data.get("publishing_data");
-                if (publishingData.isArray()) {
-                    for (final JsonNode objNode : publishingData) {
-                        if (objNode.get("for_publishing").asInt()==1) {
-                            String publishingName = objNode.get("publishing_name").asText();
-                            names.add(publishingName);
-                        }
+                JsonNode publishingNames = data.get("publishing_names");
+                if (publishingNames.isArray()) {
+                    for (final JsonNode publishingNameNode : publishingNames) {
+                        names.add(publishingNameNode.asText());
                     }
                 }
             }
