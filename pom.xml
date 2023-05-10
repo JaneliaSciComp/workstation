@@ -176,6 +176,13 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
+        <repository>
+            <id>janelia-snapshots</id>
+            <url>https://nexus.janelia.org/repository/maven-snapshots/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
         <!-- for BioFormats -->
         <repository>
             <id>imagej-repository</id>
