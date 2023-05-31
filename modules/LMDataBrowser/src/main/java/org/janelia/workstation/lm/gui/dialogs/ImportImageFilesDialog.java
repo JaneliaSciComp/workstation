@@ -71,9 +71,9 @@ public class ImportImageFilesDialog extends ModalDialog {
     private static final String NRS_STORAGE = "NRS";
     private static final String JADE_STORAGE = "Jade";
 
-    private static final Map<String, String> STORAGE_TAGS = ImmutableMap.of(
-            NRS_STORAGE, ConsoleProperties.getString("console.upload.StorageTags.nrs"),
-            JADE_STORAGE, ConsoleProperties.getString("console.upload.StorageTags.jade")
+    private static final Map<String, String> STORAGE_TAGS_KEY = ImmutableMap.of(
+            NRS_STORAGE, "console.upload.StorageTags.nrs",
+            JADE_STORAGE, "console.upload.StorageTags.jade"
     );
 
     private GroupedKeyValuePanel attrPanel;
@@ -385,9 +385,9 @@ public class ImportImageFilesDialog extends ModalDialog {
                     options.append("legends");
                 }
             }
-            
-            String storageTags = STORAGE_TAGS.get(storageTier);
-            
+
+            String storageTags = ConsoleProperties.getString(STORAGE_TAGS_KEY.get(storageTier));
+
             // close import dialog and run import in background thread
             this.setVisible(false);
             runImport(selectedFile, 
