@@ -49,6 +49,7 @@ public class Subvolume {
     private ShortBuffer shorts;
     private int bytesPerIntensity = 1;
     private int channelCount = 1;
+    private int skipChannelBytes = 2;
     private int totalTiles = 0;
     private int remainingTiles = 0;
 
@@ -240,10 +241,10 @@ public class Subvolume {
         int[] bits;
         int[] bandOffsets = {0};
         int dataType;
-        if ((channelCount == 1) && (bytesPerIntensity == 2)) {
+        if (bytesPerIntensity == 2) {
             dataType = DataBuffer.TYPE_USHORT;
             bits = new int[]{16};
-        } else if ((channelCount == 1) && (bytesPerIntensity == 1)) {
+        } else if (bytesPerIntensity == 1) {
             dataType = DataBuffer.TYPE_BYTE;
             bits = new int[]{8};
         } else {
@@ -256,6 +257,7 @@ public class Subvolume {
                 false,
                 Transparency.OPAQUE,
                 dataType);
+
         for (int z = 0; z < sz; ++z) {
             WritableRaster raster = Raster.createInterleavedRaster(
                     dataType,
@@ -264,14 +266,13 @@ public class Subvolume {
                     channelCount, // pixel stride
                     bandOffsets,
                     null);
+            int slicesize = sx*sy/2;
+            short[] zslice = new short[slicesize];
+            shorts.get(zslice, slicesize*z, slicesize);
+            raster.setDataElements(0, 0, sx, sy, zslice);
             result[z] = new BufferedImage(colorModel, raster, false, null);
-            if (bytesPerIntensity == 2) {
-                short[] a = ((DataBufferUShort) result[z].getRaster().getDataBuffer()).getData();
-                // TODO
-                // System.arraycopy(data, 0, a, 0, data.length); // TODO
-            }
         }
-        return null;
+        return result;
     }
 
     public ByteBuffer getByteBuffer() {
@@ -460,7 +461,7 @@ public class Subvolume {
                 int endX = Math.min(farCorner.getX(), tileOrigin.getX() + tileData.getUsedWidth());
                 int overlapX = endX - startX;
                 // byte array offsets
-                int pixelBytes = channelCount * bytesPerIntensity;
+                int pixelBytes = skipChannelBytes * bytesPerIntensity;
                 int tileLineBytes = pixelBytes * tileData.getWidth();
                 int subvolumeLineBytes = pixelBytes * extent.getX();
                 // Where to start putting bytes into subvolume?
@@ -475,11 +476,15 @@ public class Subvolume {
                 for (int y = 0; y < overlapY; ++y) {
                     for (int x = 0; x < overlapX; ++x) {
                         // TODO faster copy
-                        for (int b = 0; b < pixelBytes; ++b) {
+                        for (int b = 0; b < skipChannelBytes; ++b) {
                             int d = dstOffset + x * pixelBytes + b;
                             int s = srcOffset + x * pixelBytes + b;
+                            if (b==0 && y==0 && x==0) {
+                                logger.info("TILE INFO: {},{},{}",tileXyz.getX(), tileXyz.getY(),tileXyz.getZ());
+                                logger.info("Destination start point:{}-{}", dstOffset, dstOffset+overlapX*overlapY);
+                            }
                             try {
-                                bytes.put(d, tileData.getPixels().get(s));
+                                shorts.put(d, tileData.getPixels().getShort(s));
                             } catch (Exception ex) {
                                 logger.error("Failed to copy data into pixels buffer: " + ex.getMessage() + ".  Skipping remainder.");
                                 /* for debugging */
@@ -515,6 +520,7 @@ public class Subvolume {
                 // simply ensuring the user never sees a negative remainder.
                 remainingTiles--;
                 int remaining = Math.max(0, remainingTiles);
+                logger.info("start: {},{},{}, end: {},{},{}",dstZ, startX, startY, dstZ, endX, endY);
                 reportProgress(remaining, totalTiles);
             }
 
@@ -536,9 +542,9 @@ public class Subvolume {
 
     private void allocateRasterMemory(final TileFormat tileFormat, int[] dimensions) {
         bytesPerIntensity = tileFormat.getBitDepth() / 8;
-        channelCount = tileFormat.getChannelCount();
+        skipChannelBytes = tileFormat.getChannelCount();
         int totalBytes = bytesPerIntensity
-                * channelCount
+                * skipChannelBytes
                 * dimensions[0] * dimensions[1] * dimensions[2];
         bytes = ByteBuffer.allocateDirect(totalBytes);
         bytes.order(ByteOrder.nativeOrder());

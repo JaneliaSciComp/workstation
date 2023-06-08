@@ -63,7 +63,7 @@ public class TiledMicroscopeDomainMgr {
         return getSample(workspace.getSampleRef().getTargetId());
     }
 
-    public TmSample createSample(String name, String filepath, String ktxPath, String rawPath) throws Exception {
+    public TmSample createSample(String name, String filepath, String ktxPath, String zarrPath) throws Exception {
         LOG.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
         TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         Map<String,Object> constants = client.getTmSampleConstants(filepath);
@@ -74,11 +74,11 @@ public class TiledMicroscopeDomainMgr {
             sample.setOwnerKey(AccessManager.getSubjectKey());
             sample.setName(name);
             DomainUtils.setFilepath(sample, FileType.LargeVolumeOctree, filepath);
-            if (rawPath != null) {
+            if (ktxPath != null) {
                 DomainUtils.setFilepath(sample, FileType.LargeVolumeKTX, ktxPath);
             }
-            if (rawPath != null) {
-                DomainUtils.setFilepath(sample, FileType.TwoPhotonAcquisition, rawPath);
+            if (zarrPath != null) {
+                DomainUtils.setFilepath(sample, FileType.LargeVolumeZarr, zarrPath);
             }
             // call out to server to get origin/scaling information
             TmSample persistedSample = save(sample);

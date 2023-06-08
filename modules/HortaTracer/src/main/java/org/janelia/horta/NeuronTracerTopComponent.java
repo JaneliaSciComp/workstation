@@ -35,6 +35,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 
 import org.janelia.geometry3d.ObservableInterface;
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.controller.dialog.NeuronColorDialog;
 import org.janelia.workstation.controller.listener.ColorModelListener;
@@ -844,7 +845,6 @@ public final class NeuronTracerTopComponent extends TopComponent
         setCubifyVoxels(prefs.getBoolean("bCubifyVoxels", doCubifyVoxels));
         volumeCache.setUpdateCache(
                 prefs.getBoolean("bCacheHortaTiles", doesUpdateVolumeCache()));
-        setPreferKtx(prefs.getBoolean("bPreferKtxTiles", isPreferKtx()));
     }
 
     public void initMeshes() {
@@ -1196,7 +1196,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                     }
                 });
 
-                ktxBlockMenuBuilder.populateMenus(menuContext);
+                ktxBlockMenuBuilder.populateMenus(NeuronTracerTopComponent.getInstance(), menuContext);
 
                 if (currentSource != null) {
                     JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
@@ -2021,7 +2021,6 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     public void clearAllTiles() {
         // this is a workaround for clearing RAW tiles until we can clean up the controllers for Horta
-        setPreferKtx(true);
         TetVolumeActor.getInstance().setAutoUpdate(false);
         reloadSampleLocation();
     }
@@ -2241,11 +2240,12 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     boolean isPreferKtx() {
-        return ktxBlockMenuBuilder.isPreferKtx();
-    }
-
-    public void setPreferKtx(boolean doPreferKtx) {
-        ktxBlockMenuBuilder.setPreferKtx(doPreferKtx);
+        TmSample tmSample = TmModelManager.getInstance().getCurrentSample();
+        if (tmSample.getFiles().containsKey(FileType.LargeVolumeZarr)) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
     public NeuronMPRenderer getNeuronMPRenderer() {

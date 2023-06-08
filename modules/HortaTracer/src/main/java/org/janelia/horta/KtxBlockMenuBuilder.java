@@ -27,58 +27,33 @@ class KtxBlockMenuBuilder {
         return preferKtx;
     }
 
-    void setPreferKtx(boolean doPreferKtx) {
-        preferKtx = doPreferKtx;
-    }
-    
-    void populateMenus(final HortaMenuContext context) {
+    void populateMenus(NeuronTracerTopComponent nttc, final HortaMenuContext context) {
         JMenu tilesMenu = new JMenu("Tiles");
         context.topMenu.add(tilesMenu);
-        
-         tilesMenu.add(new AbstractAction("Load KTX Tile At Cursor") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                logger.info("Load Horta Cursor Tile Action invoked");
-                NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
-                if (nttc == null)
-                    return;
-                try {
-                    nttc.setPreferKtx(true);
-                    nttc.loadPersistentTileAtLocation(context.mouseXyz);
-                } catch (IOException ex) {
-                    logger.info("Tile load failed");
+
+        if (nttc.isPreferKtx()) {
+            tilesMenu.add(new AbstractAction("Load KTX Tile At Cursor") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    logger.info("Load Horta Cursor Tile Action invoked");
+                    try {
+                        nttc.loadPersistentTileAtLocation(context.mouseXyz);
+                    } catch (IOException ex) {
+                        logger.info("Tile load failed");
+                    }
                 }
-            }
-        });       
-        
-       tilesMenu.add(new AbstractAction("Load KTX Tile At Focus") {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
-                if (nttc == null)
-                    return;
-                new LoadHortaTileAtFocusAction(nttc).actionPerformed(e);
-            }
-        });
-        
+            });
+
+
+            tilesMenu.add(new AbstractAction("Load KTX Tile At Focus") {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    new LoadHortaTileAtFocusAction(nttc).actionPerformed(e);
+                }
+            });
+
+        }
         tilesMenu.add(new JPopupMenu.Separator());
-        
-        /* */
-        JCheckBoxMenuItem enableVolumeCacheMenu = new JCheckBoxMenuItem(
-                "Prefer rendered Ktx tiles", preferKtx);
-        tilesMenu.add(enableVolumeCacheMenu);
-        enableVolumeCacheMenu.addActionListener(new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e)
-            {
-                JCheckBoxMenuItem item = (JCheckBoxMenuItem)e.getSource();
-                preferKtx = item.isSelected();
-                NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
-                item.setSelected(preferKtx);
-                nttc.reloadSampleLocation();
-            }
-        });
-        /* */
         
         tilesMenu.add(new JMenuItem(
                 new AbstractAction("Clear all Volume Blocks")
@@ -86,7 +61,6 @@ class KtxBlockMenuBuilder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 TetVolumeActor.getInstance().clearAllBlocks();
-                NeuronTracerTopComponent nttc = NeuronTracerTopComponent.getInstance();
                 TetVolumeActor.getInstance().clearAllBlocks();
                 nttc.getNeuronMPRenderer().clearVolumeActors();
                 nttc.clearAllTiles();
