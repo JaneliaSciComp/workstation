@@ -107,7 +107,7 @@
 
         <janeliaws.jackson.version>2.13.3</janeliaws.jackson.version>
 
-        <janeliaws.jetty.version>9.4.46.v20220331</janeliaws.jetty.version>
+        <janeliaws.jetty.version>9.4.51.v20230217</janeliaws.jetty.version>
 
         <janeliaws.jacs-model.version>2.70.1</janeliaws.jacs-model.version>
 
