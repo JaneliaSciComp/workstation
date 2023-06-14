@@ -165,11 +165,13 @@ class NeuronModelAdapter {
     }
 
     void asyncSaveNeuron(TmNeuronMetadata neuron, Map<String, String> extraArgs) throws Exception {
-        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_SAVE_NEURONDATA, extraArgs);
+        //sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_SAVE_NEURONDATA, extraArgs);
+        tmDomainMgr.save(neuron);
     }
 
     void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
-        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE, null);
+        //sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE, null);
+        tmDomainMgr.remove(neuron);
     }
 
     CompletableFuture<Boolean> requestOwnership(TmNeuronMetadata neuron) throws Exception {

@@ -255,10 +255,16 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
     }
 
     public TmNeuronMetadata update(TmNeuronMetadata neuronMetadata) {
-       List<TmNeuronMetadata> list = update(Arrays.asList(neuronMetadata));
-       if (list.isEmpty()) return null;
-       if (list.size()>1) LOG.warn("update(TmNeuronMetadata) returned more than one result.");
-       return list.get(0);
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(neuronMetadata);
+        WebTarget target = getMouselightDataEndpoint("/workspace/neuron");
+        Response response = target
+                .request()
+                .post(Entity.json(query));
+        checkBadResponse(target, response);
+        LOG.info("Updated {} - {}",neuronMetadata.getName(), neuronMetadata.getId());
+        return response.readEntity(TmNeuronMetadata.class);
     }
 
     public List<TmNeuronMetadata> update(Collection<TmNeuronMetadata> neurons) {
