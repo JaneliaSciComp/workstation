@@ -387,6 +387,7 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
                     result.add(addCopyTileLocMenuItem());
                     result.add(addCopyRawTileFileLocMenuItem(TmModelManager.getInstance().getCurrentSample()));
                     result.add(addCopyOctreePathMenuItem(TmModelManager.getInstance().getCurrentSample()));
+                    result.add(addGenerateCarveoutMenuItem(TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron()));
                     result.add(addViewMenuItem());
 
                     return result;
@@ -1112,6 +1113,14 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
                 new MicronsToClipboardAction(statusLabel)
         );
         return mnCopyMicron;
+    }
+
+    private JMenuItem addGenerateCarveoutMenuItem(TmNeuronMetadata neuron) {
+        JMenuItem menuItem = new JMenuItem(
+                new GenerateCarveoutAction(tileFormat,
+                        getRenderedVolumeLocation(TmModelManager.getInstance().getCurrentSample()))
+        );
+        return menuItem;
     }
 
     private JMenuItem addCopyOctreePathMenuItem(TmSample tmSample) {

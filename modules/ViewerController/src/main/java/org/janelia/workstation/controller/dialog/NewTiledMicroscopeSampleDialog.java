@@ -3,14 +3,22 @@ package org.janelia.workstation.controller.dialog;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
+import java.util.Map;
 
 import javax.swing.*;
 
 import org.apache.commons.lang.StringUtils;
+import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.common.gui.dialogs.ModalDialog;
 import org.janelia.workstation.controller.action.SaveTiledMicroscopeSampleAction;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.jdesktop.swingx.VerticalLayout;
 
@@ -19,19 +27,27 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 	private JTextField nameTextField = new JTextField(40);
 	private JTextField pathToOctreeTextField = new JTextField(40);
 	private JTextField pathToKTXTextField = new JTextField(40);
-	private JTextField pathToRawTextField = new JTextField(40);
+	private JTextField pathToAltFormatTextField = new JTextField(40);
 	private JCheckBox rawCompressedField = new JCheckBox();
+	private JComboBox sampleFormat = new JComboBox<>(new String[] {"KTX Sample", "Zarr Sample"});
+
 
 	private TmSample sample;
+	GridBagConstraints c;
+	JPanel attrPanel;
+	JLabel pathToOctreeLabel = new JLabel("Path To Render Folder:");
+	JLabel pathToKTXLabel = new JLabel("Path To KTX Folder (optional):");
+	JLabel pathToAltFormatLabel = new JLabel("Path To Sample Top Folder:");
+	JPanel mainPanel;
 
 	public NewTiledMicroscopeSampleDialog() {
-
+        c = new GridBagConstraints();
 		setTitle("Add Horta Sample");
 
-		JPanel mainPanel = new JPanel();
+		mainPanel = new JPanel();
 		mainPanel.setLayout(new VerticalLayout(5));
 
-		JPanel attrPanel = new JPanel();
+		attrPanel = new JPanel();
 		attrPanel.setLayout(new GridBagLayout());
 
 		JLabel sampleNameLabel = new JLabel("Sample Name:");
@@ -44,33 +60,64 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		c.gridx = 1;
 		attrPanel.add(nameTextField, c);
 
-		// Figure out the user path preference
+		JLabel sampleFormatLabel = new JLabel("Choose Sample Format:");
+		sampleFormatLabel.setLabelFor(sampleFormat);
 		c.gridx = 0;
 		c.gridy = 1;
-		attrPanel.add(new JLabel("Path To Render Folder:"), c);
+		attrPanel.add(sampleFormatLabel, c);
 		c.gridx = 1;
-		attrPanel.add(pathToOctreeTextField, c);
+		attrPanel.add(sampleFormat, c);
 
-		// Figure out the user path preference
+		// KTX Selections
 		c.gridx = 0;
 		c.gridy = 2;
-		attrPanel.add(new JLabel("Path To KTX Folder (optional):"), c);
+		attrPanel.add(pathToOctreeLabel, c);
+		c.gridx = 1;
+		attrPanel.add(pathToOctreeTextField, c);
+		c.gridx = 0;
+		c.gridy = 3;
+		attrPanel.add(pathToKTXLabel, c);
 		c.gridx = 1;
 		attrPanel.add(pathToKTXTextField, c);
 
-		// Figure out the user path preference
-		c.gridx = 0;
-		c.gridy = 3;
-		attrPanel.add(new JLabel("Path To RAW Folder (optional):"), c);
-		c.gridx = 1;
-		attrPanel.add(pathToRawTextField, c);
-
-		// Show whether the path is compressed or not
 		c.gridx = 0;
 		c.gridy = 4;
-		attrPanel.add(new JLabel( "RAW Tiles Compressed (MJ2):"), c);
+		attrPanel.add(pathToAltFormatLabel, c);
 		c.gridx = 1;
-		attrPanel.add(rawCompressedField, c);
+		attrPanel.add(pathToAltFormatTextField, c);
+
+		// Zarr selections
+		sampleFormat.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent itemEvent) {
+				if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
+						String formatSelected = (String)itemEvent.getItem();
+						switch (formatSelected) {
+							case "KTX Sample":
+								pathToOctreeLabel.setVisible(true);
+								pathToOctreeTextField.setVisible(true);
+								pathToKTXLabel.setVisible(true);
+								pathToKTXTextField.setVisible(true);
+								pathToAltFormatLabel.setVisible(false);
+								pathToAltFormatTextField.setVisible(false);
+							    break;
+							case "Zarr Sample":
+								pathToOctreeLabel.setVisible(false);
+								pathToOctreeTextField.setVisible(false);
+								pathToKTXLabel.setVisible(false);
+								pathToKTXTextField.setVisible(false);
+								pathToAltFormatLabel.setVisible(true);
+								pathToAltFormatTextField.setVisible(true);
+
+								// Figure out the user path preference
+
+								mainPanel.repaint();
+								mainPanel.revalidate();
+								break;
+						}
+					}
+				}
+		});
 
 		mainPanel.add(attrPanel);
 		add(mainPanel, BorderLayout.CENTER);
@@ -103,10 +150,11 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 
 		nameTextField.setText(sample.getName());
 
-		String octreePath = sample.getLargeVolumeOctreeFilepath();
-		String ktxPath = sample.getLargeVolumeKTXFilepath();
-		String rawPath = sample.getAcquisitionFilepath();
-		boolean rawCompressed = sample.hasCompressedAcquisition();
+		Map<FileType,String> filepaths = sample.getFiles();
+
+		String octreePath = filepaths.get(FileType.LargeVolumeOctree);
+		String ktxPath = filepaths.get(FileType.LargeVolumeKTX);
+		String altPath = filepaths.get(FileType.LargeVolumeZarr);
 
 		if (octreePath!=null) {
 			pathToOctreeTextField.setText(octreePath);
@@ -116,12 +164,8 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 			pathToKTXTextField.setText(ktxPath);
 		}
 
-		if (rawPath!=null) {
-			pathToRawTextField.setText(rawPath);
-		}
-
-		if (rawCompressed) {
-			rawCompressedField.setSelected(true);
+		if (altPath!=null) {
+			pathToAltFormatTextField.setText(altPath);
 		}
 
 		packAndShow();
@@ -132,7 +176,7 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		String name = nameTextField.getText();
 		String octree = pathToOctreeTextField.getText();
 		String ktx = StringUtils.isBlank(pathToKTXTextField.getText()) ? null : pathToKTXTextField.getText();
-		String raw = StringUtils.isBlank(pathToRawTextField.getText()) ? null : pathToRawTextField.getText();
+		String alt = StringUtils.isBlank(pathToAltFormatTextField.getText()) ? null : pathToAltFormatTextField.getText();
 		if (octree.isEmpty()) {
 			JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
 					"You must specify both a sample name and location!",
@@ -146,7 +190,7 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 			name = file.getName();
 		}
 
-		Action action = new SaveTiledMicroscopeSampleAction(sample, name, octree, ktx, raw, rawCompressedField.isSelected());
+		Action action = new SaveTiledMicroscopeSampleAction(sample, name, octree, ktx, alt, rawCompressedField.isSelected());
 		action.actionPerformed(null);
 		NewTiledMicroscopeSampleDialog.this.dispose();
 	}

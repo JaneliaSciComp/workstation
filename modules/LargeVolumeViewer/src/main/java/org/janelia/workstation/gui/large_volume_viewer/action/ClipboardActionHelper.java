@@ -4,7 +4,12 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.tileimagery.FileBasedOctreeMetadataSniffer;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.geom.Vec3;

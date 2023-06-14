@@ -54,7 +54,7 @@ public class ExtractOctreeSubvolume {
 	 * Implementation with stronger type arguments than main() has...
 	 * @throws IOException 
 	 */
-	private static void extractSubvolume(
+	public static void extractSubvolume(
 			Vec3 corner1,
 			Vec3 corner2,
 			double resolutionMicrometers,

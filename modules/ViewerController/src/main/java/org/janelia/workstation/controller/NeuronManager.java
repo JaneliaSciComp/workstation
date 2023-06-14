@@ -458,7 +458,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             Long neuronID = neuron.getId();
 
             // some issues with this; need to isolate why serialization wipes out neuron IDs
-            // getNeuronModel().requestAssignmentChange(neuron, newOwner.getKey());
+            getNeuronModel().requestAssignmentChange(neuron, newOwner.getKey());
 
             // it's now safe to change local object
             neuron.setOwnerKey(newOwner.getKey());
