@@ -13,7 +13,6 @@ import org.openide.util.lookup.ServiceProvider;
  */
 @ServiceProvider(service = AdminActionBuilder.class, position=1)
 public final class RunAsMenuActionBuilder implements AdminActionBuilder {
-
     @Override
     public Action getAction() {
         return SystemAction.get(RunAsMenuAction.class);
