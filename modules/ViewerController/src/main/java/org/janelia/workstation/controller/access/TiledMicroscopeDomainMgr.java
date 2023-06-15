@@ -358,5 +358,4 @@ public class TiledMicroscopeDomainMgr {
         TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         client.removeNeuron(tmNeuron);
     }
-
 }

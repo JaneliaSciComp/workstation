@@ -1,37 +1,16 @@
 package org.janelia.workstation.controller;
 
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.swing.*;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
-
 import com.google.common.eventbus.Subscribe;
 import org.apache.commons.io.FilenameUtils;
-import org.janelia.workstation.controller.model.DefaultNeuron;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
-import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.security.Subject;
+import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.action.NeuronTagsAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.listener.ViewStateListener;
@@ -48,18 +27,27 @@ import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionSupport;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.core.util.Progress;
 import org.janelia.workstation.geom.ParametrizedLine;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.janelia.model.util.MatrixUtilities;
 import org.janelia.workstation.swc.MatrixDrivenSWCExchanger;
 import org.janelia.workstation.swc.SWCData;
 import org.janelia.workstation.swc.SWCDataConverter;
 import org.janelia.workstation.swc.SWCNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 
@@ -85,19 +73,20 @@ import org.slf4j.LoggerFactory;
  */
 public class NeuronManager implements DomainObjectSelectionSupport {
     private static final Logger log = LoggerFactory.getLogger(NeuronManager.class);
+
     public static final String STD_SWC_EXTENSION = SWCData.STD_SWC_EXTENSION;
     private static final String COLOR_FORMAT = "# COLOR %f,%f,%f";
     private static final String NAME_FORMAT = "# NAME %s";
     private static final String NEURON_TAG_VISIBILITY = "hidden";
 
     private static final int NUMBER_FRAGMENTS_THRESHOLD = 1000;
+    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
     private final TiledMicroscopeDomainMgr tmDomainMgr;
     private SWCDataConverter swcDataConverter;
 
     private TmSample currentSample;
     private TmWorkspace currentWorkspace;
     private TmNeuronMetadata currentNeuron;
-    private TmGeoAnnotation currentVertex;
     private List<TmNeuronMetadata> currentFilteredNeuronList;
 
     private NeuronSpatialFilter neuronFilter;
@@ -237,11 +226,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         if (neuron==null)
             return;
 
-        String systemUser = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
-        if (systemUser==null)
-            return;
-
-        if (!neuron.getOwnerKey().equals(systemUser)) {
+        if (!neuron.getOwnerKey().equals(TRACERS_GROUP)) {
             SwingUtilities.invokeLater(() -> {
                 NeuronUpdates updates = null;
                 switch (remoteAction) {
@@ -339,7 +324,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      */
     public TmGeoAnnotation getNeuriteRootAnnotation(TmGeoAnnotation annotation) {
         if (annotation == null) {
-            return annotation;
+            return null;
         }
 
         TmNeuronMetadata neuron = getNeuronFromNeuronID(annotation.getNeuronId());
@@ -438,12 +423,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         log.info("Neuron was renamed: "+neuron);
 
         final TmWorkspace workspace = modelManager.getCurrentWorkspace();
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireNeuronRenamed(neuron);
-                //activityLog.logRenameNeuron(workspace.getId(), neuron.getId());
-            }
+        SwingUtilities.invokeLater(() -> {
+            fireNeuronRenamed(neuron);
+            //activityLog.logRenameNeuron(workspace.getId(), neuron.getId());
         });
     }
 
@@ -452,7 +434,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      */
     public synchronized void changeNeuronOwner(List<TmNeuronMetadata> neuronList, Subject newOwner) throws Exception {
         for (TmNeuronMetadata neuron: neuronList) {
-            Long neuronID = neuron.getId();
 
             // some issues with this; need to isolate why serialization wipes out neuron IDs
             getNeuronModel().requestAssignmentChange(neuron, newOwner.getKey());
@@ -539,10 +520,10 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         final TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
         newNeuron.setWorkspaceRef(Reference.createFor(TmWorkspace.class, workspace.getId()));
         newNeuron.setName(name);
-        newNeuron.getReaders().add(ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup"));
+        newNeuron.getReaders().add(TRACERS_GROUP);
         TmNeuronMetadata neuron = tmDomainMgr.createNeuron(newNeuron);
         neuron.setColor(neuronColors[(int) (neuron.getId() % neuronColors.length)]);
-        neuronModel.completeCreateNeuron(neuron);
+        neuronModel.addNeuron(neuron);
 
         // Update local workspace
         log.info("Neuron was created: "+neuron);
@@ -594,17 +575,14 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         final TmGeoAnnotation annotation = neuronModel.addGeometricAnnotation(
                 neuron, neuron.getId(), xyz.x(), xyz.y(), xyz.z());
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireAnnotationAdded(annotation);
-                if (applyFilter) {
-                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
-                    updateFrags(updates);
-                    updateFragsByAnnotation(neuron.getId(), annotation.getId());
-                }
-                //activityLog.logEndOfOperation(getWsId(), xyz);
+        SwingUtilities.invokeLater(() -> {
+            fireAnnotationAdded(annotation);
+            if (applyFilter) {
+                NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                updateFrags(updates);
+                updateFragsByAnnotation(neuron.getId(), annotation.getId());
             }
+            //activityLog.logEndOfOperation(getWsId(), xyz);
         });
 
         return annotation;

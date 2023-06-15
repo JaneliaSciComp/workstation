@@ -6,7 +6,6 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.model.TmHistoricalEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.core.api.AccessManager;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 /**
@@ -53,32 +51,8 @@ class NeuronModelAdapter {
         }
     }
 
-    CompletableFuture<TmNeuronMetadata> createNeuron(TmNeuronMetadata neuron) throws Exception {
-        // make sure the neuron contains the current user's ownerKey
-        neuron.setOwnerKey(AccessManager.getSubjectKey());
-        tmDomainMgr.createNeuron(neuron);
-        return new CompletableFuture<>();
-    }
-
     void saveNeuron(TmNeuronMetadata neuron) throws Exception {
         tmDomainMgr.updateNeuron(neuron);
-    }
-
-    void undoNeuron(TmNeuronMetadata neuron) throws Exception {
-
-        // add historical event
-        ObjectMapper mapper = new ObjectMapper();
-        byte[] neuronData = mapper.writeValueAsBytes(neuron);
-        TmHistoricalEvent event = new TmHistoricalEvent();
-        Map<Long,byte[]> map = new HashMap<>();
-        map.put(neuron.getId(), neuronData);
-        event.setNeurons(map);
-        event.setTimestamp(new Date());
-        event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
-        TmModelManager.getInstance().getNeuronHistory().addHistoricalEvent(event);
-
-        tmDomainMgr.updateNeuron(neuron);
-
     }
 
     void requestAssignment(TmNeuronMetadata neuron, String targetUser) throws Exception {

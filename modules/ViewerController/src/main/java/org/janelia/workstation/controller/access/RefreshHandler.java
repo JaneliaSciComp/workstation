@@ -171,7 +171,7 @@ public class RefreshHandler implements MessageHandler {
             StopWatch stopWatch = new StopWatch();
 
             if (msgHeaders == null) {
-                logError("Issue trying to process metadata from update");
+                log.warn("Encountered null message headers when handling refresh message");
                 return;
             }
             // thead logging
@@ -200,8 +200,7 @@ public class RefreshHandler implements MessageHandler {
 
             if (action == NeuronMessageConstants.MessageType.ERROR_PROCESSING) {
                 if (user != null && user.equals(AccessManager.getSubjectKey())) {
-                    log.info("Error message received from server");
-                    logError(new String(msgBody));
+                    log.warn("Error message received from server: {}", new String(msgBody));
                 }
                 return;
             }
@@ -236,7 +235,6 @@ public class RefreshHandler implements MessageHandler {
                         origNeuron.setReaders(neuron.getReaders());
                     }
                 }
-                annotationModel.getNeuronModel().completeOwnershipRequest(decision);
                 updateFilter(neuron, action);
                 SwingUtilities.invokeLater(() -> {
                     StopWatch stopWatch2 = new StopWatch();
@@ -277,15 +275,13 @@ public class RefreshHandler implements MessageHandler {
                             case NEURON_DELETE:
                                 if (!user.equals(AccessManager.getSubjectKey())) {
                                     handleNeuronDeleted(neuron);
-
                                 }
                                 break;
                         }
                         stopWatch2.stop();
                         log.debug("RefreshHandler.invokeLater: handled update in {} ms", stopWatch2.getElapsedTime());
                     } catch (Exception e) {
-                        log.error("Exception thrown in main GUI thread during message processing", e);
-                        logError(e.getMessage());
+                        FrameworkAccess.handleExceptionQuietly("Error handling refresh message: " + e.getMessage(), e);
                     }
                     log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
                 });
@@ -293,7 +289,7 @@ public class RefreshHandler implements MessageHandler {
             stopWatch.stop();
             log.info("RefreshHandler: handled message in {} ms", stopWatch.getElapsedTime());
         } catch (Exception e) {
-            log.error(e.getMessage());
+            FrameworkAccess.handleExceptionQuietly("Error handling refresh message: " + e.getMessage(), e);
         }
     }
 
@@ -304,8 +300,7 @@ public class RefreshHandler implements MessageHandler {
 			updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE);
             annotationModel.fireNeuronCreated(neuron);
         } catch (Exception e) {
-            logError("Error handling neuron creation: " + e.getMessage());
-            log.error("Error handling neuron creation message for {}", neuron, e);
+            FrameworkAccess.handleExceptionQuietly("Error handling neuron creation: " + e.getMessage(), e);
         }
     }
 
@@ -317,8 +312,7 @@ public class RefreshHandler implements MessageHandler {
                 annotationModel.refreshNeuron(neuron);
             }
         } catch (Exception e) {
-            logError("Error handling neuron change: " + e.getMessage());
-            log.error("Error handling neuron changed message for {}", neuron, e);
+            FrameworkAccess.handleExceptionQuietly("Error handling neuron change: " + e.getMessage(), e);
         }
     }
 
@@ -330,25 +324,12 @@ public class RefreshHandler implements MessageHandler {
                 annotationModel.fireNeuronDeleted(neuron);
             }
         } catch (Exception e) {
-            logError("Error handling neuron change: " + e.getMessage());
-            log.error("Error handling neuron changed message for {}", neuron, e);
+            FrameworkAccess.handleExceptionQuietly("Error handling neuron deletion: " + e.getMessage(), e);
         }
     }
 	
     public void updateFilter(TmNeuronMetadata neuron, NeuronMessageConstants.MessageType action) {
         annotationModel.updateNeuronFilter(neuron, action);
-    }
-
-    public void logError(String errorMsg) {
-        String error = "Problems receiving message updates, " + errorMsg;
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-               // AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-             //   annotationMgr.presentError(errorMsg, new RuntimeException(error));
-            }
-        });
-        log.error(error);
     }
 
     @Override
@@ -363,6 +344,4 @@ public class RefreshHandler implements MessageHandler {
     public void setAnnotationModel(NeuronManager annotationModel) {
         this.annotationModel = annotationModel;
     }
-
-
 }

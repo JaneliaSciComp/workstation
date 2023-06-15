@@ -1,20 +1,17 @@
 package org.janelia.workstation.controller.model.annotations.neuron;
 
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
-import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.util.TmNeuronUtils;
 import org.janelia.workstation.controller.model.IdSource;
+import org.janelia.workstation.controller.model.TmHistoricalEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class NeuronModel {
 
@@ -22,8 +19,6 @@ public class NeuronModel {
     private final NeuronModelAdapter neuronModelAdapter = new NeuronModelAdapter();
     private final IdSource idSource = new IdSource();
     private Map<Long, TmNeuronMetadata> neuronMap;
-    private CompletableFuture<Boolean> ownershipRequest;
-    private CompletableFuture<TmNeuronMetadata> createNeuronRequest;
     static NeuronModel modelInstance;
 
     static public NeuronModel getInstance() {
@@ -156,31 +151,6 @@ public class NeuronModel {
         return annotation;
     }
 
-    /**
-     * We complete the ownership request future once we get the decision from the NeuronBroker
-     *
-     * @param updatedNeuron neuron created by the message server and broadcast back
-     * @throws Exception
-     */
-    public void completeCreateNeuron(TmNeuronMetadata updatedNeuron) {
-        addNeuron(updatedNeuron);
-        if (createNeuronRequest != null) {
-            createNeuronRequest.complete(updatedNeuron);
-        }
-    }
-
-    /**
-     * We complete the ownership request future once we get the decision from the NeuronBroker
-     *
-     * @param decision
-     * @throws Exception
-     */
-    public void completeOwnershipRequest(boolean decision) {
-        if (ownershipRequest != null) {
-            ownershipRequest.complete(new Boolean(decision));
-        }
-    }
-
     public void deleteNeuron(TmWorkspace tmWorkspace, TmNeuronMetadata tmNeuronMetadata) throws Exception {
         TmNeuronMetadata oldValue = removeNeuron(tmNeuronMetadata);
         if (oldValue!=null) {
@@ -214,28 +184,6 @@ public class NeuronModel {
             addNeuron(n);
         }
         LOG.info("loadWorkspaceNeurons() loaded {} neurons", neuronMap.size());
-    }
-
-    /**
-     * Makes a new neuron.
-     *
-     * @todo may need to add create, update dates + ownerKey
-     * @param workspace will contain this neuron.
-     * @param name of new neuron.
-     * @return that neuron
-     * @throws Exception
-     */
-    public CompletableFuture<TmNeuronMetadata> createTiledMicroscopeNeuron(TmWorkspace workspace, String name) throws Exception {
-        if (workspace == null || name == null) {
-            throw new IllegalStateException("Tiled Neuron must be created in a valid workspace.");
-        }
-        TmNeuronMetadata neuron = new TmNeuronMetadata(workspace, name);
-        createNeuronRequest = createTiledMicroscopeNeuron(neuron);
-        return createNeuronRequest;
-    }
-
-    private CompletableFuture<TmNeuronMetadata> createTiledMicroscopeNeuron(TmNeuronMetadata neuron) throws Exception {
-        return neuronModelAdapter.createNeuron(neuron);
     }
 
     /**
@@ -454,16 +402,30 @@ public class NeuronModel {
     }
 
     public void saveNeuronData(TmNeuronMetadata neuron) throws Exception {
-        // save historical event data for undo/redo
+
+        // add historical event
+        ObjectMapper mapper = new ObjectMapper();
+        byte[] neuronData = mapper.writeValueAsBytes(neuron);
+        TmHistoricalEvent event = new TmHistoricalEvent();
+        Map<Long,byte[]> map = new HashMap<>();
+        map.put(neuron.getId(), neuronData);
+        event.setNeurons(map);
+        event.setTimestamp(new Date());
+        event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+        TmModelManager.getInstance().getNeuronHistory().addHistoricalEvent(event);
+
         neuronModelAdapter.saveNeuron(neuron);
     }
 
     public void restoreNeuronFromHistory(TmNeuronMetadata neuron) throws Exception {
+
+        // restore from history
         TmNeuronMetadata oldNeuron = neuronMap.get(neuron.getId());
         oldNeuron.setNeuronData(neuron.getNeuronData());
         oldNeuron.setColor(neuron.getColor());
         oldNeuron.setName(neuron.getName());
-        neuronModelAdapter.undoNeuron(neuron);
+
+        neuronModelAdapter.saveNeuron(neuron);
     }
 
     public void refreshNeuronFromShared (TmNeuronMetadata neuron) throws Exception {

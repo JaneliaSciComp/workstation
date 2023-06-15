@@ -35,7 +35,6 @@ import java.util.Arrays;
 public class TmModelManager {
 
     private static final Logger log = LoggerFactory.getLogger(TmModelManager.class);
-
     private TmSample currentSample;
     private TmWorkspace currentWorkspace;
     private TmNeuronTagMap currentTagMap;
