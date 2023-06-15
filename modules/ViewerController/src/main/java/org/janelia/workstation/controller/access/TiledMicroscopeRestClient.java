@@ -303,6 +303,61 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         checkBadResponse(target, response);
     }
 
+    //==================================================================================================================
+    // NEW API for shared data
+    //==================================================================================================================
+
+    public TmNeuronMetadata createNeuron(TmNeuronMetadata neuronMetadata) {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(neuronMetadata);
+        WebTarget target = getMouselightDataEndpoint("/shared/workspace/neuron");
+        Response response = target
+                .request()
+                .put(Entity.json(query));
+        checkBadResponse(target, response);
+        return response.readEntity(TmNeuronMetadata.class);
+    }
+
+    public TmNeuronMetadata updateNeuron(TmNeuronMetadata neuronMetadata) {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(neuronMetadata);
+        WebTarget target = getMouselightDataEndpoint("/shared/workspace/neuron");
+        Response response = target
+                .request()
+                .post(Entity.json(query));
+        checkBadResponse(target, response);
+        LOG.info("Updated {} - {}",neuronMetadata.getName(), neuronMetadata.getId());
+        return response.readEntity(TmNeuronMetadata.class);
+    }
+
+    public TmNeuronMetadata changeOwnership(TmNeuronMetadata neuronMetadata, String targetUser) {
+        DomainQuery query = new DomainQuery();
+        query.setSubjectKey(AccessManager.getSubjectKey());
+        query.setDomainObject(neuronMetadata);
+        WebTarget target = getMouselightDataEndpoint("/shared/workspace/neuron/ownership")
+            .queryParam("targetUser", targetUser);
+        Response response = target
+                .request()
+                .post(Entity.json(query));
+        checkBadResponse(target, response);
+        LOG.info("Changed ownership of {} ({}) to {}",neuronMetadata.getName(), neuronMetadata.getId(), targetUser);
+        return response.readEntity(TmNeuronMetadata.class);
+    }
+
+    public void removeNeuron(TmNeuronMetadata neuronMetadata) {
+        WebTarget target = getMouselightDataEndpoint("/shared/workspace/neuron")
+                .queryParam("workspaceId", neuronMetadata.getWorkspaceId())
+                .queryParam("neuronId", neuronMetadata.getId())
+                .queryParam("isLarge", neuronMetadata.isLargeNeuron());
+        Response response = target
+                .request()
+                .delete();
+        checkBadResponse(target, response);
+    }
+
+    //==================================================================================================================
     void changeTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) {
         if (neurons.isEmpty()) return;
         List<Long> neuronIds = DomainUtils.getIds(neurons);

@@ -242,27 +242,24 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             return;
 
         if (!neuron.getOwnerKey().equals(systemUser)) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    NeuronUpdates updates = null;
-                    switch (remoteAction) {
-                        case NEURON_CREATE:
-                            updates = neuronFilter.addNeuron(neuron);
-                            break;
-                        case NEURON_DELETE:
-                            updates = neuronFilter.deleteNeuron(neuron);
-                            break;
-                        case NEURON_SAVE_NEURONDATA:
-                        case NEURON_OWNERSHIP_DECISION:
-                            updates = neuronFilter.updateNeuron(neuron);
-                            break;
-                    }
+            SwingUtilities.invokeLater(() -> {
+                NeuronUpdates updates = null;
+                switch (remoteAction) {
+                    case NEURON_CREATE:
+                        updates = neuronFilter.addNeuron(neuron);
+                        break;
+                    case NEURON_DELETE:
+                        updates = neuronFilter.deleteNeuron(neuron);
+                        break;
+                    case NEURON_SAVE_NEURONDATA:
+                    case NEURON_OWNERSHIP_DECISION:
+                        updates = neuronFilter.updateNeuron(neuron);
+                        break;
+                }
 
-                    if (updates!=null) {
-                        updateFrags(updates);
+                if (updates!=null) {
+                    updateFrags(updates);
 
-                    }
                 }
             });
         }
@@ -484,24 +481,21 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public synchronized void deleteNeuron(final TmNeuronMetadata deletedNeuron) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    neuronModel.deleteNeuron(currentWorkspace, deletedNeuron);
-                    log.info("Neuron was deleted: "+deletedNeuron);
+        SwingUtilities.invokeLater(() -> {
+            try {
+                neuronModel.deleteNeuron(currentWorkspace, deletedNeuron);
+                log.info("Neuron was deleted: "+deletedNeuron);
 
-                    // if filter, add and remove fragments as necessary
-                    if (applyFilter) {
-                        NeuronUpdates updates = neuronFilter.deleteNeuron(deletedNeuron);
-                        updateFrags(updates);
-                    }
-
-                    fireClearSelections();
-                    fireNeuronDeleted(deletedNeuron);
-                } catch (Exception e) {
-                    FrameworkAccess.handleException(e);
+                // if filter, add and remove fragments as necessary
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.deleteNeuron(deletedNeuron);
+                    updateFrags(updates);
                 }
+
+                fireClearSelections();
+                fireNeuronDeleted(deletedNeuron);
+            } catch (Exception e) {
+                FrameworkAccess.handleException(e);
             }
         });
     }
@@ -513,8 +507,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * @throws Exception
      */
     public synchronized TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
-        TmWorkspace workspace = tmDomainMgr.createWorkspace(sampleId, name);
-        return workspace;
+        return tmDomainMgr.createWorkspace(sampleId, name);
     }
 
     private static Color[] neuronColors = {
@@ -547,7 +540,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         newNeuron.setWorkspaceRef(Reference.createFor(TmWorkspace.class, workspace.getId()));
         newNeuron.setName(name);
         newNeuron.getReaders().add(ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup"));
-        TmNeuronMetadata neuron = tmDomainMgr.save(newNeuron);
+        TmNeuronMetadata neuron = tmDomainMgr.createNeuron(newNeuron);
         neuron.setColor(neuronColors[(int) (neuron.getId() % neuronColors.length)]);
         neuronModel.completeCreateNeuron(neuron);
 
@@ -556,18 +549,15 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         setCurrentNeuron(neuron);
 
         if (!deferUIUpdate) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    // if filter, find new fragments that might be affected
-                    if (applyFilter) {
-                        NeuronUpdates updates = neuronFilter.addNeuron(neuron);
-                        updateFrags(updates);
-                    }
-
-                    fireNeuronCreated(neuron);
-                    fireNeuronSelected(neuron);
+            SwingUtilities.invokeLater(() -> {
+                // if filter, find new fragments that might be affected
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.addNeuron(neuron);
+                    updateFrags(updates);
                 }
+
+                fireNeuronCreated(neuron);
+                fireNeuronSelected(neuron);
             });
         }
 

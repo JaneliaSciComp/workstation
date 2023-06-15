@@ -193,7 +193,7 @@ public class NeuronModel {
     }
 
     private void deleteNeuronData(TmNeuronMetadata neuron) throws Exception {
-        neuronModelAdapter.asyncDeleteNeuron(neuron);
+        neuronModelAdapter.removeNeuron(neuron);
     }
 
     public void deleteStructuredTextAnnotation(TmNeuronMetadata neuron, long annotationId) {
@@ -235,7 +235,7 @@ public class NeuronModel {
     }
 
     private CompletableFuture<TmNeuronMetadata> createTiledMicroscopeNeuron(TmNeuronMetadata neuron) throws Exception {
-        return neuronModelAdapter.asyncCreateNeuron(neuron);
+        return neuronModelAdapter.createNeuron(neuron);
     }
 
     /**
@@ -378,20 +378,6 @@ public class NeuronModel {
     }
 
     /**
-     * We make an ownership request to take ownership of this neuron; we'd like to perform a fast
-     * block in this case in the calling function and fulfill the future (hopefully rapidly)
-     * when the approval request comes in from the NeuronBroker.
-     *
-     * This version is used when the requester doesn't have ownership and an explicit decision is needed.
-     * @param neuron
-     * @throws Exception
-     */
-    public CompletableFuture<Boolean> requestOwnershipChange(TmNeuronMetadata neuron) throws Exception {
-        ownershipRequest = neuronModelAdapter.requestOwnership(neuron);
-        return ownershipRequest;
-    }
-
-    /**
      * This can be a partial operation.  Therefore, it will not carry out any
      * communication with the databse.
      *
@@ -469,7 +455,7 @@ public class NeuronModel {
 
     public void saveNeuronData(TmNeuronMetadata neuron) throws Exception {
         // save historical event data for undo/redo
-        neuronModelAdapter.asyncSaveNeuron(neuron, null);
+        neuronModelAdapter.saveNeuron(neuron);
     }
 
     public void restoreNeuronFromHistory(TmNeuronMetadata neuron) throws Exception {
@@ -477,9 +463,7 @@ public class NeuronModel {
         oldNeuron.setNeuronData(neuron.getNeuronData());
         oldNeuron.setColor(neuron.getColor());
         oldNeuron.setName(neuron.getName());
-        Map<String, String> extraArguments = new HashMap<>();
-        extraArguments.put("undo", "true");
-        neuronModelAdapter.asyncSaveNeuron(neuron, extraArguments);
+        neuronModelAdapter.undoNeuron(neuron);
     }
 
     public void refreshNeuronFromShared (TmNeuronMetadata neuron) throws Exception {

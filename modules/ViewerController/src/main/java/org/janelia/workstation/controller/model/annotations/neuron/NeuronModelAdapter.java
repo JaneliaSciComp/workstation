@@ -13,14 +13,12 @@ import org.janelia.messaging.core.impl.MessageSenderImpl;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.model.TmHistoricalEvent;
-import org.janelia.workstation.controller.model.TmHistory;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
-//import org.janelia.workstation.gui.large_volume_viewer.options.ApplicationPanel;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,29 +117,8 @@ class NeuronModelAdapter {
         ObjectMapper mapper = new ObjectMapper();
         byte[] neuronData = mapper.writeValueAsBytes(neuron);
 
-        // add historical event
-        TmHistoricalEvent event = new TmHistoricalEvent();
-        Map<Long,byte[]> map = new HashMap<>();
-        map.put(neuron.getId(), neuronData);
-        event.setNeurons(map);
-        event.setTimestamp(new Date());
-        switch (type) {
-            case NEURON_CREATE:
-                event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_CREATE);
-                break;
-            case NEURON_DELETE:
-                event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_DELETE);
-                break;
-            case NEURON_SAVE_NEURONDATA:
-                event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
-                break;
-        }
-        if (extraArguments==null || !extraArguments.containsKey("undo") ||
-                    !extraArguments.get("undo").equals("true")) {
-            TmModelManager.getInstance().getNeuronHistory().addHistoricalEvent(event);
-        }
 
-        Map<String, Object> updateHeaders = new HashMap<String, Object>();
+        Map<String, Object> updateHeaders = new HashMap<>();
         updateHeaders.put(NeuronMessageConstants.Headers.TYPE, type.toString());
         updateHeaders.put(NeuronMessageConstants.Headers.USER, AccessManager.getSubjectKey());
         updateHeaders.put(NeuronMessageConstants.Headers.WORKSPACE, neuron.getWorkspaceId().toString());
@@ -157,31 +134,39 @@ class NeuronModelAdapter {
         getSender().sendMessage(updateHeaders, neuronData);
     }
 
-    CompletableFuture<TmNeuronMetadata> asyncCreateNeuron(TmNeuronMetadata neuron) throws Exception {
-        // make sure the neuron contains the current user's ownerKey;
+    CompletableFuture<TmNeuronMetadata> createNeuron(TmNeuronMetadata neuron) throws Exception {
+        // make sure the neuron contains the current user's ownerKey
         neuron.setOwnerKey(AccessManager.getSubjectKey());
-        sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE, null);
+        tmDomainMgr.createNeuron(neuron);
         return new CompletableFuture<>();
     }
 
-    void asyncSaveNeuron(TmNeuronMetadata neuron, Map<String, String> extraArgs) throws Exception {
-        //sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_SAVE_NEURONDATA, extraArgs);
-        tmDomainMgr.save(neuron);
+    void saveNeuron(TmNeuronMetadata neuron) throws Exception {
+        tmDomainMgr.updateNeuron(neuron);
     }
 
-    void asyncDeleteNeuron(TmNeuronMetadata neuron) throws Exception {
-        //sendMessage(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE, null);
-        tmDomainMgr.remove(neuron);
-    }
+    void undoNeuron(TmNeuronMetadata neuron) throws Exception {
 
-    CompletableFuture<Boolean> requestOwnership(TmNeuronMetadata neuron) throws Exception {
-        sendMessage(neuron, NeuronMessageConstants.MessageType.REQUEST_NEURON_OWNERSHIP, null);
-        return new CompletableFuture<>();
+        // add historical event
+        ObjectMapper mapper = new ObjectMapper();
+        byte[] neuronData = mapper.writeValueAsBytes(neuron);
+        TmHistoricalEvent event = new TmHistoricalEvent();
+        Map<Long,byte[]> map = new HashMap<>();
+        map.put(neuron.getId(), neuronData);
+        event.setNeurons(map);
+        event.setTimestamp(new Date());
+        event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+        TmModelManager.getInstance().getNeuronHistory().addHistoricalEvent(event);
+
+        tmDomainMgr.updateNeuron(neuron);
+
     }
 
     void requestAssignment(TmNeuronMetadata neuron, String targetUser) throws Exception {
-        Map<String, String> extraArgs = new HashMap<>();
-        extraArgs.put(NeuronMessageConstants.Headers.TARGET_USER, targetUser);
-        sendMessage(neuron, NeuronMessageConstants.MessageType.REQUEST_NEURON_ASSIGNMENT, extraArgs);
+        tmDomainMgr.changeOwnership(neuron, targetUser);
+    }
+
+    void removeNeuron(TmNeuronMetadata neuron) throws Exception {
+        tmDomainMgr.removeNeuron(neuron);
     }
 }
