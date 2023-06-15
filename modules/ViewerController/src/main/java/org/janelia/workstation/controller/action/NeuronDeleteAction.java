@@ -64,7 +64,7 @@ public class NeuronDeleteAction extends EditAction {
                 "Delete neuron?",
                 JOptionPane.OK_CANCEL_OPTION);
         if (ans == JOptionPane.OK_OPTION) {
-            NeuronManager.getInstance().deleteCurrentNeuron();
+            NeuronManager.getInstance().deleteNeuron(targetNeuron);
         }
         this.targetNeuron = null;
     }
