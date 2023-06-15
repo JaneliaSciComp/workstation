@@ -60,7 +60,7 @@ public class NeuronRenameAction extends EditAction {
         SimpleWorker renamer = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.renameCurrentNeuron(neuronName);
+                annotationModel.renameNeuron(targetNeuron, neuronName);
             }
 
             @Override
