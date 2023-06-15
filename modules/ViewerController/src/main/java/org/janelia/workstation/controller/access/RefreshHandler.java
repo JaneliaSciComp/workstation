@@ -14,6 +14,7 @@ import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,7 @@ public class RefreshHandler implements MessageHandler {
     private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
     private static final String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount").trim();
     private static final String MESSAGESERVER_PASSWORD = ConsoleProperties.getInstance().getProperty("domain.msgserver.password").trim();
-    private static final String MESSAGESERVER_REFRESHEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.refresh").trim();
+    private static final String MESSAGESERVER_EXCHANGE_REFRESH = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.refresh").trim();
 
     private NeuronManager annotationModel;
     private AsyncMessageConsumer msgReceiver;
@@ -83,18 +84,17 @@ public class RefreshHandler implements MessageHandler {
                 .getConnection(
                         MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 20,
                         (exc) -> {
-                           // AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-                            String error = "Problems initializing connection to message server " + MESSAGESERVER_URL +
-                                    " with username: " + MESSAGESERVER_USERACCOUNT;
-                          //  annotationMgr.presentError(error, "Problem connecting to Message Server");
-                            log.error(error, exc);
+                            FrameworkAccess.handleExceptionQuietly(
+                                    "Problems initializing connection to message server "+
+                                            MESSAGESERVER_URL+" with username "+
+                                            MESSAGESERVER_USERACCOUNT, exc);
                         });
         msgReceiver = new AsyncMessageConsumerImpl(messageConnection);
         ((AsyncMessageConsumerImpl)msgReceiver).setAutoAck(true);
         // create a temporary binding to ModelRefresh exchange and listen on that channel for the replies
-        msgReceiver.bindAndConnectTo("ModelRefresh", "", null);
+        msgReceiver.bindAndConnectTo(MESSAGESERVER_EXCHANGE_REFRESH, "", null);
         msgReceiver.subscribe(this);
-        log.info("Established connection to message server " + MESSAGESERVER_URL);
+        log.info("Established connection to message server {}", MESSAGESERVER_URL);
         return messageConnection.isOpen();
     }
 
@@ -148,12 +148,12 @@ public class RefreshHandler implements MessageHandler {
             TmNeuronMetadata neuron = mapper.readValue(msgBody, TmNeuronMetadata.class);
 
             // assume this has to do with neuron CRUD; otherwise ignore
-            Map neuronData = new HashMap<>();
+            Map<String,Object> neuronData = new HashMap<>();
             neuronData.put("neuron", neuron);
             neuronData.put("action", action);
             neuronData.put("user", user);
             log.info("Adding neuron remote update: {}", neuron.getName());
-            if (neuron != null && neuron.getId() != null) {
+            if (neuron.getId() != null) {
                 this.updatesMap.put(neuron.getId(), neuronData);
             }
         } catch (Exception e) {
@@ -246,50 +246,48 @@ public class RefreshHandler implements MessageHandler {
                 });
             } else if (action == NeuronMessageConstants.MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
                 // complete the future outside of the swing thread, since the copyGUI thread is blocked
-                StopWatch stopWatch2 = new StopWatch();
-                handleNeuronCreate(neuron, n -> annotationModel.getNeuronModel().completeCreateNeuron(n));
-                stopWatch2.stop();
-                log.info("RefreshHandler: Remote own neuron creation update in {} ms", stopWatch2.getElapsedTime());
-                log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
+//                StopWatch stopWatch2 = new StopWatch();
+//                handleNeuronCreate(neuron, n -> annotationModel.getNeuronModel().completeCreateNeuron(n));
+//                stopWatch2.stop();
+//                log.info("RefreshHandler: Remote own neuron creation update in {} ms", stopWatch2.getElapsedTime());
+//                log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
             } else if (action == NeuronMessageConstants.MessageType.REQUEST_NEURON_OWNERSHIP) {
                 // some other user is asking for ownership of this neuron... process accordingly
             } else {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        try {
-                            StopWatch stopWatch2 = new StopWatch();
-                            // fire notice to NeuronManager
-                            // change relevant to this workspace and not executed on this client,
-                            // update model or process request
-                            switch (action) {
-                                case NEURON_CREATE:
-                                    handleNeuronCreate(neuron, n -> annotationModel.getNeuronModel().addNeuron(n));
-                                    break;
-                                case NEURON_SAVE_NEURONDATA:
-                                    if (!user.equals(AccessManager.getSubjectKey())) {
-                                        if (annotationModel.getNeuronModel().getNeuronById(neuron.getId())==null) {
-                                            annotationModel.getNeuronModel().addNeuron(neuron);
-                                            updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE);
-                                            annotationModel.fireNeuronCreated(neuron);
-                                        } else
-                                            handleNeuronChanged(neuron);
-                                    }
-                                    break;
-                                case NEURON_DELETE:
-                                    if (!user.equals(AccessManager.getSubjectKey())) {
-                                        handleNeuronDeleted(neuron);
-                                         
-                                    }
-                                    break;
-                            }
-                            stopWatch2.stop();
-                            log.debug("RefreshHandler.invokeLater: handled update in {} ms", stopWatch2.getElapsedTime());
-                        } catch (Exception e) {
-                            log.error("Exception thrown in main GUI thread during message processing", e);
-                            logError(e.getMessage());
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        StopWatch stopWatch2 = new StopWatch();
+                        // fire notice to NeuronManager
+                        // change relevant to this workspace and not executed on this client,
+                        // update model or process request
+                        switch (action) {
+                            case NEURON_CREATE:
+                                handleNeuronCreate(neuron, n -> annotationModel.getNeuronModel().addNeuron(n));
+                                break;
+                            case NEURON_SAVE_NEURONDATA:
+                                if (!user.equals(AccessManager.getSubjectKey())) {
+                                    if (annotationModel.getNeuronModel().getNeuronById(neuron.getId())==null) {
+                                        annotationModel.getNeuronModel().addNeuron(neuron);
+                                        updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE);
+                                        annotationModel.fireNeuronCreated(neuron);
+                                    } else
+                                        handleNeuronChanged(neuron);
+                                }
+                                break;
+                            case NEURON_DELETE:
+                                if (!user.equals(AccessManager.getSubjectKey())) {
+                                    handleNeuronDeleted(neuron);
+
+                                }
+                                break;
                         }
-                        log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
+                        stopWatch2.stop();
+                        log.debug("RefreshHandler.invokeLater: handled update in {} ms", stopWatch2.getElapsedTime());
+                    } catch (Exception e) {
+                        log.error("Exception thrown in main GUI thread during message processing", e);
+                        logError(e.getMessage());
                     }
+                    log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
                 });
             }
             stopWatch.stop();

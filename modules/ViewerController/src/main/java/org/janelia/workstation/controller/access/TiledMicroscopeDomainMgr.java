@@ -254,36 +254,6 @@ public class TiledMicroscopeDomainMgr {
         return neurons;
     }
 
-//    public TmNeuronMetadata saveMetadata(TmNeuronMetadata neuronMetadata) throws Exception {
-//        LOG.debug("save({})", neuronMetadata);
-//        TmNeuronMetadata savedMetadata;
-//        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
-//        if (neuronMetadata.getId()==null) {
-//            savedMetadata = client.create(neuronMetadata);
-//            getModel().notifyDomainObjectCreated(savedMetadata);
-//        }
-//        else {
-//            savedMetadata = client.update(neuronMetadata);
-//            getModel().notifyDomainObjectChanged(savedMetadata);
-//        }
-//        return savedMetadata;
-//    }
-
-//    public List<TmNeuronMetadata> saveMetadata(List<TmNeuronMetadata> neuronList) throws Exception {
-//        LOG.debug("save({})", neuronList);
-//        for(TmNeuronMetadata tmNeuronMetadata : neuronList) {
-//            if (tmNeuronMetadata.getId()==null) {
-//                throw new IllegalArgumentException("Bulk neuron creation is currently unsupported");
-//            }
-//        }
-//        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
-//        List<TmNeuronMetadata> updatedMetadata = client.update(neuronList);
-//        for(TmNeuronMetadata tmNeuronMetadata : updatedMetadata) {
-//            getModel().notifyDomainObjectChanged(tmNeuronMetadata);
-//        }
-//        return updatedMetadata;
-//    }
-
     public TmNeuronMetadata createWithId(TmNeuronMetadata neuronMetadata) throws Exception {
         LOG.debug("save({})", neuronMetadata);
         TmNeuronMetadata savedMetadata;
@@ -292,24 +262,6 @@ public class TiledMicroscopeDomainMgr {
         getModel().notifyDomainObjectCreated(savedMetadata);
         return savedMetadata;
     }
-    
-//    public TmNeuronMetadata save(TmNeuronMetadata neuronMetadata) throws Exception {
-//        LOG.debug("save({})", neuronMetadata);
-//        TmNeuronMetadata savedMetadata;
-//        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
-//        if (neuronMetadata.getId()==null) {
-//            savedMetadata = client.create(neuronMetadata);
-//            getModel().notifyDomainObjectCreated(savedMetadata);
-//        }
-//        else {
-//            savedMetadata = client.update(neuronMetadata);
-//            getModel().notifyDomainObjectChanged(savedMetadata);
-//        }
-//        // We assume that the neuron data was saved on the server, but it only returns metadata for efficiency. We
-//        // already have the data, so let's copy it over into the new object.
-//       // exchanger.copyNeuronData(neuronMetadata, savedMetadata);
-//        return savedMetadata;
-//    }
     
     public TmReviewTask save(TmReviewTask reviewTask) throws Exception {
         LOG.debug("save({})", reviewTask);
@@ -334,15 +286,6 @@ public class TiledMicroscopeDomainMgr {
         TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         client.updateNeuronStyles(bulkNeuronStyleUpdate, workspaceId);
     }
-    
-//    public void remove(TmNeuronMetadata tmNeuron) throws Exception {
-//        LOG.debug("remove({})", tmNeuron);
-//        TmNeuronMetadata neuronMetadata = new TmNeuronMetadata();
-//        neuronMetadata.setId(tmNeuron.getId());
-//        TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
-//        client.remove(neuronMetadata);
-//        getModel().notifyDomainObjectRemoved(neuronMetadata);
-//    }
     
     public List<TmReviewTask> getReviewTasks() throws Exception {
         LOG.debug("getReviewTasks()");
@@ -381,7 +324,6 @@ public class TiledMicroscopeDomainMgr {
             throw new IllegalStateException("Attempt to create neuron which already has a GUID: "+neuronMetadata.getId());
         }
         TmNeuronMetadata savedMetadata = client.createNeuron(neuronMetadata);
-        getModel().notifyDomainObjectCreated(savedMetadata);
         return savedMetadata;
     }
 
@@ -392,7 +334,6 @@ public class TiledMicroscopeDomainMgr {
             throw new IllegalStateException("Attempt to update neuron which does not have a GUID");
         }
         TmNeuronMetadata savedMetadata = client.updateNeuron(neuronMetadata);
-        getModel().notifyDomainObjectChanged(savedMetadata);
         // We assume that the neuron data was saved on the server, but it only returns metadata for efficiency. We
         // already have the data, so let's copy it over into the new object.
         // exchanger.copyNeuronData(neuronMetadata, savedMetadata);
@@ -406,7 +347,6 @@ public class TiledMicroscopeDomainMgr {
             throw new IllegalStateException("Attempt to update neuron which does not have a GUID");
         }
         TmNeuronMetadata savedMetadata = client.changeOwnership(neuronMetadata, targetUser);
-        getModel().notifyDomainObjectChanged(savedMetadata);
         // We assume that the neuron data was saved on the server, but it only returns metadata for efficiency. We
         // already have the data, so let's copy it over into the new object.
         // exchanger.copyNeuronData(neuronMetadata, savedMetadata);
@@ -417,7 +357,6 @@ public class TiledMicroscopeDomainMgr {
         LOG.debug("remove({})", tmNeuron);
         TiledMicroscopeRestClient client = new TiledMicroscopeRestClient();
         client.removeNeuron(tmNeuron);
-        //getModel().notifyDomainObjectRemoved(tmNeuron);
     }
 
 }

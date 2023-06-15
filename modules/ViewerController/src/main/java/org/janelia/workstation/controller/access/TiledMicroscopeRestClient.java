@@ -303,10 +303,6 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         checkBadResponse(target, response);
     }
 
-    //==================================================================================================================
-    // NEW API for shared data
-    //==================================================================================================================
-
     public TmNeuronMetadata createNeuron(TmNeuronMetadata neuronMetadata) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
@@ -357,7 +353,6 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         checkBadResponse(target, response);
     }
 
-    //==================================================================================================================
     void changeTags(List<TmNeuronMetadata> neurons, List<String> tags, boolean tagState) {
         if (neurons.isEmpty()) return;
         List<Long> neuronIds = DomainUtils.getIds(neurons);
