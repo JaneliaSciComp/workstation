@@ -43,6 +43,7 @@ public class NeuronContextMenu extends PopupContextMenu {
         setNextAddRequiresSeparator(true);
         add(getShowNeuronItem());
         add(getHideNeuronItem());
+        add(getShowOthersItem());
         add(getHideOthersItem());
 
         setNextAddRequiresSeparator(true);
@@ -101,6 +102,11 @@ public class NeuronContextMenu extends PopupContextMenu {
 
     protected JMenuItem getHideNeuronItem() {        
         Action action = new NeuronHideAction();
+        return new JMenuItem(action);
+    }
+
+    protected JMenuItem getShowOthersItem() {
+        Action action = new NeuronShowOthersAction();
         return new JMenuItem(action);
     }
 
