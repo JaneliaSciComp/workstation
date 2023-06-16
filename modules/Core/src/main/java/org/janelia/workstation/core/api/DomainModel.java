@@ -121,7 +121,7 @@ public class DomainModel {
      * @param domainObject
      * @return
      */
-    private boolean isCacheable(DomainObject domainObject) {
+    public boolean isCacheable(DomainObject domainObject) {
         return domainObject.getClass().getAnnotation(NotCacheable.class) == null;
     }
 

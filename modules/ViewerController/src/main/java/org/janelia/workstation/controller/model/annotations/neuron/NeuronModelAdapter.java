@@ -1,21 +1,17 @@
 package org.janelia.workstation.controller.model.annotations.neuron;
 
-import com.rabbitmq.client.UnblockedCallback;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.options.ApplicationPanel;
+import org.janelia.workstation.controller.util.QueuedWorkThread;
+import org.janelia.workstation.controller.util.ThrowingLambda;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Application;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 /**
@@ -37,42 +33,21 @@ class NeuronModelAdapter {
     private static final int MAX_NEURONS = 1000000;
     // Use async work queue to process neuron updates
     private static final boolean USE_NEURON_WORK_QUEUE = ApplicationPanel.isUseNeuronQueue();
-    // Run serial neuron persistence every N milliseconds
-    private static final int WORK_DELAY_MILLIS = 2000;
-    // How long to wait before processing a neuron operation
-    private static final int WORK_ITEM_DELAY = 200;
     // How many neurons to process every interval
     private static final int MAX_BATCH_SIZE = 1000;
 
-    private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-    private DedupedDelayQueue<ThrowingLambda> neuronPersistQueue;
-    private ScheduledExecutorService executor;
+    private final TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+    private final BlockingQueue<ThrowingLambda> neuronPersistQueue;
+    private final QueuedWorkThread workThread;
 
     public NeuronModelAdapter() {
-
-
-        this.neuronPersistQueue = new DedupedDelayQueue<ThrowingLambda>() {
-            {
-                setWorkItemDelay(WORK_ITEM_DELAY);
-            }
-
-            @Override
-            void processList(List<ThrowingLambda> workItems) {
-                LOG.info("Executing {} neuron operations", workItems.size());
-                for (ThrowingLambda lambda : workItems) {
-                    try {
-                        lambda.accept();
-                    }
-                    catch (Exception e) {
-                        FrameworkAccess.handleException("Error executing neuron operation", e);
-                    }
-                }
+        this.neuronPersistQueue = new ArrayBlockingQueue<>(MAX_BATCH_SIZE);
+        this.workThread = new QueuedWorkThread(neuronPersistQueue, MAX_BATCH_SIZE) {
+            public void handleException(Throwable e) {
+                FrameworkAccess.handleException(e);
             }
         };
-
-        Runnable queueProcessTask = () -> neuronPersistQueue.process(MAX_BATCH_SIZE);
-        this.executor = Executors.newScheduledThreadPool(1);
-        executor.scheduleAtFixedRate(queueProcessTask, 0, WORK_DELAY_MILLIS, TimeUnit.MILLISECONDS);
+        workThread.start();
     }
 
     Stream<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) {
@@ -95,7 +70,7 @@ class NeuronModelAdapter {
     CompletableFuture<TmNeuronMetadata> createNeuronAsync(TmNeuronMetadata neuron) throws Exception {
         CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
         if (USE_NEURON_WORK_QUEUE) {
-            neuronPersistQueue.addWorkItem(() -> {
+            neuronPersistQueue.add(() -> {
                 future.complete(tmDomainMgr.createNeuron(neuron));
             });
         }
@@ -108,7 +83,7 @@ class NeuronModelAdapter {
     CompletableFuture<TmNeuronMetadata> saveNeuron(TmNeuronMetadata neuron) throws Exception {
         CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
         if (USE_NEURON_WORK_QUEUE) {
-            neuronPersistQueue.addWorkItem(() -> {
+            neuronPersistQueue.add(() -> {
                 future.complete(tmDomainMgr.updateNeuron(neuron));
             });
         }
@@ -121,7 +96,7 @@ class NeuronModelAdapter {
     CompletableFuture<TmNeuronMetadata> changeOwnership(TmNeuronMetadata neuron, String targetOwner) throws Exception {
         CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
         if (USE_NEURON_WORK_QUEUE) {
-            neuronPersistQueue.addWorkItem(() -> {
+            neuronPersistQueue.add(() -> {
                 future.complete(tmDomainMgr.changeOwnership(neuron, targetOwner));
             });
         }
@@ -134,7 +109,7 @@ class NeuronModelAdapter {
     CompletableFuture<TmNeuronMetadata> removeNeuron(TmNeuronMetadata neuron) throws Exception {
         CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
         if (USE_NEURON_WORK_QUEUE) {
-            neuronPersistQueue.addWorkItem(() -> {
+            neuronPersistQueue.add(() -> {
                 tmDomainMgr.removeNeuron(neuron);
                 future.complete(neuron);
             });
