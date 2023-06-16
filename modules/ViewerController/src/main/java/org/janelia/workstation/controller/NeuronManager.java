@@ -433,14 +433,17 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * change the ownership of the input neuron
      */
     public synchronized void changeNeuronOwner(List<TmNeuronMetadata> neuronList, Subject newOwner) throws Exception {
-        for (TmNeuronMetadata neuron: neuronList) {
+        for (TmNeuronMetadata neuron : neuronList) {
 
             // some issues with this; need to isolate why serialization wipes out neuron IDs
-            getNeuronModel().requestAssignmentChange(neuron, newOwner.getKey());
+            getNeuronModel().changeOwnership(neuron, newOwner.getKey());
 
             // it's now safe to change local object
-            neuron.setOwnerKey(newOwner.getKey());
-            neuronModel.saveNeuronData(neuron);
+            String targetUser = newOwner.getKey();
+            neuron.setOwnerKey(targetUser);
+            neuron.getReaders().add(targetUser);
+            neuron.getWriters().add(targetUser);
+
             // if filter, find new fragments that might be affected
             fireNeuronChanged(neuron);
 
@@ -521,7 +524,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         newNeuron.setWorkspaceRef(Reference.createFor(TmWorkspace.class, workspace.getId()));
         newNeuron.setName(name);
         newNeuron.getReaders().add(TRACERS_GROUP);
-        TmNeuronMetadata neuron = tmDomainMgr.createNeuron(newNeuron);
+        TmNeuronMetadata neuron = neuronModel.createNeuron(newNeuron);
         neuron.setColor(neuronColors[(int) (neuron.getId() % neuronColors.length)]);
         neuronModel.addNeuron(neuron);
 

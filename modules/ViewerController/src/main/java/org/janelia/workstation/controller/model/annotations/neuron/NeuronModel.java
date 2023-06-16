@@ -1,5 +1,6 @@
 package org.janelia.workstation.controller.model.annotations.neuron;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.util.TmNeuronUtils;
@@ -317,12 +318,17 @@ public class NeuronModel {
         }
     }
 
+    public TmNeuronMetadata createNeuron(TmNeuronMetadata neuron) throws Exception {
+        return neuronModelAdapter.createNeuron(neuron);
+    }
+
     /**
      * ownership change request; this version expects to happen immediately (user already
      * has authority to change the owner (they own it or it's a common neuron)
      */
-    public void requestAssignmentChange(TmNeuronMetadata neuron, String userKey) throws Exception {
-        neuronModelAdapter.requestAssignment(neuron, userKey);
+    public TmNeuronMetadata changeOwnership(TmNeuronMetadata neuron, String userKey) throws Exception {
+        saveHistoricalNeuron(neuron);
+        return neuronModelAdapter.changeOwnership(neuron, userKey);
     }
 
     /**
@@ -402,8 +408,11 @@ public class NeuronModel {
     }
 
     public void saveNeuronData(TmNeuronMetadata neuron) throws Exception {
+        saveHistoricalNeuron(neuron);
+        neuronModelAdapter.saveNeuron(neuron);
+    }
 
-        // add historical event
+    private void saveHistoricalNeuron(TmNeuronMetadata neuron) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         byte[] neuronData = mapper.writeValueAsBytes(neuron);
         TmHistoricalEvent event = new TmHistoricalEvent();
@@ -413,8 +422,6 @@ public class NeuronModel {
         event.setTimestamp(new Date());
         event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
         TmModelManager.getInstance().getNeuronHistory().addHistoricalEvent(event);
-
-        neuronModelAdapter.saveNeuron(neuron);
     }
 
     public void restoreNeuronFromHistory(TmNeuronMetadata neuron) throws Exception {
