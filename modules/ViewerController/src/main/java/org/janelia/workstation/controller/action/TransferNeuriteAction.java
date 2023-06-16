@@ -86,7 +86,7 @@ public class TransferNeuriteAction extends AbstractAction {
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    TmNeuronMetadata newNeuron = neuronManager.createNeuron(neuronName);
+                    TmNeuronMetadata newNeuron = neuronManager.createNeuron(neuronName).get();
                     neuronManager.moveNeurite(annotation, newNeuron);
                 }
 

@@ -663,7 +663,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    TmNeuronMetadata newNeuron = annotationModel.createNeuron(neuronName);
+                    TmNeuronMetadata newNeuron = annotationModel.createNeuron(neuronName).get();
                     annotationModel.moveNeurite(annotation, newNeuron);
                 }
 

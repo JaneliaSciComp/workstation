@@ -58,7 +58,7 @@ public class NeuronCreateAction extends EditAction {
                 TmNeuronMetadata newNeuron;
                 @Override
                 protected void doStuff() throws Exception {
-                    newNeuron = NeuronManager.getInstance().createNeuron(neuronName);
+                    newNeuron = NeuronManager.getInstance().createNeuron(neuronName).get();
                 }
 
                 @Override

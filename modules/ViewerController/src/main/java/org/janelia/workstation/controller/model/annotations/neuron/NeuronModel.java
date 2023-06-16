@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -156,21 +157,15 @@ public class NeuronModel {
         TmNeuronMetadata oldValue = removeNeuron(tmNeuronMetadata);
         if (oldValue!=null) {
             // Need to signal to DB that this entitydata must be deleted.
-            deleteNeuronData(tmNeuronMetadata);
+            neuronModelAdapter.removeNeuron(tmNeuronMetadata);
         }
         else {
             LOG.warn("Attempted to remove neuron {} that was not in workspace {}.", tmNeuronMetadata.getId(), tmWorkspace.getId());
         }
     }
 
-    private void deleteNeuronData(TmNeuronMetadata neuron) throws Exception {
-        neuronModelAdapter.removeNeuron(neuron);
-    }
-
     public void deleteStructuredTextAnnotation(TmNeuronMetadata neuron, long annotationId) {
-        if (neuron.getStructuredTextAnnotationMap().containsKey(annotationId)) {
-            neuron.getStructuredTextAnnotationMap().remove(annotationId);
-        }
+        neuron.getStructuredTextAnnotationMap().remove(annotationId);
     }
 
     /**
@@ -318,17 +313,17 @@ public class NeuronModel {
         }
     }
 
-    public TmNeuronMetadata createNeuron(TmNeuronMetadata neuron) throws Exception {
-        return neuronModelAdapter.createNeuron(neuron);
+    public CompletableFuture<TmNeuronMetadata> createNeuron(TmNeuronMetadata neuron) throws Exception {
+        return neuronModelAdapter.createNeuronAsync(neuron);
     }
 
     /**
      * ownership change request; this version expects to happen immediately (user already
      * has authority to change the owner (they own it or it's a common neuron)
      */
-    public TmNeuronMetadata changeOwnership(TmNeuronMetadata neuron, String userKey) throws Exception {
+    public void changeOwnership(TmNeuronMetadata neuron, String userKey) throws Exception {
         saveHistoricalNeuron(neuron);
-        return neuronModelAdapter.changeOwnership(neuron, userKey);
+        neuronModelAdapter.changeOwnership(neuron, userKey);
     }
 
     /**

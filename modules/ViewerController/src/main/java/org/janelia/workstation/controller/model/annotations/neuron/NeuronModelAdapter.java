@@ -1,14 +1,18 @@
 package org.janelia.workstation.controller.model.annotations.neuron;
 
+import com.rabbitmq.client.UnblockedCallback;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.Application;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +36,7 @@ class NeuronModelAdapter {
 
     private static final int MAX_NEURONS = 1000000;
     // Use async work queue to process neuron updates
-    private static final boolean USE_NEURON_WORK_QUEUE = true;
+    private static final boolean USE_NEURON_WORK_QUEUE = ApplicationPanel.isUseNeuronQueue();
     // Run serial neuron persistence every N milliseconds
     private static final int WORK_DELAY_MILLIS = 2000;
     // How long to wait before processing a neuron operation
@@ -41,24 +45,26 @@ class NeuronModelAdapter {
     private static final int MAX_BATCH_SIZE = 1000;
 
     private TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-    private DedupedDelayQueue<TmNeuronMetadata> neuronPersistQueue;
+    private DedupedDelayQueue<ThrowingLambda> neuronPersistQueue;
     private ScheduledExecutorService executor;
 
     public NeuronModelAdapter() {
-        this.neuronPersistQueue = new DedupedDelayQueue<TmNeuronMetadata>() {
+
+
+        this.neuronPersistQueue = new DedupedDelayQueue<ThrowingLambda>() {
             {
                 setWorkItemDelay(WORK_ITEM_DELAY);
             }
 
             @Override
-            void processList(List<TmNeuronMetadata> workItems) {
+            void processList(List<ThrowingLambda> workItems) {
                 LOG.info("Executing {} neuron operations", workItems.size());
-                for (TmNeuronMetadata neuron : workItems) {
+                for (ThrowingLambda lambda : workItems) {
                     try {
-                        tmDomainMgr.updateNeuron(neuron);
+                        lambda.accept();
                     }
                     catch (Exception e) {
-                        FrameworkAccess.handleException("Error saving neuron", e);
+                        FrameworkAccess.handleException("Error executing neuron operation", e);
                     }
                 }
             }
@@ -86,24 +92,57 @@ class NeuronModelAdapter {
         }
     }
 
-    TmNeuronMetadata createNeuron(TmNeuronMetadata neuron) throws Exception {
-        return tmDomainMgr.createNeuron(neuron);
-    }
-
-    void saveNeuron(TmNeuronMetadata neuron) throws Exception {
+    CompletableFuture<TmNeuronMetadata> createNeuronAsync(TmNeuronMetadata neuron) throws Exception {
+        CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
         if (USE_NEURON_WORK_QUEUE) {
-            neuronPersistQueue.addWorkItem(neuron);
+            neuronPersistQueue.addWorkItem(() -> {
+                future.complete(tmDomainMgr.createNeuron(neuron));
+            });
         }
         else {
-            tmDomainMgr.updateNeuron(neuron);
+            future.complete(tmDomainMgr.createNeuron(neuron));
         }
+        return future;
     }
 
-    TmNeuronMetadata changeOwnership(TmNeuronMetadata neuron, String targetUser) throws Exception {
-        return tmDomainMgr.changeOwnership(neuron, targetUser);
+    CompletableFuture<TmNeuronMetadata> saveNeuron(TmNeuronMetadata neuron) throws Exception {
+        CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
+        if (USE_NEURON_WORK_QUEUE) {
+            neuronPersistQueue.addWorkItem(() -> {
+                future.complete(tmDomainMgr.updateNeuron(neuron));
+            });
+        }
+        else {
+            future.complete(tmDomainMgr.updateNeuron(neuron));
+        }
+        return future;
     }
 
-    void removeNeuron(TmNeuronMetadata neuron) throws Exception {
-        tmDomainMgr.removeNeuron(neuron);
+    CompletableFuture<TmNeuronMetadata> changeOwnership(TmNeuronMetadata neuron, String targetOwner) throws Exception {
+        CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
+        if (USE_NEURON_WORK_QUEUE) {
+            neuronPersistQueue.addWorkItem(() -> {
+                future.complete(tmDomainMgr.changeOwnership(neuron, targetOwner));
+            });
+        }
+        else {
+            future.complete(tmDomainMgr.changeOwnership(neuron, targetOwner));
+        }
+        return future;
+    }
+
+    CompletableFuture<TmNeuronMetadata> removeNeuron(TmNeuronMetadata neuron) throws Exception {
+        CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
+        if (USE_NEURON_WORK_QUEUE) {
+            neuronPersistQueue.addWorkItem(() -> {
+                tmDomainMgr.removeNeuron(neuron);
+                future.complete(neuron);
+            });
+        }
+        else {
+            tmDomainMgr.removeNeuron(neuron);
+            future.complete(neuron);
+        }
+        return future;
     }
 }
