@@ -216,7 +216,7 @@ public class RefreshHandler implements MessageHandler {
                 }
             }
 
-            log.info("Processed headers for workspace Id {}", workspace);
+            log.debug("Processed headers for workspace Id {}", workspace);
             // if not this workspace or user isn't looking at a workspace right now or workspace not relating to a workspace update, filter out message
 
             log.debug("PRE-WORKSPACE TIME: {}", stopWatch.getElapsedTime());

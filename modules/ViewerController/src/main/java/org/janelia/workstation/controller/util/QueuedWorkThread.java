@@ -19,11 +19,11 @@ public abstract class QueuedWorkThread extends Thread {
 
     /** Introduce some artificial latency for each item, for testing purposes */
     private static final int ARTIFICIAL_LATENCY = 2000;
-    private final BlockingQueue<ThrowingLambda> queue;
-    private final Queue<ThrowingLambda> deque = new ArrayDeque<>();
+    private final BlockingQueue<Runnable> queue;
+    private final Queue<Runnable> deque = new ArrayDeque<>();
     private final int batchSize;
 
-    public QueuedWorkThread(BlockingQueue<ThrowingLambda> queue, int batchSize) {
+    public QueuedWorkThread(BlockingQueue<Runnable> queue, int batchSize) {
         this.queue = queue;
         this.batchSize = batchSize;
         setDaemon(true);
@@ -42,10 +42,10 @@ public abstract class QueuedWorkThread extends Thread {
                 }
             }
             log.info("Processing {} work items", deque.size());
-            ThrowingLambda runnable;
+            Runnable runnable;
             while ((runnable = deque.poll()) != null) {
                 try {
-                    runnable.accept();
+                    runnable.run();
                     if (ARTIFICIAL_LATENCY > 0) {
                         Thread.sleep(ARTIFICIAL_LATENCY);
                     }

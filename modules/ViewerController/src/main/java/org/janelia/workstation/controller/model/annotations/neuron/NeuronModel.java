@@ -153,14 +153,15 @@ public class NeuronModel {
         return annotation;
     }
 
-    public void deleteNeuron(TmWorkspace tmWorkspace, TmNeuronMetadata tmNeuronMetadata) throws Exception {
+    public CompletableFuture<TmNeuronMetadata> deleteNeuron(TmWorkspace tmWorkspace, TmNeuronMetadata tmNeuronMetadata) {
         TmNeuronMetadata oldValue = removeNeuron(tmNeuronMetadata);
         if (oldValue!=null) {
             // Need to signal to DB that this entitydata must be deleted.
-            neuronModelAdapter.removeNeuron(tmNeuronMetadata);
+            return neuronModelAdapter.removeNeuron(tmNeuronMetadata);
         }
         else {
             LOG.warn("Attempted to remove neuron {} that was not in workspace {}.", tmNeuronMetadata.getId(), tmWorkspace.getId());
+            return CompletableFuture.completedFuture(null);
         }
     }
 
@@ -321,9 +322,9 @@ public class NeuronModel {
      * ownership change request; this version expects to happen immediately (user already
      * has authority to change the owner (they own it or it's a common neuron)
      */
-    public void changeOwnership(TmNeuronMetadata neuron, String userKey) throws Exception {
+    public CompletableFuture<TmNeuronMetadata> changeOwnership(TmNeuronMetadata neuron, String userKey) throws Exception {
         saveHistoricalNeuron(neuron);
-        neuronModelAdapter.changeOwnership(neuron, userKey);
+        return neuronModelAdapter.changeOwnership(neuron, userKey);
     }
 
     /**
@@ -404,7 +405,9 @@ public class NeuronModel {
 
     public void saveNeuronData(TmNeuronMetadata neuron) throws Exception {
         saveHistoricalNeuron(neuron);
-        neuronModelAdapter.saveNeuron(neuron);
+        // TODO: for now this is a synchronous method that waits for the data access to complete,
+        //       but we should take full advantage of futures here
+        neuronModelAdapter.saveNeuron(neuron).get();
     }
 
     private void saveHistoricalNeuron(TmNeuronMetadata neuron) throws JsonProcessingException {
@@ -419,7 +422,7 @@ public class NeuronModel {
         TmModelManager.getInstance().getNeuronHistory().addHistoricalEvent(event);
     }
 
-    public void restoreNeuronFromHistory(TmNeuronMetadata neuron) throws Exception {
+    public CompletableFuture<TmNeuronMetadata> restoreNeuronFromHistory(TmNeuronMetadata neuron) throws Exception {
 
         // restore from history
         TmNeuronMetadata oldNeuron = neuronMap.get(neuron.getId());
@@ -427,7 +430,7 @@ public class NeuronModel {
         oldNeuron.setColor(neuron.getColor());
         oldNeuron.setName(neuron.getName());
 
-        neuronModelAdapter.saveNeuron(neuron);
+        return neuronModelAdapter.saveNeuron(neuron);
     }
 
     public void refreshNeuronFromShared (TmNeuronMetadata neuron) throws Exception {

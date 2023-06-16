@@ -436,26 +436,28 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public synchronized void changeNeuronOwner(List<TmNeuronMetadata> neuronList, Subject newOwner) throws Exception {
         for (TmNeuronMetadata neuron : neuronList) {
 
-            // some issues with this; need to isolate why serialization wipes out neuron IDs
-            getNeuronModel().changeOwnership(neuron, newOwner.getKey());
-
-            // it's now safe to change local object
+            // Update the UI first
             String targetUser = newOwner.getKey();
             neuron.setOwnerKey(targetUser);
             neuron.getReaders().add(targetUser);
             neuron.getWriters().add(targetUser);
-
-            // if filter, find new fragments that might be affected
             fireNeuronChanged(neuron);
 
-            log.info("Neuron " + neuron.getName() + " owner changed to  " + newOwner.getKey());
+            // Now update the database
+            neuronModel.changeOwnership(neuron, newOwner.getKey()).thenApply((updatedNeuron) -> {
+                log.info("Neuron " + updatedNeuron.getName() + " owner changed to  " + newOwner.getKey());
+                return updatedNeuron;
+            }).exceptionally((e) -> {
+                FrameworkAccess.handleException(e);
+                // TODO: rollback the UI updates
+                return null;
+            });
         }
     }
 
     public synchronized void deleteCurrentNeuron() {
         try {
             TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
-
             if (currentNeuron == null) {
                 return;
             }
@@ -466,22 +468,24 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public synchronized void deleteNeuron(final TmNeuronMetadata deletedNeuron) {
-        SwingUtilities.invokeLater(() -> {
-            try {
-                neuronModel.deleteNeuron(currentWorkspace, deletedNeuron);
-                log.info("Neuron was deleted: "+deletedNeuron);
 
-                // if filter, add and remove fragments as necessary
-                if (applyFilter) {
-                    NeuronUpdates updates = neuronFilter.deleteNeuron(deletedNeuron);
-                    updateFrags(updates);
-                }
+        // Update the UI first
+        if (applyFilter) {
+            // if filter, add and remove fragments as necessary
+            NeuronUpdates updates = neuronFilter.deleteNeuron(deletedNeuron);
+            updateFrags(updates);
+        }
+        fireClearSelections();
+        fireNeuronDeleted(deletedNeuron);
 
-                fireClearSelections();
-                fireNeuronDeleted(deletedNeuron);
-            } catch (Exception e) {
-                FrameworkAccess.handleException(e);
-            }
+        // Now update the database
+        neuronModel.deleteNeuron(currentWorkspace, deletedNeuron).thenApply((neuron) -> {
+            log.info("Neuron '{}' ({}) was deleted", neuron.getName(), neuron.getId());
+            return neuron;
+        }).exceptionally((e) -> {
+            FrameworkAccess.handleException(e);
+            // TODO: rollback the UI updates
+            return null;
         });
     }
 
@@ -756,7 +760,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                     currNeuron.getGeoAnnotationMap().values(), null);
             ViewerEventBus.postEvent(deleteAnnEvent);
 
-            neuronModel.restoreNeuronFromHistory(restoredNeuron);
+            neuronModel.restoreNeuronFromHistory(restoredNeuron).get();
             fireNeuronChanged(restoredNeuron);
             if (applyFilter) {
                 NeuronUpdates updates = neuronFilter.updateNeuron(restoredNeuron);
@@ -807,14 +811,11 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             throw e;
         }
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireAnnotationRadiusUpdated(annotation);
-                if (applyFilter) {
-                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
-                    updateFrags(updates);
-                }
+        SwingUtilities.invokeLater(() -> {
+            fireAnnotationRadiusUpdated(annotation);
+            if (applyFilter) {
+                NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                updateFrags(updates);
             }
         });
 
@@ -866,14 +867,11 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             throw e;
         }
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireNeuronRadiusUpdated(neuron);
-                if (applyFilter) {
-                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
-                    updateFrags(updates);
-                }
+        SwingUtilities.invokeLater(() -> {
+            fireNeuronRadiusUpdated(neuron);
+            if (applyFilter) {
+                NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                updateFrags(updates);
             }
         });
 
@@ -971,7 +969,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         // If source neuron is now empty, delete it, otherwise save it.
         final boolean sourceDeleted = sourceNeuron.getGeoAnnotationMap().isEmpty();
         if (sourceDeleted) {
-            neuronModel.deleteNeuron(currentWorkspace, sourceNeuron);
+            neuronModel.deleteNeuron(currentWorkspace, sourceNeuron).get();
             if (applyFilter) {
                 NeuronUpdates updates = neuronFilter.deleteNeuron(sourceNeuron);
                 updateFrags(updates);
@@ -1956,9 +1954,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             return;
         }
 
-
         // Next write one file containing all neurons, if there are more than one.
-        if (swcDatas != null  &&  swcDatas.size() > 1) {
+        if (swcDatas.size() > 1) {
             SWCData swcData = getSwcDataConverter().fromAllTmNeuron(neuronList, downsampleModulo);
             if (swcData != null) {
                 swcData.write(swcFile);

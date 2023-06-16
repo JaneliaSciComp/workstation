@@ -5,23 +5,26 @@ import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.controller.util.QueuedWorkThread;
-import org.janelia.workstation.controller.util.ThrowingLambda;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.*;
 import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 /**
  * Implementation of the model adapter, which pulls/pushes data through
  * the TiledMicroscopeDomainMgr.
- * <p>
+ *
  * When invoked to fetch exchange neurons, this implementation will do so
  * by way of the model manager.  It adapts the model manipulator for
- * client-side use.  Not intended to be used from multiple threads, which are
- * feeding different workspaces.
+ * client-side use.
+ *
+ * The behavior of this class depends on the "UseNeuronQueue" option that is configurable by the user. If this
+ * option is enabled, then all actions are asynchronous (managed by a local queue that serializes operations).
+ * Otherwise, actions are taken synchronously.
  *
  * @author fosterl
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
@@ -35,9 +38,11 @@ class NeuronModelAdapter {
     private static final boolean USE_NEURON_WORK_QUEUE = ApplicationPanel.isUseNeuronQueue();
     // How many neurons to process every interval
     private static final int MAX_BATCH_SIZE = 1000;
+    // Alert user if queue grows larger than
+    private static final int ALERT_QUEUE_SIZE = 10;
 
     private final TiledMicroscopeDomainMgr tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-    private final BlockingQueue<ThrowingLambda> neuronPersistQueue;
+    private final BlockingQueue<Runnable> neuronPersistQueue;
     private final QueuedWorkThread workThread;
 
     public NeuronModelAdapter() {
@@ -50,7 +55,7 @@ class NeuronModelAdapter {
         workThread.start();
     }
 
-    Stream<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) {
+    public Stream<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) {
         LOG.info("Loading neurons for workspace: {}", workspace);
         StopWatch stopWatch = new StopWatch();
         try {
@@ -67,56 +72,65 @@ class NeuronModelAdapter {
         }
     }
 
-    CompletableFuture<TmNeuronMetadata> createNeuronAsync(TmNeuronMetadata neuron) throws Exception {
+    public CompletableFuture<TmNeuronMetadata> createNeuronAsync(TmNeuronMetadata neuron) {
+        Callable<TmNeuronMetadata> action = () -> tmDomainMgr.createNeuron(neuron);
+        return USE_NEURON_WORK_QUEUE ? getFuture(action) : getPresent(action);
+    }
+
+    public CompletableFuture<TmNeuronMetadata> saveNeuron(TmNeuronMetadata neuron) {
+        Callable<TmNeuronMetadata> action = () -> tmDomainMgr.updateNeuron(neuron);
+        return USE_NEURON_WORK_QUEUE ? getFuture(action) : getPresent(action);
+    }
+
+    public CompletableFuture<TmNeuronMetadata> changeOwnership(TmNeuronMetadata neuron, String targetOwner) {
+        Callable<TmNeuronMetadata> action = () -> tmDomainMgr.changeOwnership(neuron, targetOwner);
+        return USE_NEURON_WORK_QUEUE ? getFuture(action) : getPresent(action);
+    }
+
+    public CompletableFuture<TmNeuronMetadata> removeNeuron(TmNeuronMetadata neuron) {
+        Callable<TmNeuronMetadata> action = () -> tmDomainMgr.removeNeuron(neuron);
+        return USE_NEURON_WORK_QUEUE ? getFuture(action) : getPresent(action);
+    }
+
+    /**
+     * Call the given producer synchronously and return a completed CompletebleFuture.
+     * This is here so that the interface of the methods looks the same whether or not
+     * we use futures.
+     * @param producer a lambda that produces a neuron
+     * @return the future neuron
+     */
+    private CompletableFuture<TmNeuronMetadata> getPresent(Callable<TmNeuronMetadata> producer) {
         CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
-        if (USE_NEURON_WORK_QUEUE) {
-            neuronPersistQueue.add(() -> {
-                future.complete(tmDomainMgr.createNeuron(neuron));
-            });
-        }
-        else {
-            future.complete(tmDomainMgr.createNeuron(neuron));
+        try {
+            TmNeuronMetadata updatedNeuron = producer.call();
+            future.complete(updatedNeuron);
+        } catch (Throwable t) {
+            future.completeExceptionally(t);
         }
         return future;
     }
 
-    CompletableFuture<TmNeuronMetadata> saveNeuron(TmNeuronMetadata neuron) throws Exception {
+    /**
+     * Add the given producer to the work queue and return a future value.
+     * @param producer lambda that produces a neuron
+     * @return the future neuron
+     */
+    private CompletableFuture<TmNeuronMetadata> getFuture(Callable<TmNeuronMetadata> producer) {
         CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
-        if (USE_NEURON_WORK_QUEUE) {
-            neuronPersistQueue.add(() -> {
-                future.complete(tmDomainMgr.updateNeuron(neuron));
-            });
-        }
-        else {
-            future.complete(tmDomainMgr.updateNeuron(neuron));
-        }
-        return future;
-    }
-
-    CompletableFuture<TmNeuronMetadata> changeOwnership(TmNeuronMetadata neuron, String targetOwner) throws Exception {
-        CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
-        if (USE_NEURON_WORK_QUEUE) {
-            neuronPersistQueue.add(() -> {
-                future.complete(tmDomainMgr.changeOwnership(neuron, targetOwner));
-            });
-        }
-        else {
-            future.complete(tmDomainMgr.changeOwnership(neuron, targetOwner));
-        }
-        return future;
-    }
-
-    CompletableFuture<TmNeuronMetadata> removeNeuron(TmNeuronMetadata neuron) throws Exception {
-        CompletableFuture<TmNeuronMetadata> future = new CompletableFuture<>();
-        if (USE_NEURON_WORK_QUEUE) {
-            neuronPersistQueue.add(() -> {
-                tmDomainMgr.removeNeuron(neuron);
-                future.complete(neuron);
-            });
-        }
-        else {
-            tmDomainMgr.removeNeuron(neuron);
-            future.complete(neuron);
+        neuronPersistQueue.add(() -> {
+            try {
+                TmNeuronMetadata updatedNeuron = producer.call();
+                future.complete(updatedNeuron);
+            } catch (Throwable t) {
+                future.completeExceptionally(t);
+            }
+        });
+        if (neuronPersistQueue.size() > ALERT_QUEUE_SIZE) {
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                    "The system is currently having trouble saving your changes. " +
+                            "There are "+neuronPersistQueue.size()+" actions in the queue.",
+                    "Persistence issues detected",
+                    JOptionPane.INFORMATION_MESSAGE);
         }
         return future;
     }

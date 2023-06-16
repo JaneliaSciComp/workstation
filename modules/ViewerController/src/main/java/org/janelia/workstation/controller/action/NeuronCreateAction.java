@@ -2,6 +2,7 @@ package org.janelia.workstation.controller.action;
 
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.concurrent.CompletionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,28 +56,29 @@ public class NeuronCreateAction extends EditAction {
         if (neuronName != null) {
             // create it:
             SimpleWorker creator = new SimpleWorker() {
-                TmNeuronMetadata newNeuron;
                 @Override
                 protected void doStuff() throws Exception {
-                    newNeuron = NeuronManager.getInstance().createNeuron(neuronName).get();
+                    NeuronManager.getInstance().createNeuron(neuronName).thenApply((newNeuron -> {
+                        try {
+                            if (createInitVertex) {
+                                NeuronManager.getInstance().addRootAnnotation(newNeuron, vertexLoc);
+                            }
+                        } catch (Exception e) {
+                            throw new CompletionException(e);
+                        }
+                        return newNeuron;
+                    })).exceptionally((t) -> {
+                        hadError(t);
+                        return null;
+                    });
                 }
-
                 @Override
                 protected void hadSuccess() {
-                    try {
-                        if (createInitVertex) {
-                            TmGeoAnnotation newAnn = NeuronManager.getInstance().addRootAnnotation(newNeuron, vertexLoc);
-                        }
-                    } catch (Exception e) {
-                        FrameworkAccess.handleException(new Exception( "Could not create neuron",
-                                error));
-                    }
                 }
 
                 @Override
-                protected void hadError(Throwable error) {
-                    FrameworkAccess.handleException(new Exception( "Could not create neuron",
-                            error));
+                protected void hadError(Throwable t) {
+                    FrameworkAccess.handleException("Could not create neuron", t);
                 }
             };
             creator.execute();

@@ -60,7 +60,6 @@ public class Startup implements Runnable {
          *       ALL
          */
         System.setProperty("org.janelia.level", "INFO");
-        System.setProperty("org.janelia.controller.level", "DEBUG");
 
         /*
          * Reduce logging level for this class to avoid WARNING spam about null popups from node actions.
@@ -128,7 +127,6 @@ public class Startup implements Runnable {
             DomainMgr.getDomainMgr();
             AccessManager.getAccessManager();
             SessionMgr.getSessionMgr();
-
         }
         catch (Throwable e) {
             FrameworkAccess.handleException(e);
