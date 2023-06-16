@@ -156,6 +156,8 @@ public class HortaManager {
             renderer.clearNeuronReconstructions();
 
             if (TmModelManager.getInstance().getCurrentWorkspace() != null) {
+                workspace = TmModelManager.getInstance().getCurrentWorkspace();
+                guiManager.setDefaultWorkspace(workspace);
                 for (TmNeuronMetadata neuron : NeuronManager.getInstance().getNeuronList()) {
                     renderer.addNeuronActors(neuron);
                 }
