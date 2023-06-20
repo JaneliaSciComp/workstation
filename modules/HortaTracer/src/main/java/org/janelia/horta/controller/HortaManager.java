@@ -143,6 +143,7 @@ public class HortaManager {
             for (MeshActor meshActor: meshActorList) {
                 renderer.removeMeshActor(meshActor);
             }
+            guiManager.createContext().clearParent();
             topComponent.redrawNow();
         } catch (Exception e) {
             FrameworkAccess.handleException(e);

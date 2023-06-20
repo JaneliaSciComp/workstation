@@ -3,4 +3,5 @@
 Horta
 * Fixed issue with hidden neurons reappearing
 * Added "Show other neurons" feature to neuron right-click menu and neuron gear menu
+* Fixed issue with right-clicking in 3d view giving error in second workspace opened
 
