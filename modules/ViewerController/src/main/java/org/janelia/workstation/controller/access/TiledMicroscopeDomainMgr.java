@@ -1,14 +1,5 @@
 package org.janelia.workstation.controller.access;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveTask;
-import java.util.stream.Stream;
-
 import com.google.common.eventbus.Subscribe;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.model.domain.DomainConstants;
@@ -16,25 +7,21 @@ import org.janelia.model.domain.DomainObjectComparator;
 import org.janelia.model.domain.DomainUtils;
 import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.domain.workspace.TreeNode;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
-import org.janelia.workstation.core.api.facade.impl.rest.*;
-import org.janelia.workstation.core.api.web.AuthServiceClient;
-import org.janelia.workstation.core.api.web.SageRestClient;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
-import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
+import java.util.stream.Stream;
 
 /**
  * Singleton for managing the Tiled Microscope Domain Model and related data access.
@@ -42,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
 public class TiledMicroscopeDomainMgr {
-    private final int NUM_PARALLEL_NEURONSTREAMS = 4;
+    private static final int NUM_PARALLEL_NEURONSTREAMS = 4;
     private static final Logger LOG = LoggerFactory.getLogger(TiledMicroscopeDomainMgr.class);
 
     // Singleton
@@ -270,7 +257,7 @@ public class TiledMicroscopeDomainMgr {
     public TmNeuronMetadata createWithId(TmNeuronMetadata neuronMetadata) throws Exception {
         LOG.debug("save({})", neuronMetadata);
         TmNeuronMetadata savedMetadata;
-        savedMetadata = client.create(neuronMetadata);
+        savedMetadata = client.createNeuron(neuronMetadata);
         getModel().notifyDomainObjectCreated(savedMetadata);
         return savedMetadata;
     }

@@ -522,38 +522,37 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * @param name = name of neuron
      * @throws Exception
      */
-    public CompletableFuture<TmNeuronMetadata> createNeuronInternal(String name) throws Exception {
+    private CompletableFuture<TmNeuronMetadata> createNeuronInternal(String name) throws Exception {
 
         TmNeuronMetadata newNeuron = new TmNeuronMetadata();
-        newNeuron.setOwnerKey(AccessManager.getSubjectKey());
-        final TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
-        newNeuron.setWorkspaceRef(Reference.createFor(TmWorkspace.class, workspace.getId()));
         newNeuron.setName(name);
+        newNeuron.setWorkspaceRef(Reference.createFor(TmModelManager.getInstance().getCurrentWorkspace()));
+        newNeuron.setOwnerKey(AccessManager.getSubjectKey());
         newNeuron.getReaders().add(TRACERS_GROUP);
 
         return neuronModel.createNeuron(newNeuron).thenApply((neuron) -> {
-
             neuron.setColor(neuronColors[(int) (neuron.getId() % neuronColors.length)]);
-            neuronModel.addNeuron(neuron);
-
-            // Update local workspace
             log.info("Neuron was created: "+neuron);
-            setCurrentNeuron(neuron);
-
+            SwingUtilities.invokeLater(() -> {
+                neuronModel.addNeuron(neuron);
+                setCurrentNeuron(neuron);
+            });
             return neuron;
         });
     }
 
     public CompletableFuture<TmNeuronMetadata> createNeuron(String name) throws Exception {
         return createNeuronInternal(name).thenApply((neuron) -> {
-            // if filter, find new fragments that might be affected
-            if (applyFilter) {
-                NeuronUpdates updates = neuronFilter.addNeuron(neuron);
-                updateFrags(updates);
-            }
+            SwingUtilities.invokeLater(() -> {
+                // if filter, find new fragments that might be affected
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.addNeuron(neuron);
+                    updateFrags(updates);
+                }
 
-            fireNeuronCreated(neuron);
-            fireNeuronSelected(neuron);
+                fireNeuronCreated(neuron);
+                fireNeuronSelected(neuron);
+            });
             return neuron;
         });
     }

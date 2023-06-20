@@ -1,6 +1,5 @@
 package org.janelia.workstation.controller.util;
 
-import org.janelia.workstation.core.options.ApplicationOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,14 +10,12 @@ import java.util.concurrent.BlockingQueue;
 
 /**
  * Background daemon thread that continuously processes work from
- * a queue and executes them.
+ * a queue and executes them. This thread runs forever after being started.
  */
 public abstract class QueuedWorkThread extends Thread {
 
     private static final Logger log = LoggerFactory.getLogger(QueuedWorkThread.class);
 
-    /** Introduce some artificial latency for each item, for testing purposes */
-    private static final int ARTIFICIAL_LATENCY = 2000;
     private final BlockingQueue<Runnable> queue;
     private final Queue<Runnable> deque = new ArrayDeque<>();
     private final int batchSize;
@@ -46,9 +43,8 @@ public abstract class QueuedWorkThread extends Thread {
             while ((runnable = deque.poll()) != null) {
                 try {
                     runnable.run();
-                    if (ARTIFICIAL_LATENCY > 0) {
-                        Thread.sleep(ARTIFICIAL_LATENCY);
-                    }
+                    // Introduce some artificial latency for each item, for testing purposes
+                    // Thread.sleep(2000);
                 }
                 catch (Exception e) {
                     handleException(e);
