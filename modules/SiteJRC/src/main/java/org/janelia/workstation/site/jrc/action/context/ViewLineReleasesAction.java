@@ -1,7 +1,5 @@
 package org.janelia.workstation.site.jrc.action.context;
 
-import org.janelia.model.domain.AbstractDomainObject;
-import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.sample.LineRelease;
 import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.common.actions.BaseContextualPopupAction;
@@ -20,9 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @ActionID(
         category = "actions",
