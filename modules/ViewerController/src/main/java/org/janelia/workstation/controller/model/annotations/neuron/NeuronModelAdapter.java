@@ -62,7 +62,7 @@ class NeuronModelAdapter {
             return tmDomainMgr.streamWorkspaceNeurons(workspace.getId())
                     .limit(MAX_NEURONS)
                     .map(neuron -> {
-                        // make sure to initialize cross references
+                        // make sure to initialize cross-references
                         neuron.initNeuronData();
                         return neuron;
                     })

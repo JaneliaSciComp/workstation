@@ -146,11 +146,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                         tip = neuronMetadata.getOwnerName();
                     } else if (realColumnIndex == NeuronTableModel.COLUMN_COLOR) {
                         Color color = neuronMetadata.getColor();
-                        if (color == null) {
-                            // get the default if there isn't a stored user-chosen color
-                            //color = annotationModel.getNeuronStyle(neuronMetadata).getColor();
+                        if (color != null) {
+                            tip = "RGB value: " + color.getRed() + ", " + color.getGreen() + ", " + color.getBlue();
                         }
-                        tip = "RGB value: " + color.getRed() + ", " + color.getGreen() + ", " + color.getBlue();
                     }
                     return tip;
                 } else {
