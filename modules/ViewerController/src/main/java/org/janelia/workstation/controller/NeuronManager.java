@@ -238,7 +238,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                         updates = neuronFilter.deleteNeuron(neuron);
                         break;
                     case NEURON_SAVE_NEURONDATA:
-                    case NEURON_OWNERSHIP_DECISION:
                         updates = neuronFilter.updateNeuron(neuron);
                         break;
                 }
