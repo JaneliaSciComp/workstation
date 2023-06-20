@@ -1,11 +1,10 @@
-// 9.13
-
-FlyLight
-* Changed "Apply publishing names" to use new SAGE end point which fetches better default names
-* Fixed issue with the "EM Data Sets" note in the Data Explorer
+// 9.14
 
 Horta
 * Fixed email error reporting so that it works in HortaCloud
 * Added "problem end" shortcut action; don't allow traced/problem end on non-ends
 * Option to start a workstation instance that does not expose the Login dialog
 * Do not allow users to create a neuron in a workspace in which they do not have write permissions
+* Fixed issue with hidden neurons reappearing
+* Added "Show other neurons" feature to neuron right-click menu and neuron gear menu
+* Fixed issue with right-clicking in 3d view giving error in second workspace opened

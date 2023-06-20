@@ -228,7 +228,8 @@ public class NeuronVbo implements Iterable<TmNeuronMetadata>
             return false; // we are going to redo everything anyway, so skip the surgical update
         int sv = neuron.getAnnotationCount();
         int se = neuron.getEdges().size();
-        boolean bIsVisible = neuron.isVisible();
+        TmViewState viewState = TmModelManager.getInstance().getCurrentView();
+        boolean bIsVisible = !viewState.isHidden(neuron.getId());
         float visFloat = bIsVisible ? 1.0f : 0.0f;
         boolean bChanged = false;
         // log.info("Updating neuron visibility to '{}'", bIsVisible);

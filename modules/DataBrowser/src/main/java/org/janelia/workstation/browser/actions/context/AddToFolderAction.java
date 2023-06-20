@@ -189,11 +189,9 @@ public class AddToFolderAction extends BaseContextualPopupAction {
                 final Long folderId = idPath[idPath.length-1];
                 
                 JMenuItem commonRootItem = new JMenuItem(recentFolder.getLabel());
-                commonRootItem.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent actionEvent) {
-                        ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
-                        addUniqueItemsToFolder(domainObjects, folderId, idPath, success);
-                    }
+                commonRootItem.addActionListener(actionEvent -> {
+                    ActivityLogHelper.logUserAction("AddToFolderAction.recentFolder", folderId);
+                    addUniqueItemsToFolder(domainObjects, folderId, idPath, success);
                 });
 
                 items.add(commonRootItem);

@@ -82,6 +82,7 @@ public class AnnotationPanel extends JPanel
 
     private AbstractAction showAllNeuronsAction;
     private AbstractAction hideAllNeuronsAction;
+    private AbstractAction showOtherNeuronsAction;
     private AbstractAction hideOtherNeuronsAction;
     private AbstractAction bulkChangeNeuronStyleAction;
     private AbstractAction bulkNeuronTagAction;
@@ -394,6 +395,21 @@ public class AnnotationPanel extends JPanel
         };
         neuronToolMenu.add(hideAllNeuronsAction);
         
+        showOtherNeuronsAction = new AbstractAction("Show other neurons") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                java.util.List<TmNeuronMetadata> shownNeurons = new ArrayList<>();
+                for (TmNeuronMetadata neuron: workspaceNeuronList.getUnshownNeuronList()) {
+                    TmModelManager.getInstance().getCurrentView().removeAnnotationFromHidden(neuron.getId());
+                    shownNeurons.add(neuron);
+                }
+                NeuronUpdateEvent event = new NeuronUpdateEvent(this,
+                        shownNeurons);
+                ViewerEventBus.postEvent(event);
+            }
+        };
+        neuronToolMenu.add(showOtherNeuronsAction);
+
         hideOtherNeuronsAction = new AbstractAction("Hide other neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {

@@ -75,13 +75,16 @@ public abstract class AbstractDomainObjectNode<T extends DomainObject>
         if (domainObject==null) throw new IllegalStateException("Cannot update with null object");
         String oldName = getName();
         String oldDisplayName = getDisplayName();
-        log.debug("Updating node with: {}",domainObject.getName());
+        log.info("Updating node for object: {}",domainObject);
         lookupContents.remove(getDomainObject());
         lookupContents.add(domainObject);
         fireCookieChange();
         fireNameChange(oldName, getName());
-        log.debug("Display name changed {} -> {}",oldDisplayName, getDisplayName());
-        fireDisplayNameChange(oldDisplayName, getDisplayName());
+        log.info("Name changed {} -> {}",oldName, getName());
+        log.info("Display name changed {} -> {}",oldDisplayName, getDisplayName());
+        // When the same object is reused, the oldDisplayName is already correct, so this won't do anything.
+        // Instead, we use the name as the prior display name, so there is always an update.
+        fireDisplayNameChange(getName(), getDisplayName());
     }
 
     public ChildFactory<?> getParentChildFactory() {

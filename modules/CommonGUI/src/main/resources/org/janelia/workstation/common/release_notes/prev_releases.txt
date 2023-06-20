@@ -1,3 +1,13 @@
+// 9.13
+
+FlyLight
+* Changed "Apply publishing names" to use new SAGE end point which fetches better default names
+* Fixed issue with the "EM Data Sets" note in the Data Explorer
+
+Horta
+* Fixed email error reporting so that it works in HortaCloud
+* Added "problem end" shortcut action; don't allow traced/problem end on non-ends
+
 // 9.12
 
 Horta
