@@ -43,14 +43,16 @@ public abstract class QueuedWorkThread extends Thread {
             while ((runnable = deque.poll()) != null) {
                 try {
                     runnable.run();
-                    // Introduce some artificial latency for each item, for testing purposes
-                    // Thread.sleep(2000);
                 }
                 catch (Exception e) {
                     handleException(e);
                 }
             }
+            notifyBatchCompleted();
         }
+    }
+
+    protected void notifyBatchCompleted() {
     }
 
     public abstract void handleException(Throwable e);

@@ -156,6 +156,11 @@ public class PanelController {
     }
 
     @Subscribe
+    public void neuronQueueChanged(NeuronQueueChangeEvent event) {
+        wsNeuronList.updateNeuronLabel();
+    }
+
+    @Subscribe
     public void vertexSelected(SelectionAnnotationEvent selectionEvent) {
         List<TmGeoAnnotation> vertices = (List<TmGeoAnnotation>)selectionEvent.getItems();
 

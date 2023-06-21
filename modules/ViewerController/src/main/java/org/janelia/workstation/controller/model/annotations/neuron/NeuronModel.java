@@ -476,4 +476,7 @@ public class NeuronModel {
         neuron.getStructuredTextAnnotationMap().put(annotation.getParentId(), annotation);
     }
 
+    public int getPendingOperations() {
+        return neuronModelAdapter.getPendingOperations();
+    }
 }

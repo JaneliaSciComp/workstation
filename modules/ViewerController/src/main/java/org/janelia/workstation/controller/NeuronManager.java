@@ -2504,6 +2504,10 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         }
     }
 
+    public int getNumPendingNeuronOperations() {
+        return neuronModel.getPendingOperations();
+    }
+
     /**
      * given a workspace, return a new generic neuron name (probably something
      * like "New neuron 12", where the integer is based on whatever similarly

@@ -2,7 +2,9 @@ package org.janelia.workstation.controller.model.annotations.neuron;
 
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
+import org.janelia.workstation.controller.eventbus.NeuronQueueChangeEvent;
 import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.controller.util.QueuedWorkThread;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -48,8 +50,13 @@ class NeuronModelAdapter {
     public NeuronModelAdapter() {
         this.neuronPersistQueue = new ArrayBlockingQueue<>(MAX_BATCH_SIZE);
         this.workThread = new QueuedWorkThread(neuronPersistQueue, MAX_BATCH_SIZE) {
+            @Override
             public void handleException(Throwable e) {
                 FrameworkAccess.handleException(e);
+            }
+            @Override
+            protected void notifyBatchCompleted() {
+                ViewerEventBus.postEvent(new NeuronQueueChangeEvent());
             }
         };
         workThread.start();
@@ -125,6 +132,7 @@ class NeuronModelAdapter {
                 future.completeExceptionally(t);
             }
         });
+        ViewerEventBus.postEvent(new NeuronQueueChangeEvent());
         if (neuronPersistQueue.size() > ALERT_QUEUE_SIZE) {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                     "The system is currently having trouble saving your changes. " +
@@ -133,5 +141,9 @@ class NeuronModelAdapter {
                     JOptionPane.INFORMATION_MESSAGE);
         }
         return future;
+    }
+
+    public int getPendingOperations() {
+        return neuronPersistQueue.size();
     }
 }

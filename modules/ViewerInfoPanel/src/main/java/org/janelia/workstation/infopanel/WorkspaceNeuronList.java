@@ -9,7 +9,6 @@ import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.it.jacs.shared.utils.StringUtils;
-import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
@@ -24,7 +23,8 @@ import org.janelia.workstation.infopanel.action.NeuronListProvider;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-//import org.janelia.workstation.gui.large_volume_viewer.style.NeuronStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -61,6 +61,7 @@ import java.util.Set;
  */
 public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
+    private static final Logger log = LoggerFactory.getLogger(WorkspaceNeuronList.class);
     private JLabel neuronLabel;
     private JTable neuronTable;
     private NeuronTableModel neuronTableModel;
@@ -71,7 +72,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private JComboBox<String> tagMenu;
     private JLabel spatialFilterLabel = new JLabel("Disabled");
 
-    private NeuronManager annotationModel;
+    private NeuronManager neuronManager;
     private TmModelManager modelManager;
 
     // for preserving selection across operations
@@ -105,7 +106,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     private void setupUI() {
-        annotationModel = NeuronManager.getInstance();
+        neuronManager = NeuronManager.getInstance();
         modelManager = TmModelManager.getInstance();
         setLayout(new GridBagLayout());
 
@@ -124,7 +125,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
 
         // neuron table
         neuronTableModel = new NeuronTableModel();
-        neuronTableModel.setAnnotationModel(annotationModel);
+        neuronTableModel.setAnnotationModel(neuronManager);
         neuronTable = new JTable(neuronTableModel){
             // mostly taken from the Oracle tutorial
             public String getToolTipText(MouseEvent event) {
@@ -501,7 +502,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         String currentMode = (String) tagModeMenu.getSelectedItem();
         tagMenu.removeAllItems();
 
-        Set<String> tagSet = annotationModel.getAvailableNeuronTags();
+        Set<String> tagSet = neuronManager.getAvailableNeuronTags();
         String[] tagList = tagSet.toArray(new String[tagSet.size()]);
         Arrays.sort(tagList);
 
@@ -571,15 +572,22 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     }
 
     private void updateFilteredNeuronList() {
-        annotationModel.setCurrentFilteredNeuronList(this.getNeuronList());
+        neuronManager.setCurrentFilteredNeuronList(this.getNeuronList());
     }
 
-    private void updateNeuronLabel() {
+    public void updateNeuronLabel() {
         int showing = neuronTable.getRowCount();
         int loaded = neuronTableModel.getTotalNeuronCount();
-        int total = annotationModel.getNumTotalNeurons();
+        int total = neuronManager.getNumTotalNeurons();
+        int ops = neuronManager.getNumPendingNeuronOperations();
+        log.info("Updating label with {} ops", ops);
+        String pendingOps = ops>0 ?
+                (ops==1
+                    ? " - "+ops+" pending operation"
+                    : " - "+ops+" pending operations")
+                : "";
 
-        neuronLabel.setText(String.format("Neurons (%s/%s/%s)", showing, loaded, total));
+        neuronLabel.setText(String.format("Neurons (%s/%s/%s)%s", showing, loaded, total, pendingOps));
         neuronLabel.setToolTipText(String.format("%s in table/%s in memory/%s total", showing, loaded, total));
     }
 
@@ -728,7 +736,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private void updateModel(TmWorkspace workspace) {
         neuronTableModel.clear();
         if (workspace != null) {
-            neuronTableModel.addNeurons(annotationModel.getNeuronList());
+            neuronTableModel.addNeurons(neuronManager.getNeuronList());
         }
         updateNeuronLabel();
     }
