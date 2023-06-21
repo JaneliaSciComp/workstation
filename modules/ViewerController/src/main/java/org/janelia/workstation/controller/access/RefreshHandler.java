@@ -105,9 +105,10 @@ public class RefreshHandler implements MessageHandler {
                 log.warn("Encountered null message headers when handling refresh message");
                 return;
             }
-            // thead logging
-            log.debug("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
-            log.debug("Heap Size: {}", Runtime.getRuntime().totalMemory());
+
+            // thread logging
+            log.trace("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
+            log.trace("Heap Size: {}", Runtime.getRuntime().totalMemory());
 
             log.debug("message properties: TYPE={},USER={},WORKSPACE={}",
                     msgHeaders.get(NeuronMessageConstants.Headers.TYPE),
@@ -158,6 +159,7 @@ public class RefreshHandler implements MessageHandler {
                             break;
                         case NEURON_SAVE_NEURONDATA:
                             if (neuronManager.getNeuronModel().getNeuronById(neuron.getId())==null) {
+                                // We don't know about this neuron yet
                                 neuronManager.getNeuronModel().addNeuron(neuron);
                                 updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE);
                                 neuronManager.fireNeuronCreated(neuron);
@@ -180,7 +182,7 @@ public class RefreshHandler implements MessageHandler {
                 log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
             });
             stopWatch.stop();
-            log.info("RefreshHandler: handled message in {} ms", stopWatch.getElapsedTime());
+            log.debug("RefreshHandler: handled message in {} ms", stopWatch.getElapsedTime());
         } catch (Exception e) {
             FrameworkAccess.handleExceptionQuietly("Error handling refresh message: " + e.getMessage(), e);
         }

@@ -85,7 +85,7 @@ public class AnnotationSetRadiusAction extends AbstractAction {
             return;
         }
 
-        final Float finalRadius = radius;
+        final double finalRadius = radius;
         SimpleWorker setter = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {

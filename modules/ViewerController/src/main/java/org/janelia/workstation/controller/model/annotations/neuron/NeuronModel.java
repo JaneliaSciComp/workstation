@@ -161,7 +161,6 @@ public class NeuronModel {
             return neuronModelAdapter.removeNeuron(tmNeuronMetadata);
         }
         else {
-            LOG.warn("Attempted to remove neuron {} that was not in workspace {}.", tmNeuronMetadata.getId(), tmWorkspace.getId());
             return CompletableFuture.completedFuture(null);
         }
     }
@@ -316,7 +315,7 @@ public class NeuronModel {
     }
 
     public CompletableFuture<TmNeuronMetadata> createNeuron(TmNeuronMetadata neuron) throws Exception {
-        return neuronModelAdapter.createNeuronAsync(neuron);
+        return neuronModelAdapter.createNeuron(neuron);
     }
 
     /**
@@ -406,9 +405,6 @@ public class NeuronModel {
 
     public CompletableFuture<TmNeuronMetadata> saveNeuronData(TmNeuronMetadata neuron) throws Exception {
         saveHistoricalNeuron(neuron);
-        // TODO: for now this method fires off the save asynchronously and callers pretend like it happened
-        //       but we should take full advantage of futures in the callers. The callers should handle the
-        //       exceptions as well, since all we can do here is pop up an error.
         return neuronModelAdapter.saveNeuron(neuron).exceptionally((e) -> {
             FrameworkAccess.handleException(e);
             return null;

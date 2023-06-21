@@ -82,6 +82,24 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     private static final int NUMBER_FRAGMENTS_THRESHOLD = 1000;
     private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+
+    private static final Color[] neuronColors = {
+            Color.red,
+            Color.blue,
+            Color.green,
+            Color.magenta,
+            Color.cyan,
+            Color.yellow,
+            Color.white,
+            // I need more colors!  (1, 0.5, 0) and permutations:
+            new Color(1.0f, 0.5f, 0.0f),
+            new Color(0.0f, 0.5f, 1.0f),
+            new Color(0.0f, 1.0f, 0.5f),
+            new Color(1.0f, 0.0f, 0.5f),
+            new Color(0.5f, 0.0f, 1.0f),
+            new Color(0.5f, 1.0f, 0.0f)
+    };
+
     private final TiledMicroscopeDomainMgr tmDomainMgr;
     private SWCDataConverter swcDataConverter;
 
@@ -412,57 +430,57 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     /**
-     * rename the given neuron
+     * Rename the current neuron.
      */
-    public synchronized void renameCurrentNeuron(String name) throws Exception {
-        // rename whatever neuron was current at time of start of this call.
-        final TmNeuronMetadata neuron = TmSelectionState.getInstance().getCurrentNeuron();
-        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
-        neuron.setName(name);
-        this.neuronModel.saveNeuronData(neuron);
-        log.info("Neuron was renamed: "+neuron);
+    public synchronized void renameNeuron(TmNeuronMetadata neuron, String newName) throws Exception {
 
-        final TmWorkspace workspace = modelManager.getCurrentWorkspace();
-        SwingUtilities.invokeLater(() -> {
+        // Update the UI first
+        String originalName = neuron.getName();
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
+        neuron.setName(newName);
+        fireNeuronRenamed(neuron);
+
+        // Now update the database
+        neuronModel.saveNeuronData(neuron).thenApply((updatedNeuron) -> {
+            log.info("Neuron " + originalName + " renamed to  " + updatedNeuron.getName());
+            return updatedNeuron;
+        }).exceptionally((e) -> {
+            // Rollback the UI updates
+            neuron.setName(originalName);
             fireNeuronRenamed(neuron);
-            //activityLog.logRenameNeuron(workspace.getId(), neuron.getId());
+            return null;
         });
     }
 
     /**
-     * change the ownership of the input neuron
+     * Change the ownership of the input neurons.
      */
     public synchronized void changeNeuronOwner(List<TmNeuronMetadata> neuronList, Subject newOwner) throws Exception {
         for (TmNeuronMetadata neuron : neuronList) {
 
             // Update the UI first
+            String originalUser = neuron.getOwnerKey();
             String targetUser = newOwner.getKey();
             neuron.setOwnerKey(targetUser);
             neuron.getReaders().add(targetUser);
             neuron.getWriters().add(targetUser);
-            fireNeuronChanged(neuron);
+            fireNeuronsOwnerChanged(neuron);
 
             // Now update the database
-            neuronModel.changeOwnership(neuron, newOwner.getKey()).thenApply((updatedNeuron) -> {
-                log.info("Neuron " + updatedNeuron.getName() + " owner changed to  " + newOwner.getKey());
+            neuronModel.changeOwnership(neuron, targetUser).thenApply((updatedNeuron) -> {
+                log.info("Neuron " + updatedNeuron.getName() + " owner changed to  " + targetUser);
                 return updatedNeuron;
             }).exceptionally((e) -> {
                 FrameworkAccess.handleException(e);
-                // TODO: rollback the UI updates
+
+                // Rollback the UI updates
+                neuron.setOwnerKey(originalUser);
+                neuron.getReaders().add(originalUser);
+                neuron.getWriters().add(originalUser);
+                fireNeuronsOwnerChanged(neuron);
+
                 return null;
             });
-        }
-    }
-
-    public synchronized void deleteCurrentNeuron() {
-        try {
-            TmNeuronMetadata currentNeuron = TmSelectionState.getInstance().getCurrentNeuron();
-            if (currentNeuron == null) {
-                return;
-            }
-            deleteNeuron(currentNeuron);
-        } catch (Exception e) {
-            FrameworkAccess.handleException(e);
         }
     }
 
@@ -479,11 +497,15 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
         // Now update the database
         neuronModel.deleteNeuron(currentWorkspace, deletedNeuron).thenApply((neuron) -> {
-            log.info("Neuron '{}' ({}) was deleted", neuron.getName(), neuron.getId());
+            if (neuron != null) {
+                log.info("Neuron '{}' ({}) was deleted", neuron.getName(), neuron.getId());
+            }
+            else {
+                log.warn("Attempted to remove neuron {} that was not in workspace {}.", deletedNeuron.getId(), deletedNeuron.getWorkspaceId());
+            }
             return neuron;
         }).exceptionally((e) -> {
             FrameworkAccess.handleException(e);
-            // TODO: rollback the UI updates
             return null;
         });
     }
@@ -497,23 +519,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public synchronized TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
         return tmDomainMgr.createWorkspace(sampleId, name);
     }
-
-    private static Color[] neuronColors = {
-            Color.red,
-            Color.blue,
-            Color.green,
-            Color.magenta,
-            Color.cyan,
-            Color.yellow,
-            Color.white,
-            // I need more colors!  (1, 0.5, 0) and permutations:
-            new Color(1.0f, 0.5f, 0.0f),
-            new Color(0.0f, 0.5f, 1.0f),
-            new Color(0.0f, 1.0f, 0.5f),
-            new Color(1.0f, 0.0f, 0.5f),
-            new Color(0.5f, 0.0f, 1.0f),
-            new Color(0.5f, 1.0f, 0.0f)
-    };
 
     /**
      * create a neuron in the current workspace
@@ -679,66 +684,43 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             annotation.setZ(location.getZ());
         }
 
-        try {
-            // Update value in database.
-            synchronized(neuron) {
-                neuronModel.saveNeuronData(neuron);
-                NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(this,Arrays.asList(
-                        new TmNeuronMetadata[]{getNeuronFromNeuronID(neuron.getId())}));
-                TmModelManager.getInstance().getSpatialIndexManager().neuronUpdated(updateEvent);
-            }
+        // Update UI
+        SwingUtilities.invokeLater(() -> {
 
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    fireAnnotationMoved(annotation);
-                    if (applyFilter) {
-                        NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
-                        updateFrags(updates);
-                        updateFragsByAnnotation(neuron.getId(), annotation.getId());
-                    }
-                    //activityLog.logEndOfOperation(getWsId(), location);
+            NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(this,
+                    Collections.singletonList(getNeuronFromNeuronID(neuron.getId())));
+            TmModelManager.getInstance().getSpatialIndexManager().neuronUpdated(updateEvent);
+
+            fireAnnotationMoved(annotation);
+            if (applyFilter) {
+                NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                updateFrags(updates);
+                updateFragsByAnnotation(neuron.getId(), annotation.getId());
+            }
+            //activityLog.logEndOfOperation(getWsId(), location);
+
+            if (automatedTracingEnabled()) {
+                // trace to parent, and each child to this parent:
+                viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
+                for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
+                    viewStateListener.pathTraceRequested(child.getNeuronId(), child.getId());
                 }
-            });
-        }
-        catch (Exception e) {
-            // error means not persisted; however, in the process of moving,
-            //  the marker's already been moved, to give interactive feedback
-            //  to the user; so in case of error, tell the view to update to current
-            //  position (pre-move)
-            // this is unfortunately untested, because I couldn't think of an
-            //  easy way to simulate or force a failure!
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    fireAnnotationNotMoved(annotation);
-                    //activityLog.logEndOfOperation(getWsId(), location);
-                }
-            });
-            throw e;
-        }
-
-        log.info("Moved annotation {} in neuron {} to {}", annotation.getId(), neuron.getId(), location);
-
-        //final TmWorkspace workspace = modelManager.getCurrentWorkspace();
-
-        if (automatedTracingEnabled()) {
-            // trace to parent, and each child to this parent:
-            viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
-            for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
-                viewStateListener.pathTraceRequested(child.getNeuronId(), child.getId());
             }
-        }
+        });
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                //activityLog.logEndOfOperation(getWsId(), location);
-            }
+        // Update value in database.
+        neuronModel.saveNeuronData(neuron).thenApply((updatedNeuron) -> {
+            log.info("Moved annotation {} in neuron {} to {}", annotation.getId(), neuron.getId(), location);
+            return updatedNeuron;
+        }).exceptionally((t) -> {
+            // Rollback the UI updates
+            fireAnnotationNotMoved(annotation);
+            return null;
         });
     }
 
-    public synchronized void restoreNeuron (TmNeuronMetadata restoredNeuron) throws Exception {
+    // This method must be called from a background thread.
+    public synchronized void restoreNeuron(TmNeuronMetadata restoredNeuron) throws Exception {
         if (neuronModel.getNeuronById(restoredNeuron.getId())==null) {
             restoredNeuron = tmDomainMgr.createWithId(restoredNeuron);
             restoredNeuron.initNeuronData();
@@ -758,17 +740,22 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                     currNeuron.getGeoAnnotationMap().values(), null);
             ViewerEventBus.postEvent(deleteAnnEvent);
 
-            neuronModel.restoreNeuronFromHistory(restoredNeuron).get();
-            fireNeuronChanged(restoredNeuron);
-            if (applyFilter) {
-                NeuronUpdates updates = neuronFilter.updateNeuron(restoredNeuron);
-                updateFrags(updates);
-            }
+            neuronModel.restoreNeuronFromHistory(restoredNeuron).thenApply((neuron) -> {
+                log.info("Neuron " + neuron.getName() + " has been restored");
+                fireNeuronChanged(neuron);
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                    updateFrags(updates);
+                }
+                return neuron;
+            }).exceptionally((e) -> {
+                FrameworkAccess.handleException(e);
+                return null;
+            });
         }
-
     }
 
-    public synchronized void refreshNeuron (TmNeuronMetadata refreshNeuron) {
+    public synchronized void refreshNeuron(TmNeuronMetadata refreshNeuron) {
         NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(this,Arrays.asList(
                 new TmNeuronMetadata[]{refreshNeuron}));
         TmModelManager.getInstance().getSpatialIndexManager().neuronUpdated(updateEvent);
@@ -786,29 +773,18 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * @param radius = new radius, in units of micrometers
      * @throws Exception
      */
-    public synchronized void updateAnnotationRadius(final Long neuronID, final Long annotationID, final float radius) throws Exception {
+    public synchronized void updateAnnotationRadius(final Long neuronID, final Long annotationID, final double radius) throws Exception {
         final TmNeuronMetadata neuron = this.getNeuronFromNeuronID(neuronID);
         final TmGeoAnnotation annotation = getGeoAnnotationFromID(neuron, annotationID);
         TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
 
         // update local annotation object
-        final Double oldRadius = annotation.getRadius();
+        final double oldRadius = annotation.getRadius();
         synchronized(annotation) {
-            annotation.setRadius(new Double(radius));
+            annotation.setRadius(radius);
         }
 
-        try {
-            // Update value in database.
-            synchronized(neuron) {
-                neuronModel.saveNeuronData(neuron);
-            }
-
-        } catch (Exception e) {
-            // Rollback
-            annotation.setRadius(oldRadius);
-            throw e;
-        }
-
+        // Update the UI
         SwingUtilities.invokeLater(() -> {
             fireAnnotationRadiusUpdated(annotation);
             if (applyFilter) {
@@ -817,7 +793,17 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             }
         });
 
-        log.info("Updated radius for annotation {} in neuron {}", annotation.getId(), neuron);
+        neuronModel.saveNeuronData(neuron).thenApply((updatedNeuron) -> {
+            log.info("Updated radius for annotation {} in neuron {}", annotation.getId(), updatedNeuron);
+            return updatedNeuron;
+        }).exceptionally((t) -> {
+            // Rollback the UI updates
+            synchronized(annotation) {
+                annotation.setRadius(oldRadius);
+            }
+            fireAnnotationRadiusUpdated(annotation);
+            return null;
+        });
 
         if (automatedTracingEnabled()) {
             // trace to parent, and each child to this parent:
@@ -840,7 +826,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
 
         Map<Long, Double> oldRadii = new HashMap<>();
-
         for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
             for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
                 oldRadii.put(ann.getId(), ann.getRadius());
@@ -849,12 +834,21 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 }
             }
         }
-        try {
-            synchronized (neuron) {
-                neuronModel.saveNeuronData(neuron);
-            }
-        } catch (Exception e) {
-            // roll back
+
+        neuronModel.saveNeuronData(neuron).thenApply((updatedNeuron) -> {
+            log.info("Updated radius for neuron {}", updatedNeuron);
+            SwingUtilities.invokeLater(() -> {
+                fireNeuronRadiusUpdated(neuron);
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                    updateFrags(updates);
+                }
+            });
+
+            return updatedNeuron;
+        }).exceptionally((t) -> {
+            FrameworkAccess.handleException(t);
+            // Rollback
             for (TmGeoAnnotation root: neuron.getRootAnnotations()) {
                 for (TmGeoAnnotation ann: neuron.getSubTreeList(root)) {
                     synchronized (ann) {
@@ -862,18 +856,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                     }
                 }
             }
-            throw e;
-        }
-
-        SwingUtilities.invokeLater(() -> {
-            fireNeuronRadiusUpdated(neuron);
-            if (applyFilter) {
-                NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
-                updateFrags(updates);
-            }
+            return null;
         });
-
-        log.info("Updated radius for neuron {}", neuronID);
     }
 
     /**
@@ -967,12 +951,20 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         // If source neuron is now empty, delete it, otherwise save it.
         final boolean sourceDeleted = sourceNeuron.getGeoAnnotationMap().isEmpty();
         if (sourceDeleted) {
-            neuronModel.deleteNeuron(currentWorkspace, sourceNeuron).get();
-            if (applyFilter) {
-                NeuronUpdates updates = neuronFilter.deleteNeuron(sourceNeuron);
-                updateFrags(updates);
+            CompletableFuture<Void> result = neuronModel.deleteNeuron(currentWorkspace, sourceNeuron).thenAccept((neuron) -> {
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.deleteNeuron(sourceNeuron);
+                    updateFrags(updates);
+                }
+                log.info("Source neuron was deleted: " + sourceNeuron);
+            }).exceptionally((e) -> {
+                FrameworkAccess.handleException(e);
+                return null;
+            });
+            if (result.isCompletedExceptionally()) {
+                // Source neuron deletion failed
+                return;
             }
-            log.info("Source neuron was deleted: "+sourceNeuron);
         }
         if (applyFilter) {
              NeuronUpdates updates = neuronFilter.updateNeuron(targetNeuron);
@@ -1039,8 +1031,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * and wait until the transaction to end before doing everything in bulk.
      */
     private void beginTransaction() {
-     //   SkeletonController.getInstance().beginTransaction();
-     //   FilteredAnnotationList.getInstance().beginTransaction();
         TransactionManager.getInstance().beginTransaction();
     }
 
@@ -1048,8 +1038,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
      * Commit everything that changed into UI changes.
      */
     private void endTransaction() {
-      //  SkeletonController.getInstance().endTransaction();
-      //  FilteredAnnotationList.getInstance().endTransaction();
         TransactionManager.getInstance().endTransaction();
     }
 
@@ -1303,27 +1291,24 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
         log.info("Deleted sub tree rooted at {} in neuron {}", rootAnnotation.getId(),  neuron);
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                beginTransaction();
-                try {
-                    for (TmGeoAnnotation ann : notesChanged) {
-                        fireNotesUpdated(ann);
-                    }
-                    fireAnnotationsDeleted(deleteList, rootParent);
-                    if (applyFilter) {
-                        NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
-                        updateFrags(updates);
-                    }
+        SwingUtilities.invokeLater(() -> {
+            beginTransaction();
+            try {
+                for (TmGeoAnnotation ann : notesChanged) {
+                    fireNotesUpdated(ann);
+                }
+                fireAnnotationsDeleted(deleteList, rootParent);
+                if (applyFilter) {
+                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                    updateFrags(updates);
+                }
 
-                    fireNeuronSelected(neuron);
-                }
-                finally {
-                    endTransaction();
-                }
-                //activityLog.logEndOfOperation(getWsId(), rootAnnotation);
+                fireNeuronSelected(neuron);
             }
+            finally {
+                endTransaction();
+            }
+            //activityLog.logEndOfOperation(getWsId(), rootAnnotation);
         });
 
     }
@@ -1601,16 +1586,13 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
         log.info("Added anchored path {} in neuron {}", path.getId(),  neuron1);
 
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                fireAnchoredPathAdded(neuronID, path);
-                if (applyFilter) {
-                    NeuronUpdates updates = neuronFilter.updateNeuron(neuron1);
-                    updateFrags(updates);
-                }
-                //activityLog.logAddAnchoredPath(modelManager.getCurrentWorkspace().getId(), path.getId());
+        SwingUtilities.invokeLater(() -> {
+            fireAnchoredPathAdded(neuronID, path);
+            if (applyFilter) {
+                NeuronUpdates updates = neuronFilter.updateNeuron(neuron1);
+                updateFrags(updates);
             }
+            //activityLog.logAddAnchoredPath(modelManager.getCurrentWorkspace().getId(), path.getId());
         });
 
     }

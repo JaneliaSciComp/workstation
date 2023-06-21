@@ -5,12 +5,9 @@ import java.awt.event.ActionEvent;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.controller.model.TmSelectionState;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
-import org.openide.awt.ActionReference;
-import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 
 import javax.swing.*;
@@ -60,7 +57,7 @@ public class NeuronRenameAction extends EditAction {
         SimpleWorker renamer = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
-                annotationModel.renameCurrentNeuron(neuronName);
+                annotationModel.renameNeuron(targetNeuron, neuronName);
             }
 
             @Override

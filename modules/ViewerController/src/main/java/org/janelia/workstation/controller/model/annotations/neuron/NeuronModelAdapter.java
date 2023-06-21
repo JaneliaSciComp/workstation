@@ -72,7 +72,7 @@ class NeuronModelAdapter {
         }
     }
 
-    public CompletableFuture<TmNeuronMetadata> createNeuronAsync(TmNeuronMetadata neuron) {
+    public CompletableFuture<TmNeuronMetadata> createNeuron(TmNeuronMetadata neuron) {
         Callable<TmNeuronMetadata> action = () -> tmDomainMgr.createNeuron(neuron);
         return USE_NEURON_WORK_QUEUE ? getFuture(action) : getPresent(action);
     }
