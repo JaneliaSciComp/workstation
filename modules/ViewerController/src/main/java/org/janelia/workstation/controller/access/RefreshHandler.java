@@ -123,6 +123,11 @@ public class RefreshHandler implements MessageHandler {
             // Ignore our own updates
             if (user.equals(AccessManager.getSubjectKey())) return;
 
+            // Ignore updates if user has disabled shared workspaces
+            if (ApplicationPanel.isDisableSharedWorkspace()) {
+                return;
+            }
+
             // flag to suppress shared updates
             if (!receiveUpdates && !user.equals(AccessManager.getSubjectKey())) {
                 return;
@@ -202,10 +207,8 @@ public class RefreshHandler implements MessageHandler {
     private void handleNeuronChanged(String user, TmNeuronMetadata neuron) {
         try {
             log.info("Processing neuron '{}' ({}) remotely modified by {}", neuron.getName(), neuron.getId(), user);
-            if (!ApplicationPanel.isDisableSharedWorkspace()) {
-                neuronManager.getNeuronModel().refreshNeuronFromShared(neuron);
-                neuronManager.refreshNeuron(neuron);
-            }
+            neuronManager.getNeuronModel().refreshNeuronFromShared(neuron);
+            neuronManager.refreshNeuron(neuron);
         } catch (Exception e) {
             FrameworkAccess.handleExceptionQuietly("Error handling neuron change: " + e.getMessage(), e);
         }
@@ -214,10 +217,8 @@ public class RefreshHandler implements MessageHandler {
     private void handleNeuronDeleted(String user, TmNeuronMetadata neuron) {
         try {
             log.info("Processing neuron '{}' ({}) remotely deleted by {}", neuron.getName(), neuron.getId(), user);
-            if (!ApplicationPanel.isDisableSharedWorkspace()) {
-                updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE);
-                neuronManager.fireNeuronDeleted(neuron);
-            }
+            updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE);
+            neuronManager.fireNeuronDeleted(neuron);
         } catch (Exception e) {
             FrameworkAccess.handleExceptionQuietly("Error handling neuron deletion: " + e.getMessage(), e);
         }
@@ -226,10 +227,8 @@ public class RefreshHandler implements MessageHandler {
     private void handleNeuronAssignment(String user, TmNeuronMetadata neuron) {
         try {
             log.info("Processing neuron '{}' ({}) remotely reassigned by {}", neuron.getName(), neuron.getId(), user);
-            if (!ApplicationPanel.isDisableSharedWorkspace()) {
-                updateFilter(neuron, NeuronMessageConstants.MessageType.REQUEST_NEURON_ASSIGNMENT);
-                neuronManager.fireNeuronChanged(neuron);
-            }
+            updateFilter(neuron, NeuronMessageConstants.MessageType.REQUEST_NEURON_ASSIGNMENT);
+            neuronManager.fireNeuronChanged(neuron);
         } catch (Exception e) {
             FrameworkAccess.handleExceptionQuietly("Error handling neuron deletion: " + e.getMessage(), e);
         }
