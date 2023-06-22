@@ -33,7 +33,7 @@ import java.util.stream.Stream;
  */
 class NeuronModelAdapter {
 
-    private static Logger LOG = LoggerFactory.getLogger(NeuronModelAdapter.class);
+    private static final Logger log = LoggerFactory.getLogger(NeuronModelAdapter.class);
 
     private static final int MAX_NEURONS = 1000000;
     // Use async work queue to process neuron updates
@@ -63,7 +63,7 @@ class NeuronModelAdapter {
     }
 
     public Stream<TmNeuronMetadata> loadNeurons(TmWorkspace workspace) {
-        LOG.info("Loading neurons for workspace: {}", workspace);
+        log.info("Loading neurons for workspace: {}", workspace);
         StopWatch stopWatch = new StopWatch();
         try {
             return tmDomainMgr.streamWorkspaceNeurons(workspace.getId())
@@ -75,7 +75,7 @@ class NeuronModelAdapter {
                     })
                     ;
         } finally {
-            LOG.info("Getting neurons stream took {} ms", stopWatch.getElapsedTime());
+            log.info("Getting neurons stream took {} ms", stopWatch.getElapsedTime());
         }
     }
 

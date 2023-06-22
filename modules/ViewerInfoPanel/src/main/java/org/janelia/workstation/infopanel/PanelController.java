@@ -1,16 +1,13 @@
 package org.janelia.workstation.infopanel;
 
-import java.util.Collection;
-import java.util.List;
-
 import com.google.common.eventbus.Subscribe;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.Reference;
-import org.janelia.workstation.controller.NeuronManager;
-import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.action.OpenTmSampleOrWorkspaceAction;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -18,14 +15,10 @@ import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
-import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
-import org.janelia.workstation.core.events.lifecycle.SessionStartEvent;
-import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
-import org.perf4j.StopWatch;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.List;
 
 
 /**
@@ -34,12 +27,10 @@ import org.slf4j.LoggerFactory;
  * @author fosterl
  */
 public class PanelController {
-    private AnnotationPanel annotationPanel;
-    private WorkspaceNeuronList wsNeuronList;
-    private WorkspaceInfoPanel wsInfoPanel;
-    private FilteredAnnotationList filteredAnnotationList;
-    private static final Logger log = LoggerFactory.getLogger(PanelController.class);
-    
+    private final AnnotationPanel annotationPanel;
+    private final WorkspaceNeuronList wsNeuronList;
+    private final WorkspaceInfoPanel wsInfoPanel;
+    private final FilteredAnnotationList filteredAnnotationList;
     
     public PanelController(
             AnnotationPanel annoPanel,
@@ -214,25 +205,5 @@ public class PanelController {
         for (TmGeoAnnotation vertex : vertices) {
             filteredAnnotationList.notesChanged(vertex);
         }
-    }
-
-    /* if the user wants their previous workspace loaded, kick off the OpenSampleorWorkspace Action
-     for some consistency on how things are initialized
-     */
-    public void loadRecentWorkspace() {
-        OpenTmSampleOrWorkspaceAction recentlyLoadedAction = OpenTmSampleOrWorkspaceAction.get();
-        try {
-            List<Reference> refs =  FrameworkAccess.getBrowsingController().getRecentlyOpenedHistory();
-
-            DomainModel model = DomainMgr.getDomainMgr().getModel();
-            List<DomainObject> children = model.getDomainObjects(refs);
-            if (children.size()>0) {
-                recentlyLoadedAction.setDomainObject(children.get(0));
-                recentlyLoadedAction.performAction();
-            }
-        } catch (Exception e) {
-            FrameworkAccess.handleException(e);
-        }
-
     }
 }

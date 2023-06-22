@@ -806,8 +806,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         });
 
         if (automatedTracingEnabled()) {
-            // trace to parent, and each child to this parent:
-            //viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
+            //            // trace to parent, and each child to this parent:
+            //            //viewStateListener.pathTraceRequested(annotation.getNeuronId(), annotation.getId());
             for (TmGeoAnnotation child : neuron.getChildrenOf(annotation)) {
               //  viewStateListener.pathTraceRequested(child.getNeuronId(), child.getId());
             }
