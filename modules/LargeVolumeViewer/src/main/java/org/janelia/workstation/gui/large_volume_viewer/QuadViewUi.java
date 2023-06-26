@@ -139,7 +139,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
     private RecentFileList recentFileList = new RecentFileList(new JMenu("Open Recent"));
     private final ResetViewAction resetViewAction = new ResetViewAction(allSliceViewers, volumeImage);
     private final ResetColorsAction resetColorsAction = new ResetColorsAction(imageColorModel);
-    private final RefreshSharedUpdatesAction refreshSharedUpdatesAction = new RefreshSharedUpdatesAction();
     // mode actions (and groups)
     private final ZoomMouseModeAction zoomMouseModeAction = new ZoomMouseModeAction();
     private final PanModeAction panModeAction = new PanModeAction();
@@ -748,29 +747,6 @@ public class QuadViewUi extends JPanel implements VolumeLoadListener {
         JButton resetViewButton = new JButton("New button");
         resetViewButton.setAction(resetViewAction);
         buttonsPanel.add(resetViewButton);
-
-        JButton loadUpdatesButton = new JButton("Refresh Updates");
-        loadUpdatesButton.setAction(refreshSharedUpdatesAction);
-
-        final JCheckBox receiveSharedUpdatesCheckbox = new JCheckBox("Shared Updates");
-        receiveSharedUpdatesCheckbox.setSelected(true);
-        receiveSharedUpdatesCheckbox.addItemListener(new ItemListener() {
-            @Override
-            public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.DESELECTED) {
-                    receiveSharedUpdatesCheckbox.setSelected(false);
-                  //  annotationModel.setReceiveUpdates(false);
-                    loadUpdatesButton.setEnabled(true);
-                } else if (e.getStateChange() == ItemEvent.SELECTED) {
-                    receiveSharedUpdatesCheckbox.setSelected(true);
-                   // annotationModel.setReceiveUpdates(true);
-                    loadUpdatesButton.setEnabled(false);
-                }
-            }
-        });
-        buttonsPanel.add(receiveSharedUpdatesCheckbox);
-
-        buttonsPanel.add(loadUpdatesButton);
 
         buttonsPanel.add(new TileStackCacheStatusPanel());
 
