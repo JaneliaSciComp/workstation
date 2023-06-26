@@ -452,6 +452,15 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         });
     }
 
+    public synchronized void renameNeuron(TmNeuronMetadata neuron, String name) throws Exception {
+        TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
+        neuron.setName(name);
+        this.neuronModel.saveNeuronData(neuron);
+        log.info("Neuron was renamed: "+neuron);
+
+        SwingUtilities.invokeLater(() -> fireNeuronRenamed(neuron));
+    }
+
     /**
      * Change the ownership of the input neurons.
      */
