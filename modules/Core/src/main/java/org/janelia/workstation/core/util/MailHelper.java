@@ -45,6 +45,7 @@ public class MailHelper {
             String mailSSLProtocols = ConsoleProperties.getString("console.MailSSLProtocol", "");
             Authenticator authenticator;
             if (mailUser.trim().length() > 0 && mailPassword.trim().length() > 0) {
+                properties.put("mail.transport.protocol", "smtp");
                 properties.put("mail.smtp.auth", "true");
                 properties.put("mail.smtp.starttls.enable", "true");
                 if (mailSSLProtocols.trim().length() > 0) properties.put("mail.smtp.ssl.protocols", mailSSLProtocols);
