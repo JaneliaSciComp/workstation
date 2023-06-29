@@ -157,7 +157,7 @@ public final class AccessManager {
         // Get saved credentials
         LocalPreferenceMgr prefs = LocalPreferenceMgr.getInstance();
         String username = prefs.getModelPropertyWithDefaultAs(AccessManager.USER_NAME, System.getProperty(AccessManager.USER_NAME), String.class);
-        String password = prefs.getModelPropertyWithDefaultAs(AccessManager.USER_PASSWORD, System.getProperty(AccessManager.USER_PASSWORD), String.class);
+        String password = prefs.getModelPropertyWithDefaultAs(AccessManager.USER_PASSWORD, System.getProperty(AccessManager.USER_PASSWORD, ""), String.class);
         Boolean remember = prefs.getModelPropertyWithDefaultAs(AccessManager.REMEMBER_PASSWORD, Boolean.getBoolean(AccessManager.REMEMBER_PASSWORD), Boolean.class);
 
         if (!StringUtils.isEmpty(username) && (remember != null && remember || !StringUtils.isEmpty(password))) {
