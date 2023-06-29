@@ -12,4 +12,5 @@ Horta
 HortaCloud
 * Fixed email error reporting so that it works in HortaCloud
 * Option to start a workstation instance that does not expose the Login dialog
+* Large numbers of SWC files may now be loaded from zip files directly; this is especially important in the HortaCloud environment, as S3 file system overhead makes loading large numbers of individual SWC files glacially slow
 
