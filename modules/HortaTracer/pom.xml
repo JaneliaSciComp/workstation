@@ -16,7 +16,6 @@
     <packaging>nbm</packaging>
 
     <dependencies>
-        
         <!-- CommonLibraries -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
@@ -73,6 +72,13 @@
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>scenegraph</artifactId>
+        </dependency>
+
+        <!-- OME-Zarr -->
+        <dependency>
+            <groupId>org.aind</groupId>
+            <artifactId>jomezarr</artifactId>
+            <version>1.2.10</version>
         </dependency>
         
         <!-- NetBeans Modules --> 

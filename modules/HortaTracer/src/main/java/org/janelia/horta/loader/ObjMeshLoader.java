@@ -44,8 +44,10 @@ public class ObjMeshLoader implements FileTypeLoader
     public void saveObjectMesh (String meshName, String filename) {
         TmObjectMesh newObjMesh = new TmObjectMesh(meshName, filename);
         try {
-            TmModelManager.getInstance().getCurrentWorkspace().addObjectMesh(newObjMesh);
-            TmModelManager.getInstance().saveCurrentWorkspace();
+            if(TmModelManager.getInstance().getCurrentWorkspace() != null) {
+                TmModelManager.getInstance().getCurrentWorkspace().addObjectMesh(newObjMesh);
+                TmModelManager.getInstance().saveCurrentWorkspace();
+            }
 
             // fire off event for scene editor
             MeshCreateEvent meshEvent = new MeshCreateEvent(this,

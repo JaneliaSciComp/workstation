@@ -173,6 +173,39 @@ public class Texture3d extends BasicTexture implements GL3Resource {
         }
     }
 
+    /**
+     * Safe version of internal loadStack() for raster images that are already loaded/parsed elsewhere.
+     * @param slices stack of Raster images
+     * @param colorModel Raster image color model
+     * @return true if stack is successfully loaded
+     */
+    public boolean loadRasterSlices(Raster[] slices, ColorModel colorModel) {
+        try {
+            PerformanceTimer timer = new PerformanceTimer();
+
+            if (slices == null) {
+                return false;
+            }
+
+            if (slices.length > 0) {
+                depth = slices.length;
+                width = slices[0].getWidth();
+                height = slices[0].getHeight();
+
+                loadStack(slices, colorModel);
+
+                float t1 = timer.reportMsAndRestart();
+                LOG.info(">>> loadRasterSlices() total time = {} ms", (t1));
+                return true;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Unable to parse", e);
+        }
+    }
+
     private void allocatePixels() {
         int byteCount = numberOfComponents * bytesPerIntensity * width * height * depth;
         pixelBytes = new byte[byteCount];

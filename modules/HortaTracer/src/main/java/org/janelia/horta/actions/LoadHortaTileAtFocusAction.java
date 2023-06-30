@@ -34,7 +34,6 @@ public final class LoadHortaTileAtFocusAction implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         try {
-            LOG.info("Load KTX Central Tile Action invoked");
             context.loadPersistentTileAtFocus();
         } catch (IOException ex) {
             LOG.info("Tile load failed", ex);

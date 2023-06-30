@@ -1,6 +1,8 @@
 
 package org.janelia.horta;
 
+import org.janelia.horta.actors.OmeZarrVolumeActor;
+import org.janelia.horta.blocks.*;
 import org.janelia.horta.render.NeuronMPRenderer;
 import java.io.IOException;
 import java.util.Observable;
@@ -12,9 +14,6 @@ import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.horta.actors.TetVolumeActor;
-import org.janelia.horta.blocks.KtxBlockLoadRunner;
-import org.janelia.horta.blocks.KtxOctreeBlockTileKey;
-import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.BrickInfoSet;
@@ -201,6 +200,44 @@ public class NeuronTraceLoader {
         }
     }
 
+    void loadOmeZarrTileAtLocation(OmeZarrBlockTileSource omeZarrSource, Vector3 location, final boolean loadPersistent) {
+        if (omeZarrSource == null) {
+            return;
+        }
+        OmeZarrBlockTileKey centerKey = omeZarrSource.getBlockKeyAt(location, omeZarrSource.getMaximumResolution());
+        if (centerKey == null) {
+            return;
+        }
+
+        if (loadPersistent) {
+            final OmeZarrBlockLoadRunner loader = new OmeZarrBlockLoadRunner(omeZarrSource, centerKey);
+            loader.addObserver(new Observer() {
+                @Override
+                public void update(Observable o, Object arg) {
+                    if (loader.state != OmeZarrBlockLoadRunner.State.LOADED) {
+                        return;
+                    }
+                    OmeZarrVolumeActor parentActor = OmeZarrVolumeActor.getInstance();
+                    parentActor.addPersistentBlock(loader.blockActor);
+                    if (!neuronMPRenderer.containsVolumeActor(parentActor)) { // just add singleton actor once...
+                        parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
+                        neuronMPRenderer.addVolumeActor(parentActor);
+                    }
+                    neuronMPRenderer.setIntensityBufferDirty();
+                    nttc.redrawNow();
+                }
+            });
+            loader.run();
+        } else {
+            OmeZarrVolumeActor parentActor = OmeZarrVolumeActor.getInstance();
+            if (!neuronMPRenderer.containsVolumeActor(parentActor)) { // just add singleton actor once...
+                parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
+                neuronMPRenderer.addVolumeActor(parentActor);
+            }
+            parentActor.addTransientBlock(centerKey);
+        }
+    }
+
     void loadPersistentKtxTileAtCurrentFocus(KtxOctreeBlockTileSource ktxSource)
             throws IOException {
         Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
@@ -211,5 +248,17 @@ public class NeuronTraceLoader {
             throws IOException {
         Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
         loadKtxTileAtLocation(ktxSource, focus, false);
+    }
+
+    void loadPersistentOmeZarrTileAtCurrentFocus(OmeZarrBlockTileSource omeZarrSource)
+            throws IOException {
+        Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
+        loadOmeZarrTileAtLocation(omeZarrSource, focus, true);
+    }
+
+    void loadTransientOmeZarrTileAtCurrentFocus(OmeZarrBlockTileSource omeZarrSource)
+            throws IOException {
+        Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
+        loadOmeZarrTileAtLocation(omeZarrSource, focus, false);
     }
 }

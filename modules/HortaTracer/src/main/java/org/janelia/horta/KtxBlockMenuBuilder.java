@@ -9,6 +9,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 import org.janelia.horta.actions.LoadHortaTileAtFocusAction;
+import org.janelia.horta.actors.OmeZarrVolumeActor;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,7 +62,7 @@ class KtxBlockMenuBuilder {
             @Override
             public void actionPerformed(ActionEvent e) {
                 TetVolumeActor.getInstance().clearAllBlocks();
-                TetVolumeActor.getInstance().clearAllBlocks();
+                OmeZarrVolumeActor.getInstance().clearAllBlocks();
                 nttc.getNeuronMPRenderer().clearVolumeActors();
                 nttc.clearAllTiles();
             }

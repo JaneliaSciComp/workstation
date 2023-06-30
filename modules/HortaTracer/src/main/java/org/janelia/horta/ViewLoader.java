@@ -1,5 +1,7 @@
 package org.janelia.horta;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Paths;
@@ -15,6 +17,8 @@ import com.google.common.base.Objects;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
+import org.janelia.horta.blocks.OmeZarrBlockTileSource;
+import org.janelia.horta.omezarr.OmeZarrJadeReader;
 import org.janelia.workstation.controller.tileimagery.OsFilePathRemapper;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
@@ -35,6 +39,7 @@ import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.api.AccessManager;
+import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.geom.Vec3;
 import org.netbeans.api.progress.ProgressHandle;
@@ -83,7 +88,6 @@ public class ViewLoader {
                                 + syncLocation.getY() + ", "
                                 + syncLocation.getZ());
                     }
-                    RenderedVolume renderedVolume = getVolumeInfo(url.toURI());
 
                     if (nttc.isPreferKtx()) {
                         // for KTX tile the camera must be set before the tiles are loaded in order for them to be displayed first time
@@ -101,18 +105,21 @@ public class ViewLoader {
                             loader.loadPersistentKtxTileAtCurrentFocus(nttc.getKtxSource());
                         }
                     } else {
-                        // use raw tiles, which are handled by the StaticVolumeBrickSource
-                        StaticVolumeBrickSource volumeBrickSource = createStaticVolumeBrickSource(renderedVolume, sample, progress);
-                        nttc.setVolumeSource(volumeBrickSource);
-                        // start loading raw tiles
-                        progress.switchToIndeterminate();
-                        progress.setDisplayName("Loading brain tile image...");
-                        loader.loadTileAtCurrentFocus(volumeBrickSource, 0);
-                        // for raw tiles the camera needs to be set after the tile began loading in order to trigger the display
                         progress.setDisplayName("Centering on location...");
                         setCameraLocation(syncZoom, syncLocation);
+                        // use Ome Zarr tiles
+                        progress.setDisplayName("Loading Ome Zarr brain metadata...");
+                        OmeZarrBlockTileSource omeZarrSource = createOmeZarrSource(url, sample);
+                        nttc.setOmeZarrSource(omeZarrSource);
+                        // start loading Ome Zarr tiles
+                        progress.switchToIndeterminate();
+                        progress.setDisplayName("Loading Ome Zarr brain tile image...");
+                        if (nttc.doesUpdateVolumeCache()) {
+                            loader.loadTransientOmeZarrTileAtCurrentFocus(nttc.getOmeZarrSource());
+                        } else {
+                            loader.loadPersistentOmeZarrTileAtCurrentFocus(nttc.getOmeZarrSource());
+                        }
                     }
-
                     nttc.redrawNow();
                 } catch (final Exception ex) {
                     LOG.error("Error setting up the tile source", ex);
@@ -182,10 +189,15 @@ public class ViewLoader {
         return new KtxOctreeBlockTileSource(renderedOctreeUrl, nttc.getTileLoader()).init(sample);
     }
 
-    private StaticVolumeBrickSource createStaticVolumeBrickSource(RenderedVolume renderedVolume, TmSample sample, ProgressHandle progress) {
-        progress.switchToDeterminate(100);
-        List<RawImage> rawTiles = nttc.getRenderedVolumeLoader().loadVolumeRawImageTiles(renderedVolume.getVolumeLocation());
-        return new RawVolumeBrickSource(nttc.getTileLoader()).init(sample, rawTiles, progress::progress);
+    private OmeZarrBlockTileSource createOmeZarrSource(URL renderedOmeZarrUrl, TmSample sample) throws IOException {
+        OmeZarrBlockTileSource previousSource = nttc.getOmeZarrSource();
+        if (previousSource != null) {
+            LOG.trace("previousUrl: {}", previousSource.getOriginatingSampleURL());
+            if (Objects.equal(renderedOmeZarrUrl, previousSource.getOriginatingSampleURL())) {
+                return previousSource; // Source did not change
+            }
+        }
+        return new OmeZarrBlockTileSource(renderedOmeZarrUrl, nttc.getImageColorModel()).init(sample);
     }
 
     private void setCameraLocation(double zoom, Vec3 sampleLocation) {
