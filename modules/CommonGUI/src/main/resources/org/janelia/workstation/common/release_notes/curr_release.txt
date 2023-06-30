@@ -1,8 +1,18 @@
 // 9.14
 
+Core
+* Usernames are now case-insensitive
+
 Horta
-* Fixed issue with hidden neurons reappearing
+* Neuron persistence was refactored to be more reliable
 * Added "Show other neurons" feature to neuron right-click menu and neuron gear menu
-* Fixed issue with right-clicking in 3d view giving error in second workspace opened
+* Added "problem end" shortcut action; don't allow traced/problem end on non-ends
+* Do not allow users to create a neuron in a workspace in which they do not have write permissions
+* Fixed issue with right-clicking in 3D view giving error in second workspace opened
+* Fixed issue with hidden neurons reappearing
+* Optimized HTTP client instantiation
+* Fixed email error reporting so that it works in HortaCloud
+* Option to start a workstation instance that does not expose the Login dialog
 * Large numbers of SWC files may now be loaded from zip files directly; this is especially important in the HortaCloud environment, as S3 file system overhead makes loading large numbers of individual SWC files glacially slow
+* Disabled login dialog on HortaCloud
 

@@ -547,11 +547,13 @@ public class DomainInspectorPanel extends JPanel {
         try {
             if (domainObject == null) return;
 
-            DomainObject refreshedObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
-            if (refreshedObject != null) {
-                // If refreshedObject is null, it means the object has either been deleted, or it's marked NotCacheable
-                // TODO: distinguish between those two states and only proceed if the object has not be deleted
-                domainObject = refreshedObject;
+            if (DomainMgr.getDomainMgr().getModel().isCacheable(domainObject)) {
+                DomainObject refreshedObject = DomainMgr.getDomainMgr().getModel().getDomainObject(domainObject);
+                if (refreshedObject != null) {
+                    // If refreshedObject is null, it means the object has either been deleted, or it's marked NotCacheable
+                    // TODO: distinguish between those two states and only proceed if the object has not be deleted
+                    domainObject = refreshedObject;
+                }
             }
             
             int selectedTab = tabbedPane.getSelectedIndex();

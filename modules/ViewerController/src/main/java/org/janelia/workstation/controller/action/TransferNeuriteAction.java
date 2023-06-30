@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletionException;
 
 public class TransferNeuriteAction extends AbstractAction {
 
@@ -86,13 +87,21 @@ public class TransferNeuriteAction extends AbstractAction {
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    TmNeuronMetadata newNeuron = neuronManager.createNeuron(neuronName);
-                    neuronManager.moveNeurite(annotation, newNeuron);
+                    NeuronManager.getInstance().createNeuron(neuronName).thenApply((newNeuron -> {
+                        try {
+                            neuronManager.moveNeurite(annotation, newNeuron);
+                        } catch (Exception e) {
+                            throw new CompletionException(e);
+                        }
+                        return newNeuron;
+                    })).exceptionally((t) -> {
+                        hadError(t);
+                        return null;
+                    });
                 }
 
                 @Override
                 protected void hadSuccess() {
-                    // nothing to see here
                 }
 
                 @Override

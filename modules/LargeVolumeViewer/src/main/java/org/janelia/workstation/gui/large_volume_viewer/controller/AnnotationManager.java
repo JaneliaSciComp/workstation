@@ -5,6 +5,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.CompletionException;
 
 import javax.swing.JOptionPane;
 
@@ -663,8 +664,17 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
             SimpleWorker mover = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {
-                    TmNeuronMetadata newNeuron = annotationModel.createNeuron(neuronName);
-                    annotationModel.moveNeurite(annotation, newNeuron);
+                    annotationModel.createNeuron(neuronName).thenApply((newNeuron -> {
+                        try {
+                            annotationModel.moveNeurite(annotation, newNeuron);
+                        } catch (Exception e) {
+                            throw new CompletionException(e);
+                        }
+                        return newNeuron;
+                    })).exceptionally((t) -> {
+                        hadError(t);
+                        return null;
+                    });
                 }
 
                 @Override
@@ -684,10 +694,8 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
         } else {
             // we're moving to an existing neuron; not allowed if destination is owned by someone else;
             //  otherwise, this is straightforward
-            if (!TmModelManager.getInstance().checkOwnership(destinationNeuron))
+            if (!TmModelManager.checkOwnership(destinationNeuron))
                 return;
-
-
 
             SimpleWorker mover = new SimpleWorker() {
                 @Override

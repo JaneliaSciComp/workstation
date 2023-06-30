@@ -21,6 +21,8 @@ public class ApplicationPanel extends JPanel {
     public static final String PREFERENCE_LOAD_COLOR_SLIDERS_DEFAULT = "false";
     public static final String PREFERENCE_VERIFY_NEURONS = "VerifyNeurons";
     public static final String PREFERENCE_VERIFY_NEURONS_DEFAULT = "false";
+    public static final String PREFERENCE_USE_NEURON_QUEUE = "NeuronQueue";
+    public static final String PREFERENCE_USE_NEURON_QUEUE_DEFAULT = "true";
     public static final String PREFERENCE_ANCHORS_IN_VIEWPORT = "AnchorsInViewport";
     public static final String PREFERENCE_ANCHORS_IN_VIEWPORT_DEFAULT = "true";
     public static final String PREFERENCE_Z_THICKNESS = "ZThickness";
@@ -39,6 +41,7 @@ public class ApplicationPanel extends JPanel {
     private JCheckBox showColorSlidersOnOpen;
     private JCheckBox disableSharedWorkspace;
     private JCheckBox verifyNeuronsCheckbox;
+    private JCheckBox useNeuronQueue;
     private JCheckBox anchorsInViewportCheckbox;
     private JTextField zThicknessField;
     private JComboBox<String> clickModeCombo;
@@ -93,6 +96,13 @@ public class ApplicationPanel extends JPanel {
         titleLabel4.setLabelFor(verifyNeuronsCheckbox);
         attrPanel.add(titleLabel4,"gap para");
         attrPanel.add(verifyNeuronsCheckbox,"gap para");
+
+        this.useNeuronQueue = new JCheckBox();
+        useNeuronQueue.addChangeListener(e -> controller.changed());
+        JLabel titleLabel5 = new JLabel("Use neuron persistence queue: ");
+        titleLabel5.setLabelFor(useNeuronQueue);
+        attrPanel.add(titleLabel5,"gap para");
+        attrPanel.add(useNeuronQueue,"gap para");
 
         this.anchorsInViewportCheckbox = new JCheckBox();
         anchorsInViewportCheckbox.addChangeListener(e -> controller.changed());
@@ -162,6 +172,7 @@ public class ApplicationPanel extends JPanel {
         disableSharedWorkspace.setSelected(isDisableSharedWorkspace());
         showColorSlidersOnOpen.setSelected(isLoadColorSliders());
         verifyNeuronsCheckbox.setSelected(isVerifyNeurons());
+        useNeuronQueue.setSelected(isUseNeuronQueue());
         anchorsInViewportCheckbox.setSelected(isAnchorsInViewport());
         clickModeCombo.setSelectedItem(getAnnotationClickMode());
         dragToMergeCheckbox.setSelected(isDragToMerge2D());
@@ -193,6 +204,11 @@ public class ApplicationPanel extends JPanel {
                 ApplicationPanel.class,
                 PREFERENCE_VERIFY_NEURONS,
                 verifyNeuronsCheckbox.isSelected()+"");
+
+        FrameworkAccess.setLocalPreferenceValue(
+                ApplicationPanel.class,
+                PREFERENCE_USE_NEURON_QUEUE,
+                useNeuronQueue.isSelected()+"");
 
         FrameworkAccess.setLocalPreferenceValue(
                 ApplicationPanel.class,
@@ -274,6 +290,13 @@ public class ApplicationPanel extends JPanel {
         return Boolean.parseBoolean(loadLastStr);
     }
 
+    public static boolean isUseNeuronQueue() {
+        String loadLastStr = FrameworkAccess.getLocalPreferenceValue(
+                ApplicationPanel.class,
+                ApplicationPanel.PREFERENCE_USE_NEURON_QUEUE,
+                ApplicationPanel.PREFERENCE_USE_NEURON_QUEUE_DEFAULT);
+        return Boolean.parseBoolean(loadLastStr);
+    }
     public static boolean isAnchorsInViewport() {
         String anchorsInViewportStr = FrameworkAccess.getLocalPreferenceValue(
                 ApplicationPanel.class,
