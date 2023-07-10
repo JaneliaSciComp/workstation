@@ -177,28 +177,21 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 log.info("Loading neurons for workspace {}", workspace.getId());
                 manager.loadWorkspaceNeurons(workspace);
 
-                // if workspace contains more system-owned fragments than a threshold , enable filter
-                String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+                // if workspace is flagged as containing fragments, get bounding boxes and init filter
                 boolean applyFilter = false;
-                modelManager.getCurrentView().setFilter(applyFilter);
-                int nFragments = 0;
-                for (TmNeuronMetadata neuron: manager.getNeurons()) {
-                    if (neuron.getOwnerKey().equals(systemNeuron)) {
-                        nFragments += 1;
-                        if (nFragments >= NUMBER_FRAGMENTS_THRESHOLD) {
-                            applyFilter = true;
-                            modelManager.getCurrentView().setFilter(applyFilter);
-                            break;
-                        }
-                    }
+                if (workspace.isContainsFragments()) {
+                    modelManager.getCurrentView().setFilter(true);
+                    applyFilter = true;
+                    manager.loadWorkspaceBoundingBoxes(workspace);
                 }
+
                 log.info("Spatial Filtering applied: {}", applyFilter);
                 modelManager.getCurrentView().init();
 
                 // if spatial filter is applied, use it to filter neurons
                 NeuronSpatialFilter neuronFilter = modelManager.getCurrentView().getSpatialFilter();
                 if (applyFilter) {
-                    neuronFilter.initFilter(modelManager.getNeuronModel().getNeurons());
+                    neuronFilter.initFilter(modelManager.getNeuronModel().getBoundingBoxes());
                 }
                 //  fireNeuronSpatialFilterUpdated(applyFilter, neuronFilter);
 
