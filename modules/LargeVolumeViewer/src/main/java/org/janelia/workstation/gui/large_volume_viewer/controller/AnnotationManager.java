@@ -291,11 +291,16 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
     //-----------------------------IMPLEMENT UpdateAnchorListener
     @Override
     public void update(Anchor anchor) {
+        // this code doesn't do anything; not sure what needs to be updated here; everything seems to work fine
+        //  without it; however, it does throw NPEs on occasion
+        //  commenting it out in case its purpose becomes clear someday
+        /*
         if (anchor != null) {
             TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(anchor.getNeuronID());
             TmGeoAnnotation annotation = NeuronManager.getInstance().getGeoAnnotationFromID(neuron.getId(),
                     anchor.getGuid());
         }
+         */
     }
 
     //-----------------------------IMPLEMENTS PathTraceListener
