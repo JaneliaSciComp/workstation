@@ -42,7 +42,6 @@ public class NeuronFilterDialog extends ModalDialog {
         // you could do this with a custom annotation as well, but that is more work and there
         // aren't a lot of strategies for now
         strategyLabels.put(NeuronSelectionSpatialFilter.class.getName(), "Neuron Selection Filter");
-        strategyLabels.put(NeuronProximitySpatialFilter.class.getName(), "Neuron Proximity Filter");
 
         setLayout(new GridBagLayout());
 

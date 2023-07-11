@@ -31,6 +31,7 @@ import org.janelia.workstation.core.api.exceptions.RemoteServiceException;
 import org.janelia.workstation.core.api.http.RESTClientBase;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.model.domain.tiledMicroscope.BoundingBox3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -214,6 +215,19 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         return response.readEntity(Long.class);
     }
 
+    public List<TmNeuronMetadata> getNeuronSet(List<Long> neuronIds, TmWorkspace workspace) {
+        WebTarget target = getMouselightDataEndpoint("/neuron/metadata")
+                .queryParam("neuronIds", neuronIds)
+                .queryParam("workspaceId", workspace.getId())
+                .queryParam("subjectKey", AccessManager.getSubjectKey());
+
+        Response response = target
+                .request("application/json")
+                .get();
+        checkBadResponse(target, response);
+        return response.readEntity(new GenericType<List<TmNeuronMetadata>>() {});
+    }
+
     Collection<TmNeuronMetadata> getWorkspaceNeurons(Long workspaceId, long offset, int length) {
         try {
             List<TmNeuronMetadata> neuronList = new ArrayList<>();
@@ -229,7 +243,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
             factory.setCodec(mapper);
             JsonParser parser  = factory.createParser(is);
             Iterator<TmNeuronMetadata> neurons = parser.readValuesAs(TmNeuronMetadata.class);
-            while(neurons.hasNext()) {
+            while (neurons.hasNext()) {
                 neuronList.add(neurons.next());
             }
             return neuronList;
@@ -238,6 +252,22 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
             FrameworkAccess.handleException(e);
             LOG.error ("Problems parsing the neuron stream from the server for workspace id {}",workspaceId);
             throw new RemoteServiceException("Client had problems processing Neuron Server Stream");
+        }
+    }
+
+    Collection<BoundingBox3d> getWorkspaceBoundingBoxes(Long workspaceId) {
+        try {
+            WebTarget target = getMouselightDataEndpoint("/workspace/boundingboxes")
+                    .queryParam("workspaceId", workspaceId);
+            Response response = target
+                    .request("application/json")
+                    .get();
+            checkBadResponse(target, response);
+            return response.readEntity(new GenericType<List<BoundingBox3d>>() {});
+        } catch (Exception e) {
+            FrameworkAccess.handleException(e);
+            LOG.error ("Problems getting the workspace bounding boxes for {}",workspaceId);
+            throw new RemoteServiceException("Client had problems fetching bounding boxes for the workspace");
         }
     }
 

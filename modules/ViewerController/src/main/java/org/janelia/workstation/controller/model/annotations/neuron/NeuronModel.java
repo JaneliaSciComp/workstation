@@ -2,12 +2,15 @@ package org.janelia.workstation.controller.model.annotations.neuron;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.util.TmNeuronUtils;
 import org.janelia.workstation.controller.model.IdSource;
 import org.janelia.workstation.controller.model.TmHistoricalEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.model.domain.tiledMicroscope.BoundingBox3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +25,7 @@ public class NeuronModel {
     private final NeuronModelAdapter neuronModelAdapter = new NeuronModelAdapter();
     private final IdSource idSource = new IdSource();
     private Map<Long, TmNeuronMetadata> neuronMap;
+    private Set<BoundingBox3d> boundingBoxes;
     static NeuronModel modelInstance;
 
     static public NeuronModel getInstance() {
@@ -33,10 +37,23 @@ public class NeuronModel {
 
     public NeuronModel() {
         neuronMap = new ConcurrentHashMap<>();
+        boundingBoxes = new HashSet<BoundingBox3d>();
     }
 
     public Collection<TmNeuronMetadata> getNeurons() {
         return neuronMap.values();
+    }
+
+    public Collection<BoundingBox3d> getBoundingBoxes() {
+        return boundingBoxes;
+    }
+
+    public void retrieveFragments (List<Long> fragSet, TmWorkspace workspace) {
+        List<TmNeuronMetadata> frags = neuronModelAdapter.loadFragments(fragSet, workspace);
+        for (TmNeuronMetadata frag: frags) {
+            frag.initNeuronData();
+            neuronMap.put(frag.getId(), frag);
+        }
     }
 
     public void addNeuron(TmNeuronMetadata neuron) {
@@ -181,6 +198,18 @@ public class NeuronModel {
             addNeuron(n);
         }
         LOG.info("loadWorkspaceNeurons() loaded {} neurons", neuronMap.size());
+    }
+
+    /**
+     * Fetches the precomputed bounding boxes from a workspace so a scalable index can be built to selectively
+     * download the fragments in the vicinity.
+     * TO DO: To speed up development, I'm using the existing spatial filter and just using the corners of the bounding box
+     * (6 3D points) to find close neurons.  To scale up a bit, this should really be a 3D spatial engine using r*trees
+     * for full 3D annotation support.
+     */
+    public void loadWorkspaceBoundingBoxes (TmWorkspace workspace) throws Exception {
+        LOG.info("loadWorkspaceNeurons() loaded {} neurons", neuronMap.size());
+        boundingBoxes = new HashSet<BoundingBox3d>(neuronModelAdapter.loadBoundingBoxes(workspace));
     }
 
     /**

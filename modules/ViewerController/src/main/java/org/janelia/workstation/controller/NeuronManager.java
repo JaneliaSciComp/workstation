@@ -2442,9 +2442,15 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         this.select = select;
     }
 
+    /**
+     * because the fragments are dense now, this needs to go out and physically retrieve the list of fragments when requested.
+     * The speed per click will be slower, but the scalibility should be higher.
+     */
     private void updateFrags(NeuronUpdates updates) {
         List<TmNeuronMetadata> addList = new ArrayList<>();
         List<TmNeuronMetadata> deleteList = new ArrayList<>();
+
+        getNeuronModel().retrieveFragments(new ArrayList<>(updates.getAddedNeurons()), currentWorkspace);
         Iterator<Long> addIter = updates.getAddedNeurons().iterator();
         while (addIter.hasNext()) {
             TmNeuronMetadata neuron = getNeuronFromNeuronID(addIter.next());
@@ -2488,7 +2494,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public void setFilterStrategy(NeuronSpatialFilter filterStrategy) {
         if (neuronFilter != filterStrategy)
             neuronFilter = filterStrategy;
-        neuronFilter.initFilter(neuronModel.getNeurons());
+        neuronFilter.initFilter(neuronModel.getBoundingBoxes());
         setNeuronFiltering(true);
     }
 

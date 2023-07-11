@@ -95,6 +95,10 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         workspaceNameTextField.setText(workspaceName);
         workspaceNameTextField.setEditable(false);
         workspaceNameTextField.setFocusable(false);
+        final JCheckBox markAsFragmentsCheckbox = new JCheckBox();
+        workspaceNameTextField.setText(workspaceName);
+        workspaceNameTextField.setEditable(false);
+        workspaceNameTextField.setFocusable(false);
         inputDialog.setTitle("SWC Load-to-Workspace Parameters");
         inputDialog.setLayout(new GridLayout(6, 1));
         inputDialog.add(workspaceNameLabel);
@@ -103,6 +107,8 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         inputDialog.add(pathTextField);
         inputDialog.add(new JLabel("Assign all neurons to mouselight"));
         inputDialog.add(systemOwnerCheckbox);
+        inputDialog.add(new JLabel("Mark all neurons as fragments"));
+        inputDialog.add(markAsFragmentsCheckbox);
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BorderLayout());
         JButton cancelButton = new JButton("Cancel");
@@ -140,13 +146,9 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
                 }
                 TiledMicroscopeRestClient cf = new TiledMicroscopeRestClient();
                 String swcFolder = bldr.toString().trim();
-                if (! cf.isServerPathAvailable(swcFolder, true) ) {
-                   /* JOptionPane.showMessageDialog(
-                            ComponentUtil.getLVVMainWindow(),
-                            swcFolder + " not found on server.",
-                            "Error importing files",
-                            JOptionPane.ERROR_MESSAGE);*/
-                } else {
+
+                if (cf.isServerPathAvailable(swcFolder, true) ) {
+                    Boolean markAsFragments;
                     inputDialog.setVisible(false);
                     String neuronsOwnerKey;
                     if (systemOwnerCheckbox.isSelected()) {
@@ -154,7 +156,14 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
                     } else {
                         neuronsOwnerKey = null;
                     }
-                    importSWC(sample.getId(), workspaceNameTextField.getText().trim(), swcFolder, neuronsOwnerKey);
+                    if (markAsFragmentsCheckbox.isSelected()) {
+                        markAsFragments = true;
+                    } else {
+                        markAsFragments = false;
+                    }
+
+                    importSWC(sample.getId(), workspaceNameTextField.getText().trim(), swcFolder, neuronsOwnerKey,
+                            markAsFragments);
                 }
             }
         });
@@ -166,7 +175,7 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         inputDialog.setVisible(true);
     }
 
-    private void importSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner) {
+    private void importSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner, Boolean markAsFragments) {
         BackgroundWorker worker = new AsyncServiceMonitoringWorker() {
 
             private String taskDisplayName;
@@ -183,7 +192,7 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
 
                 setStatus("Submitting task " + taskDisplayName);
 
-                Long taskId = startImportSWC(sampleId, workspace, swcFolder, neuronsOwner);
+                Long taskId = startImportSWC(sampleId, workspace, swcFolder, neuronsOwner, markAsFragments);
 
                 setServiceId(taskId);
 
@@ -198,12 +207,14 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         worker.executeWithEvents();
     }
 
-    private Long startImportSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner) {
+    private Long startImportSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner,
+                                Boolean markAsFragments) {
         AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
         ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
                 .add("-sampleId", sampleId.toString());
         serviceArgsBuilder.add("-workspace", workspace);
         serviceArgsBuilder.add("-swcDirName", swcFolder);
+        serviceArgsBuilder.add("-markAsFragments", markAsFragments.toString());
         if (StringUtils.isNotBlank(neuronsOwner)) {
             serviceArgsBuilder.add("-neuronsOwner", neuronsOwner);
         }

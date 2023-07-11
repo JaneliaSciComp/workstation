@@ -14,6 +14,7 @@ import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
+import org.janelia.model.domain.tiledMicroscope.BoundingBox3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,6 +142,11 @@ public class TiledMicroscopeDomainMgr {
         }
         return workspace;
     }
+
+    public Collection<BoundingBox3d> getWorkspaceBoundingBoxes(Long workspaceId) throws Exception {
+        LOG.debug("getWorkspaceBoundingBoxes(workspaceId={})",workspaceId);
+        return client.getWorkspaceBoundingBoxes(workspaceId);
+    }
     
     public TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
         LOG.debug("createWorkspace(sampleId={}, name={})", sampleId, name);
@@ -244,6 +250,12 @@ public class TiledMicroscopeDomainMgr {
                 return client.getWorkspaceNeurons(workspaceId, start, end - start).stream();
             }
         }
+    }
+
+    public List<TmNeuronMetadata> getNeurons(List<Long> neuronIds, TmWorkspace workspace) {
+        LOG.debug("getNeurons(workspaceId={})",workspace.getId());
+        List<TmNeuronMetadata> neurons = client.getNeuronSet(neuronIds, workspace);
+        return neurons;
     }
     
     public Stream<TmNeuronMetadata> streamWorkspaceNeurons(Long workspaceId) {

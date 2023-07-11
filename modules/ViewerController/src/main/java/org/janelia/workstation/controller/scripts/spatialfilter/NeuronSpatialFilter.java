@@ -1,5 +1,6 @@
 package org.janelia.workstation.controller.scripts.spatialfilter;
 
+import org.janelia.model.domain.tiledMicroscope.BoundingBox3d;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 
@@ -21,7 +22,7 @@ import java.util.Map;
 public interface NeuronSpatialFilter {
     public String getLabel();
     public Set<Long> filterNeurons();
-    public void initFilter(Collection<TmNeuronMetadata> neuronList);
+    public void initFilter(Collection<BoundingBox3d> boundingBoxes);
     public NeuronUpdates deleteNeuron(TmNeuronMetadata neuron);
     public NeuronUpdates addNeuron(TmNeuronMetadata neuron);
     public NeuronUpdates updateNeuron(TmNeuronMetadata neuron);

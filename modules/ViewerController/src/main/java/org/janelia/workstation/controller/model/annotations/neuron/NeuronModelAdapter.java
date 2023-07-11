@@ -7,12 +7,16 @@ import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.eventbus.NeuronQueueChangeEvent;
 import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.controller.util.QueuedWorkThread;
+import org.janelia.model.domain.tiledMicroscope.BoundingBox3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.stream.Stream;
 
@@ -76,6 +80,21 @@ class NeuronModelAdapter {
                     ;
         } finally {
             log.info("Getting neurons stream took {} ms", stopWatch.getElapsedTime());
+        }
+    }
+
+    public List<TmNeuronMetadata> loadFragments(List<Long> fragments, TmWorkspace workspace) {
+        log.info("Loading fragments for workspace: {}", workspace);
+        return tmDomainMgr.getNeurons(fragments, workspace);
+    }
+
+    public Collection<BoundingBox3d> loadBoundingBoxes (TmWorkspace workspace) {
+        log.info("Loading bounding boxes for workspace: {}", workspace);
+        try {
+            return tmDomainMgr.getWorkspaceBoundingBoxes(workspace.getId());
+        } catch (Exception e) {
+            FrameworkAccess.handleException(e);
+            throw new RuntimeException("Attempt to load bounding boxes failed");
         }
     }
 
