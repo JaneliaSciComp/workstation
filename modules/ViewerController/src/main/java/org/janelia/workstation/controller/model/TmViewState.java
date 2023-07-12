@@ -7,6 +7,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
 
 import java.awt.*;
 import java.util.Map;
@@ -64,7 +65,7 @@ public class TmViewState {
         this.applyFilter = applyFilter;
     }
 
-    public NeuronSelectionSpatialFilter getSpatialFilter() {
+    public NeuronSpatialFilter getSpatialFilter() {
         return neuronFilter;
     }
 

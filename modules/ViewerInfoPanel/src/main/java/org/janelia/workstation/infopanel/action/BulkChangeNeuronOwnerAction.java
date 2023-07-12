@@ -1,27 +1,22 @@
 package org.janelia.workstation.infopanel.action;
 
-import java.awt.Frame;
-import java.awt.event.ActionEvent;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.swing.AbstractAction;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.security.Subject;
 import org.janelia.workstation.controller.ComponentUtil;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
+import org.janelia.workstation.controller.dialog.ChangeNeuronOwnerDialog;
 import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.workers.SimpleWorker;
-import org.janelia.workstation.controller.dialog.ChangeNeuronOwnerDialog;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.security.Subject;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.util.List;
 
 /**
  * this action pops up a dialog prompting user to choose a new
@@ -123,8 +118,6 @@ public class BulkChangeNeuronOwnerAction extends AbstractAction{
             //  operation happened in a different thread, all the UI update effectively
             //  locked the UI anyway, making it irrelevant to user the BG Worker;
             //  if we do a real bulk update, we should switch this to a BG Worker, though
-
-
             SimpleWorker changer = new SimpleWorker() {
                 @Override
                 protected void doStuff() throws Exception {

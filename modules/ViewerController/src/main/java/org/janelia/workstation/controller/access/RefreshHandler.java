@@ -14,14 +14,13 @@ import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronMessageConstants;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
+import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.perf4j.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import java.lang.management.ManagementFactory;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -35,14 +34,11 @@ public class RefreshHandler implements MessageHandler {
     private static final String MESSAGESERVER_URL = ConsoleProperties.getInstance().getProperty("domain.msgserver.url").trim();
     private static final String MESSAGESERVER_USERACCOUNT = ConsoleProperties.getInstance().getProperty("domain.msgserver.useraccount").trim();
     private static final String MESSAGESERVER_PASSWORD = ConsoleProperties.getInstance().getProperty("domain.msgserver.password").trim();
-    private static final String MESSAGESERVER_REFRESHEXCHANGE = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.refresh").trim();
+    private static final String MESSAGESERVER_EXCHANGE_REFRESH = ConsoleProperties.getInstance().getProperty("domain.msgserver.exchange.refresh").trim();
 
-    private NeuronManager annotationModel;
-    private AsyncMessageConsumer msgReceiver;
+    private NeuronManager neuronManager;
     static RefreshHandler handler;
     private boolean receiveUpdates = false;
-    private boolean freezeUpdates = false;
-    private Map<Long, Map<String, Object>> updatesMap = new HashMap<>();
     private TmModelManager modelManager;
 
     /**
@@ -83,83 +79,18 @@ public class RefreshHandler implements MessageHandler {
                 .getConnection(
                         MESSAGESERVER_URL, MESSAGESERVER_USERACCOUNT, MESSAGESERVER_PASSWORD, 20,
                         (exc) -> {
-                           // AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-                            String error = "Problems initializing connection to message server " + MESSAGESERVER_URL +
-                                    " with username: " + MESSAGESERVER_USERACCOUNT;
-                          //  annotationMgr.presentError(error, "Problem connecting to Message Server");
-                            log.error(error, exc);
+                            FrameworkAccess.handleExceptionQuietly(
+                                    "Problems initializing connection to message server "+
+                                            MESSAGESERVER_URL+" with username "+
+                                            MESSAGESERVER_USERACCOUNT, exc);
                         });
-        msgReceiver = new AsyncMessageConsumerImpl(messageConnection);
-        ((AsyncMessageConsumerImpl)msgReceiver).setAutoAck(true);
+        AsyncMessageConsumer msgReceiver = new AsyncMessageConsumerImpl(messageConnection);
+        ((AsyncMessageConsumerImpl) msgReceiver).setAutoAck(true);
         // create a temporary binding to ModelRefresh exchange and listen on that channel for the replies
-        msgReceiver.bindAndConnectTo("ModelRefresh", "", null);
+        msgReceiver.bindAndConnectTo(MESSAGESERVER_EXCHANGE_REFRESH, "", null);
         msgReceiver.subscribe(this);
-        log.info("Established connection to message server " + MESSAGESERVER_URL);
+        log.info("Established connection to message server {}", MESSAGESERVER_URL);
         return messageConnection.isOpen();
-    }
-
-    void refreshNeuronUpdates() {
-        // freeze neuron updates 
-        freezeUpdates = true;
-        // play back all the latest neurons and empty the map
-        Iterator<Long> neuronIterator = updatesMap.keySet().iterator();
-        log.info("Number of updates to refresh: {}", updatesMap.size());
-        while (neuronIterator.hasNext()) {
-            try {
-                Long neuronId = neuronIterator.next();
-                Map<String, Object> neuronData = updatesMap.get(neuronId);
-                TmNeuronMetadata neuron = (TmNeuronMetadata) neuronData.get("neuron");
-                NeuronMessageConstants.MessageType action = (NeuronMessageConstants.MessageType) neuronData.get("action");
-                String user = (String) neuronData.get("user");
-                // if not a neuron CRUD action, ignore
-                switch (action) {
-                    case NEURON_CREATE:
-                        log.info("processing remote create: {}", neuron.getName());
-                        annotationModel.getNeuronModel().addNeuron(neuron);
-                        updateFilter(neuron, action);
-                        annotationModel.fireNeuronCreated(neuron);
-                        break;
-                    case NEURON_SAVE_NEURONDATA:
-                        log.info("processing remote save: {},", neuron.getName());
-                        annotationModel.getNeuronModel().addNeuron(neuron);
-                        updateFilter(neuron, action);
-                        annotationModel.fireNeuronChanged(neuron);
-                        break;
-                    case NEURON_DELETE:
-                        log.info("processing remote delete: {},", neuron.getName());
-                        updateFilter(neuron, action);
-                        annotationModel.fireNeuronDeleted(neuron);
-                        break;
-                }
-
-            } catch (Exception e) {
-                // skip this update
-                log.error("Error refreshing the annotation model", e);
-            }
-        }
-        updatesMap.clear();
-
-        freezeUpdates = true;
-    }
-
-    private void addNeuronUpdate(Map<String, Object> msgHeaders, byte[] msgBody, NeuronMessageConstants.MessageType action, String user) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            TmNeuronMetadata neuron = mapper.readValue(msgBody, TmNeuronMetadata.class);
-
-            // assume this has to do with neuron CRUD; otherwise ignore
-            Map neuronData = new HashMap<>();
-            neuronData.put("neuron", neuron);
-            neuronData.put("action", action);
-            neuronData.put("user", user);
-            log.info("Adding neuron remote update: {}", neuron.getName());
-            if (neuron != null && neuron.getId() != null) {
-                this.updatesMap.put(neuron.getId(), neuronData);
-            }
-        } catch (Exception e) {
-            // any type of exception, log the exception and dump the neuron
-            log.info("Problem storing update {}", e.getMessage());
-        }
     }
 
     /**
@@ -171,37 +102,40 @@ public class RefreshHandler implements MessageHandler {
             StopWatch stopWatch = new StopWatch();
 
             if (msgHeaders == null) {
-                logError("Issue trying to process metadata from update");
+                log.warn("Encountered null message headers when handling refresh message");
                 return;
             }
-            // thead logging
-            log.debug("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
-            log.debug("Heap Size: {}", Runtime.getRuntime().totalMemory());
+
+            // thread logging
+            log.trace("Thread Count: {}", ManagementFactory.getThreadMXBean().getThreadCount());
+            log.trace("Heap Size: {}", Runtime.getRuntime().totalMemory());
 
             log.debug("message properties: TYPE={},USER={},WORKSPACE={}",
                     msgHeaders.get(NeuronMessageConstants.Headers.TYPE),
                     msgHeaders.get(NeuronMessageConstants.Headers.USER),
                     msgHeaders.get(NeuronMessageConstants.Headers.WORKSPACE));
 
-            NeuronMessageConstants.MessageType action = NeuronMessageConstants.MessageType.valueOf(MessagingUtils.getHeaderAsString(msgHeaders, NeuronMessageConstants.Headers.TYPE));
+            NeuronMessageConstants.MessageType action = NeuronMessageConstants.MessageType.valueOf(
+                    MessagingUtils.getHeaderAsString(msgHeaders, NeuronMessageConstants.Headers.TYPE));
             String user = MessagingUtils.getHeaderAsString(msgHeaders, NeuronMessageConstants.Headers.USER);
-
             Long workspace = MessagingUtils.getHeaderAsLong(msgHeaders, NeuronMessageConstants.Headers.WORKSPACE);
 
+            // Ignore our own updates
+            if (user.equals(AccessManager.getSubjectKey())) return;
+
+            // Ignore updates if user has disabled shared workspaces
+            if (ApplicationPanel.isDisableSharedWorkspace()) {
+                return;
+            }
+
             // flag to suppress shared updates
-            if (!receiveUpdates && !freezeUpdates && !user.equals(AccessManager.getSubjectKey())) {
-                if (workspace != null && annotationModel != null && modelManager.getCurrentWorkspace() != null
-                        && workspace.longValue() == modelManager.getCurrentWorkspace().getId().longValue()) {
-                    addNeuronUpdate(msgHeaders, msgBody, action, user);
-                    log.debug("SHARED UPDATE TIME: {}", stopWatch.getElapsedTime());
-                }
+            if (!receiveUpdates && !user.equals(AccessManager.getSubjectKey())) {
                 return;
             }
 
             if (action == NeuronMessageConstants.MessageType.ERROR_PROCESSING) {
-                if (user != null && user.equals(AccessManager.getSubjectKey())) {
-                    log.info("Error message received from server");
-                    logError(new String(msgBody));
+                if (user.equals(AccessManager.getSubjectKey())) {
+                    log.warn("Error message received from server: {}", new String(msgBody));
                 }
                 return;
             }
@@ -209,15 +143,7 @@ public class RefreshHandler implements MessageHandler {
             ObjectMapper mapper = new ObjectMapper();
             TmNeuronMetadata neuron = mapper.readValue(msgBody, TmNeuronMetadata.class);
 
-            TmNeuronMetadata localNeuron = annotationModel.getNeuronModel().getNeuronById(neuron.getId());// decrease the sync level
-            if (localNeuron != null) {
-                localNeuron.decrementSyncLevel();
-                if (localNeuron.getSyncLevel() == 0) {
-                    localNeuron.setSynced(true);
-                }
-            }
-
-            log.info("Processed headers for workspace Id {}", workspace);
+            log.debug("Processed headers for workspace Id {}", workspace);
             // if not this workspace or user isn't looking at a workspace right now or workspace not relating to a workspace update, filter out message
 
             log.debug("PRE-WORKSPACE TIME: {}", stopWatch.getElapsedTime());
@@ -226,131 +152,90 @@ public class RefreshHandler implements MessageHandler {
                 return;
             }
 
-            if (action == NeuronMessageConstants.MessageType.NEURON_OWNERSHIP_DECISION) {
-                boolean decision = MessagingUtils.getHeaderAsBoolean(msgHeaders, NeuronMessageConstants.Headers.DECISION);
-                if (decision) {
-                    TmNeuronMetadata origNeuron = annotationModel.getNeuronModel().getNeuronById(neuron.getId());
-                    if (origNeuron != null) {
-                        origNeuron.setOwnerKey(neuron.getOwnerKey());
-                        origNeuron.setWriters(neuron.getWriters());
-                        origNeuron.setReaders(neuron.getReaders());
-                    }
-                }
-                annotationModel.getNeuronModel().completeOwnershipRequest(decision);
-                updateFilter(neuron, action);
-                SwingUtilities.invokeLater(() -> {
+            SwingUtilities.invokeLater(() -> {
+                try {
                     StopWatch stopWatch2 = new StopWatch();
-                    annotationModel.fireNeuronsOwnerChanged(neuron);
-                    stopWatch2.stop();
-                    log.info("RefreshHandler.invokeLater: handled ownership decision update in {} ms", stopWatch2.getElapsedTime());
-                });
-            } else if (action == NeuronMessageConstants.MessageType.NEURON_CREATE && user.equals(AccessManager.getSubjectKey())) {
-                // complete the future outside of the swing thread, since the copyGUI thread is blocked
-                StopWatch stopWatch2 = new StopWatch();
-                handleNeuronCreate(neuron, n -> annotationModel.getNeuronModel().completeCreateNeuron(n));
-                stopWatch2.stop();
-                log.info("RefreshHandler: Remote own neuron creation update in {} ms", stopWatch2.getElapsedTime());
-                log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
-            } else if (action == NeuronMessageConstants.MessageType.REQUEST_NEURON_OWNERSHIP) {
-                // some other user is asking for ownership of this neuron... process accordingly
-            } else {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        try {
-                            StopWatch stopWatch2 = new StopWatch();
-                            // fire notice to NeuronManager
-                            // change relevant to this workspace and not executed on this client,
-                            // update model or process request
-                            switch (action) {
-                                case NEURON_CREATE:
-                                    handleNeuronCreate(neuron, n -> annotationModel.getNeuronModel().addNeuron(n));
-                                    break;
-                                case NEURON_SAVE_NEURONDATA:
-                                    if (!user.equals(AccessManager.getSubjectKey())) {
-                                        if (annotationModel.getNeuronModel().getNeuronById(neuron.getId())==null) {
-                                            annotationModel.getNeuronModel().addNeuron(neuron);
-                                            updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE);
-                                            annotationModel.fireNeuronCreated(neuron);
-                                        } else
-                                            handleNeuronChanged(neuron);
-                                    }
-                                    break;
-                                case NEURON_DELETE:
-                                    if (!user.equals(AccessManager.getSubjectKey())) {
-                                        handleNeuronDeleted(neuron);
-                                         
-                                    }
-                                    break;
+                    // fire notice to NeuronManager
+                    // change relevant to this workspace and not executed on this client,
+                    // update model or process request
+                    switch (action) {
+                        case NEURON_CREATE:
+                            handleNeuronCreate(user, neuron, n -> neuronManager.getNeuronModel().addNeuron(n));
+                            break;
+                        case NEURON_SAVE_NEURONDATA:
+                            if (neuronManager.getNeuronModel().getNeuronById(neuron.getId())==null) {
+                                // We don't know about this neuron yet
+                                neuronManager.getNeuronModel().addNeuron(neuron);
+                                updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE);
+                                neuronManager.fireNeuronCreated(neuron);
+                            } else {
+                                handleNeuronChanged(user, neuron);
                             }
-                            stopWatch2.stop();
-                            log.debug("RefreshHandler.invokeLater: handled update in {} ms", stopWatch2.getElapsedTime());
-                        } catch (Exception e) {
-                            log.error("Exception thrown in main GUI thread during message processing", e);
-                            logError(e.getMessage());
-                        }
-                        log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
+                            break;
+                        case NEURON_DELETE:
+                            handleNeuronDeleted(user, neuron);
+                            break;
+                        case REQUEST_NEURON_ASSIGNMENT:
+                            handleNeuronAssignment(user, neuron);
+                            break;
                     }
-                });
-            }
+                    stopWatch2.stop();
+                    log.debug("RefreshHandler.invokeLater: handled update in {} ms", stopWatch2.getElapsedTime());
+                } catch (Exception e) {
+                    FrameworkAccess.handleExceptionQuietly("Error handling refresh message: " + e.getMessage(), e);
+                }
+                log.debug("TOTAL MESSAGING PROCESSING TIME: {}", stopWatch.getElapsedTime());
+            });
             stopWatch.stop();
-            log.info("RefreshHandler: handled message in {} ms", stopWatch.getElapsedTime());
+            log.debug("RefreshHandler: handled message in {} ms", stopWatch.getElapsedTime());
         } catch (Exception e) {
-            log.error(e.getMessage());
+            FrameworkAccess.handleExceptionQuietly("Error handling refresh message: " + e.getMessage(), e);
         }
     }
 
-    private void handleNeuronCreate(TmNeuronMetadata neuron, Consumer<TmNeuronMetadata> neuronAction) {
+    private void handleNeuronCreate(String user, TmNeuronMetadata neuron, Consumer<TmNeuronMetadata> neuronAction) {
         try {
-            log.info("remote processing create neuron " + neuron.getName());
+            log.info("Processing neuron '{}' ({}) remotely created by {}", neuron.getName(), neuron.getId(), user);
             neuronAction.accept(neuron);
 			updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_CREATE);
-            annotationModel.fireNeuronCreated(neuron);
+            neuronManager.fireNeuronCreated(neuron);
         } catch (Exception e) {
-            logError("Error handling neuron creation: " + e.getMessage());
-            log.error("Error handling neuron creation message for {}", neuron, e);
+            FrameworkAccess.handleExceptionQuietly("Error handling neuron creation: " + e.getMessage(), e);
         }
     }
 
-    private void handleNeuronChanged(TmNeuronMetadata neuron) {
+    private void handleNeuronChanged(String user, TmNeuronMetadata neuron) {
         try {
-            log.info("remote processing change neuron " + neuron.getName());
-            if (!ApplicationPanel.isDisableSharedWorkspace()) {
-                annotationModel.getNeuronModel().refreshNeuronFromShared(neuron);
-                annotationModel.refreshNeuron(neuron);
-            }
+            log.info("Processing neuron '{}' ({}) remotely modified by {}", neuron.getName(), neuron.getId(), user);
+            neuronManager.getNeuronModel().refreshNeuronFromShared(neuron);
+            neuronManager.refreshNeuron(neuron);
         } catch (Exception e) {
-            logError("Error handling neuron change: " + e.getMessage());
-            log.error("Error handling neuron changed message for {}", neuron, e);
+            FrameworkAccess.handleExceptionQuietly("Error handling neuron change: " + e.getMessage(), e);
         }
     }
 
-    private void handleNeuronDeleted(TmNeuronMetadata neuron) {
+    private void handleNeuronDeleted(String user, TmNeuronMetadata neuron) {
         try {
-            log.info("remote processing delete neuron" + neuron.getName());
-            if (!ApplicationPanel.isDisableSharedWorkspace()) {
-                updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE);
-                annotationModel.fireNeuronDeleted(neuron);
-            }
+            log.info("Processing neuron '{}' ({}) remotely deleted by {}", neuron.getName(), neuron.getId(), user);
+            updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE);
+            neuronManager.fireNeuronDeleted(neuron);
         } catch (Exception e) {
-            logError("Error handling neuron change: " + e.getMessage());
-            log.error("Error handling neuron changed message for {}", neuron, e);
+            FrameworkAccess.handleExceptionQuietly("Error handling neuron deletion: " + e.getMessage(), e);
         }
     }
-	
+
+    private void handleNeuronAssignment(String user, TmNeuronMetadata neuron) {
+        try {
+            log.info("Processing neuron '{}' ({}) remotely reassigned by {}", neuron.getName(), neuron.getId(), user);
+            updateFilter(neuron, NeuronMessageConstants.MessageType.REQUEST_NEURON_ASSIGNMENT);
+            neuronManager.fireNeuronChanged(neuron);
+        } catch (Exception e) {
+            FrameworkAccess.handleExceptionQuietly("Error handling neuron deletion: " + e.getMessage(), e);
+        }
+    }
+
     public void updateFilter(TmNeuronMetadata neuron, NeuronMessageConstants.MessageType action) {
-        annotationModel.updateNeuronFilter(neuron, action);
-    }
-
-    public void logError(String errorMsg) {
-        String error = "Problems receiving message updates, " + errorMsg;
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-               // AnnotationManager annotationMgr = LargeVolumeViewerTopComponent.getInstance().getAnnotationMgr();
-             //   annotationMgr.presentError(errorMsg, new RuntimeException(error));
-            }
-        });
-        log.error(error);
+        neuronManager.updateNeuronFilter(neuron, action);
     }
 
     @Override
@@ -359,12 +244,10 @@ public class RefreshHandler implements MessageHandler {
     }
 
     public NeuronManager getAnnotationModel() {
-        return annotationModel;
+        return neuronManager;
     }
 
     public void setAnnotationModel(NeuronManager annotationModel) {
-        this.annotationModel = annotationModel;
+        this.neuronManager = annotationModel;
     }
-
-
 }

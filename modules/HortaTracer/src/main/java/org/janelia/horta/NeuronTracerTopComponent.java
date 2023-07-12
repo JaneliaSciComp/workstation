@@ -508,11 +508,16 @@ public final class NeuronTracerTopComponent extends TopComponent
                     tmWorkspace.getId().toString(), null);
             ObjectMapper mapper = new ObjectMapper();
             userWorkspaceColorModel = mapper.convertValue(modelMap, TmColorModel.class);
+            logger.info("Loaded {} color model from persisted preferences",
+                    userWorkspaceColorModel == null ? "<null>" : (userWorkspaceColorModel.getChannelCount() + " channel"));
         } catch (Exception e) {
             FrameworkAccess.handleException("Problems retrieving user color model for workspace", e);
         }
-        if (userWorkspaceColorModel==null) {
+        if (userWorkspaceColorModel == null) {
             userWorkspaceColorModel = tmWorkspace.getColorModel3d();
+            logger.info("Load {} color model from workspace {}",
+                    userWorkspaceColorModel == null ? "<null>" : (userWorkspaceColorModel.getChannelCount() + " channel"),
+                    tmWorkspace.getId());
         }
         if (userWorkspaceColorModel!=null) {
             ModelTranslation.updateColorModel(userWorkspaceColorModel, imageColorModel);

@@ -127,7 +127,6 @@ public class Startup implements Runnable {
             DomainMgr.getDomainMgr();
             AccessManager.getAccessManager();
             SessionMgr.getSessionMgr();
-
         }
         catch (Throwable e) {
             FrameworkAccess.handleException(e);

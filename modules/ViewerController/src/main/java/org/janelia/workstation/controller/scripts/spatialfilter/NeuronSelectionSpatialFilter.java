@@ -10,7 +10,7 @@ import java.util.Set;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.model.domain.tiledMicroscope.BoundingBox3d;
 import org.janelia.workstation.geom.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +18,8 @@ import org.slf4j.LoggerFactory;
 public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     NeuronProximitySpatialIndex index;
     BoundingBox3d currentRegion;
-    Set<Long> fragments = new HashSet<>();
+    HashMap<Long, BoundingBox3d> boxes = new HashMap<>();
+    Set<Long> fragments;
     Set<Long> userNeuronIds;
     int numTotalNeurons;
     private static final Logger log = LoggerFactory.getLogger(NeuronSelectionSpatialFilter.class);
@@ -35,22 +36,18 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     }
 
     @Override
-    public void initFilter(Collection<TmNeuronMetadata> neuronList) {
+    public void initFilter(Collection<BoundingBox3d> boundingBoxes) {
         log.info("Starting to build spatial filter");
-        numTotalNeurons = neuronList.size();
+        numTotalNeurons = boundingBoxes.size();
         // load all the neuron points into the index
         index = new NeuronProximitySpatialIndex();
         userNeuronIds = new HashSet<>();
-        String systemGroup = ConsoleProperties.getInstance()
-                .getProperty("console.LVVHorta.tracersgroup").trim();
         int count = 0;
-        for (TmNeuronMetadata neuron: neuronList) {
+        for (BoundingBox3d boundingBox: boundingBoxes) {
             count++;
-            if (!neuron.getOwnerKey().equals(systemGroup)) {
-                userNeuronIds.add(neuron.getId());
-            } else {
-                index.addToIndex(neuron);
-            }
+            index.addToIndex(boundingBox);
+            boxes.put(boundingBox.getDomainId(), boundingBox);
+            userNeuronIds.add(boundingBox.getDomainId());
         }
         log.info("Finished building spatial filter");
     }
@@ -66,11 +63,9 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     }
 
     private BoundingBox3d calcBoundingBox (TmGeoAnnotation vertex) {
-        Vec3 min = new Vec3(vertex.getX()-distance,vertex.getY()-distance,vertex.getZ()-distance);
-        Vec3 max = new Vec3(vertex.getX()+distance,vertex.getY()+distance,vertex.getZ()+distance);
-        BoundingBox3d box = new BoundingBox3d();
-        box.setMin(min);
-        box.setMax(max);
+        double[] min = new double[]{vertex.getX()-distance,vertex.getY()-distance,vertex.getZ()-distance};
+        double[] max = new double[]{vertex.getX()+distance,vertex.getY()+distance,vertex.getZ()+distance};
+        BoundingBox3d box = new BoundingBox3d(min, max);
         return box;
     }
 
@@ -79,7 +74,7 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     public synchronized NeuronUpdates deleteNeuron(TmNeuronMetadata neuron) {
         userNeuronIds.remove(neuron.getId());        
         fragments.remove(neuron.getId());
-        index.removeFromIndex(neuron);
+        index.removeFromIndex(boxes.get(neuron.getId()));
         Set<Long> delSet = new HashSet<>();
         delSet.add(neuron.getId());
         NeuronUpdates updates = new NeuronUpdates();
@@ -98,7 +93,7 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     public synchronized NeuronUpdates updateNeuron(TmNeuronMetadata neuron) {
         userNeuronIds.add(neuron.getId());
         fragments.remove(neuron.getId());
-        index.removeFromIndex(neuron);
+        index.removeFromIndex(boxes.get(neuron.getId()));
         return new NeuronUpdates();
     }
 

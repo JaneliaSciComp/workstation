@@ -54,3 +54,7 @@ You can follow any of the existing modules as a guide for the content of these f
 Next, edit `pom.xml` at the top-level and add your module to the `<modules>` section at the bottom. This will make it part of the build.
 
 Finally, edit the `pom.xml` for one or more applications (e.g. `modules/application/pom.xml` or `modules/application_horta/pom.xml`), and add your module as a dependency. This will include it into the default configuration for that application. 
+
+## DPI Settings in Windows 10+
+
+If you set higher DPI ("Make everything bigger") in Windows options, sometimes this setting is ignored by the Workstation, especially during development. One workaround is to find your java.exe, right-click it and select Properties, then click on the Compatibility tab, and click "Change high DPI settings". In the second dialog, select the "Override high DPI scaling behavior" checkbox and select "System" below that.  

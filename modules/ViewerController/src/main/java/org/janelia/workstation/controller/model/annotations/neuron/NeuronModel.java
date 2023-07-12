@@ -1,20 +1,23 @@
 package org.janelia.workstation.controller.model.annotations.neuron;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.jetty.util.ConcurrentHashSet;
+import org.janelia.model.domain.tiledMicroscope.*;
+import org.janelia.model.util.TmNeuronUtils;
+import org.janelia.workstation.controller.model.IdSource;
+import org.janelia.workstation.controller.model.TmHistoricalEvent;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.model.domain.tiledMicroscope.BoundingBox3d;
+import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.perf4j.StopWatch;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
-import org.janelia.model.domain.tiledMicroscope.TmAnchoredPath;
-import org.janelia.model.domain.tiledMicroscope.TmAnchoredPathEndpoints;
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmStructuredTextAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
-import org.janelia.model.util.TmNeuronUtils;
-import org.janelia.workstation.controller.model.IdSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class NeuronModel {
 
@@ -22,8 +25,7 @@ public class NeuronModel {
     private final NeuronModelAdapter neuronModelAdapter = new NeuronModelAdapter();
     private final IdSource idSource = new IdSource();
     private Map<Long, TmNeuronMetadata> neuronMap;
-    private CompletableFuture<Boolean> ownershipRequest;
-    private CompletableFuture<TmNeuronMetadata> createNeuronRequest;
+    private Set<BoundingBox3d> boundingBoxes;
     static NeuronModel modelInstance;
 
     static public NeuronModel getInstance() {
@@ -35,10 +37,23 @@ public class NeuronModel {
 
     public NeuronModel() {
         neuronMap = new ConcurrentHashMap<>();
+        boundingBoxes = new HashSet<BoundingBox3d>();
     }
 
     public Collection<TmNeuronMetadata> getNeurons() {
         return neuronMap.values();
+    }
+
+    public Collection<BoundingBox3d> getBoundingBoxes() {
+        return boundingBoxes;
+    }
+
+    public void retrieveFragments (List<Long> fragSet, TmWorkspace workspace) {
+        List<TmNeuronMetadata> frags = neuronModelAdapter.loadFragments(fragSet, workspace);
+        for (TmNeuronMetadata frag: frags) {
+            frag.initNeuronData();
+            neuronMap.put(frag.getId(), frag);
+        }
     }
 
     public void addNeuron(TmNeuronMetadata neuron) {
@@ -156,50 +171,19 @@ public class NeuronModel {
         return annotation;
     }
 
-    /**
-     * We complete the ownership request future once we get the decision from the NeuronBroker
-     *
-     * @param updatedNeuron neuron created by the message server and broadcast back
-     * @throws Exception
-     */
-    public void completeCreateNeuron(TmNeuronMetadata updatedNeuron) {
-        addNeuron(updatedNeuron);
-        if (createNeuronRequest != null) {
-            createNeuronRequest.complete(updatedNeuron);
-        }
-    }
-
-    /**
-     * We complete the ownership request future once we get the decision from the NeuronBroker
-     *
-     * @param decision
-     * @throws Exception
-     */
-    public void completeOwnershipRequest(boolean decision) {
-        if (ownershipRequest != null) {
-            ownershipRequest.complete(new Boolean(decision));
-        }
-    }
-
-    public void deleteNeuron(TmWorkspace tmWorkspace, TmNeuronMetadata tmNeuronMetadata) throws Exception {
+    public CompletableFuture<TmNeuronMetadata> deleteNeuron(TmWorkspace tmWorkspace, TmNeuronMetadata tmNeuronMetadata) {
         TmNeuronMetadata oldValue = removeNeuron(tmNeuronMetadata);
         if (oldValue!=null) {
             // Need to signal to DB that this entitydata must be deleted.
-            deleteNeuronData(tmNeuronMetadata);
+            return neuronModelAdapter.removeNeuron(tmNeuronMetadata);
         }
         else {
-            LOG.warn("Attempted to remove neuron {} that was not in workspace {}.", tmNeuronMetadata.getId(), tmWorkspace.getId());
+            return CompletableFuture.completedFuture(null);
         }
-    }
-
-    private void deleteNeuronData(TmNeuronMetadata neuron) throws Exception {
-        neuronModelAdapter.asyncDeleteNeuron(neuron);
     }
 
     public void deleteStructuredTextAnnotation(TmNeuronMetadata neuron, long annotationId) {
-        if (neuron.getStructuredTextAnnotationMap().containsKey(annotationId)) {
-            neuron.getStructuredTextAnnotationMap().remove(annotationId);
-        }
+        neuron.getStructuredTextAnnotationMap().remove(annotationId);
     }
 
     /**
@@ -217,25 +201,15 @@ public class NeuronModel {
     }
 
     /**
-     * Makes a new neuron.
-     *
-     * @todo may need to add create, update dates + ownerKey
-     * @param workspace will contain this neuron.
-     * @param name of new neuron.
-     * @return that neuron
-     * @throws Exception
+     * Fetches the precomputed bounding boxes from a workspace so a scalable index can be built to selectively
+     * download the fragments in the vicinity.
+     * TO DO: To speed up development, I'm using the existing spatial filter and just using the corners of the bounding box
+     * (6 3D points) to find close neurons.  To scale up a bit, this should really be a 3D spatial engine using r*trees
+     * for full 3D annotation support.
      */
-    public CompletableFuture<TmNeuronMetadata> createTiledMicroscopeNeuron(TmWorkspace workspace, String name) throws Exception {
-        if (workspace == null || name == null) {
-            throw new IllegalStateException("Tiled Neuron must be created in a valid workspace.");
-        }
-        TmNeuronMetadata neuron = new TmNeuronMetadata(workspace, name);
-        createNeuronRequest = createTiledMicroscopeNeuron(neuron);
-        return createNeuronRequest;
-    }
-
-    private CompletableFuture<TmNeuronMetadata> createTiledMicroscopeNeuron(TmNeuronMetadata neuron) throws Exception {
-        return neuronModelAdapter.asyncCreateNeuron(neuron);
+    public void loadWorkspaceBoundingBoxes (TmWorkspace workspace) throws Exception {
+        LOG.info("loadWorkspaceNeurons() loaded {} neurons", neuronMap.size());
+        boundingBoxes = new HashSet<BoundingBox3d>(neuronModelAdapter.loadBoundingBoxes(workspace));
     }
 
     /**
@@ -369,26 +343,17 @@ public class NeuronModel {
         }
     }
 
+    public CompletableFuture<TmNeuronMetadata> createNeuron(TmNeuronMetadata neuron) throws Exception {
+        return neuronModelAdapter.createNeuron(neuron);
+    }
+
     /**
      * ownership change request; this version expects to happen immediately (user already
      * has authority to change the owner (they own it or it's a common neuron)
      */
-    public void requestAssignmentChange(TmNeuronMetadata neuron, String userKey) throws Exception {
-        neuronModelAdapter.requestAssignment(neuron, userKey);
-    }
-
-    /**
-     * We make an ownership request to take ownership of this neuron; we'd like to perform a fast
-     * block in this case in the calling function and fulfill the future (hopefully rapidly)
-     * when the approval request comes in from the NeuronBroker.
-     *
-     * This version is used when the requester doesn't have ownership and an explicit decision is needed.
-     * @param neuron
-     * @throws Exception
-     */
-    public CompletableFuture<Boolean> requestOwnershipChange(TmNeuronMetadata neuron) throws Exception {
-        ownershipRequest = neuronModelAdapter.requestOwnership(neuron);
-        return ownershipRequest;
+    public CompletableFuture<TmNeuronMetadata> changeOwnership(TmNeuronMetadata neuron, String userKey) throws Exception {
+        saveHistoricalNeuron(neuron);
+        return neuronModelAdapter.changeOwnership(neuron, userKey);
     }
 
     /**
@@ -467,19 +432,35 @@ public class NeuronModel {
         }
     }
 
-    public void saveNeuronData(TmNeuronMetadata neuron) throws Exception {
-        // save historical event data for undo/redo
-        neuronModelAdapter.asyncSaveNeuron(neuron, null);
+    public CompletableFuture<TmNeuronMetadata> saveNeuronData(TmNeuronMetadata neuron) throws Exception {
+        saveHistoricalNeuron(neuron);
+        return neuronModelAdapter.saveNeuron(neuron).exceptionally((e) -> {
+            FrameworkAccess.handleException(e);
+            return null;
+        });
     }
 
-    public void restoreNeuronFromHistory(TmNeuronMetadata neuron) throws Exception {
+    private void saveHistoricalNeuron(TmNeuronMetadata neuron) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        byte[] neuronData = mapper.writeValueAsBytes(neuron);
+        TmHistoricalEvent event = new TmHistoricalEvent();
+        Map<Long,byte[]> map = new HashMap<>();
+        map.put(neuron.getId(), neuronData);
+        event.setNeurons(map);
+        event.setTimestamp(new Date());
+        event.setType(TmHistoricalEvent.EVENT_TYPE.NEURON_UPDATE);
+        TmModelManager.getInstance().getNeuronHistory().addHistoricalEvent(event);
+    }
+
+    public CompletableFuture<TmNeuronMetadata> restoreNeuronFromHistory(TmNeuronMetadata neuron) throws Exception {
+
+        // restore from history
         TmNeuronMetadata oldNeuron = neuronMap.get(neuron.getId());
         oldNeuron.setNeuronData(neuron.getNeuronData());
         oldNeuron.setColor(neuron.getColor());
         oldNeuron.setName(neuron.getName());
-        Map<String, String> extraArguments = new HashMap<>();
-        extraArguments.put("undo", "true");
-        neuronModelAdapter.asyncSaveNeuron(neuron, extraArguments);
+
+        return neuronModelAdapter.saveNeuron(neuron);
     }
 
     public void refreshNeuronFromShared (TmNeuronMetadata neuron) throws Exception {
@@ -524,4 +505,7 @@ public class NeuronModel {
         neuron.getStructuredTextAnnotationMap().put(annotation.getParentId(), annotation);
     }
 
+    public int getPendingOperations() {
+        return neuronModelAdapter.getPendingOperations();
+    }
 }
