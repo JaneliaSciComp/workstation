@@ -119,12 +119,20 @@ public class SharedVolumeImage implements VolumeImage3d {
         }
 
         loadAdapter = tileLoaderProvider.createLoadAdapter(volumeBaseURL.toString());
-        loadAdapter.loadMetadata();
 
-        // Update bounding box
-        // Compute bounding box
-        TileFormat tf = getLoadAdapter().getTileFormat();
-        BoundingBox3d newBox = tf.calcBoundingBox();
+        BoundingBox3d newBox;
+
+        try {
+            loadAdapter.loadMetadata();
+
+            // Update bounding box
+            // Compute bounding box
+            TileFormat tf = getLoadAdapter().getTileFormat();
+            newBox = tf.calcBoundingBox();
+        } catch (Exception ex) {
+            // Fails when sample is OmeZarr format.  Apply a default bounding box for now.
+            newBox = new BoundingBox3d(new Vec3(0, 0, 0), new Vec3(30000, 15000, 15000));
+        }
 
         boundingBox3d.setMin(newBox.getMin());
         boundingBox3d.setMax(newBox.getMax());

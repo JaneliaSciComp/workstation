@@ -1,6 +1,9 @@
 package org.janelia.horta;
 
 import java.awt.*;
+
+import org.apache.commons.lang.StringUtils;
+import org.janelia.model.domain.enums.FileType;
 import java.awt.datatransfer.*;
 import java.awt.dnd.*;
 import java.awt.event.*;
@@ -35,6 +38,10 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 
 import org.janelia.geometry3d.ObservableInterface;
+import org.janelia.horta.actors.OmeZarrVolumeActor;
+import org.janelia.horta.blocks.OmeZarrBlockTileSource;
+import org.janelia.horta.loader.*;
+import org.janelia.horta.volume.*;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.controller.dialog.NeuronColorDialog;
@@ -171,6 +178,8 @@ public final class NeuronTracerTopComponent extends TopComponent
     private StaticVolumeBrickSource volumeSource;
     // New way for loading ktx tiles
     private KtxOctreeBlockTileSource ktxSource;
+    // New way for loading ome zarr tiles
+    private OmeZarrBlockTileSource omeZarrSource;
 
     private CenterCrossHairActor crossHairActor;
     private ScaleBar scaleBar = new ScaleBar();
@@ -329,6 +338,15 @@ public final class NeuronTracerTopComponent extends TopComponent
             }
         });
 
+        OmeZarrVolumeActor.getInstance().setVolumeState(volumeState);
+        OmeZarrVolumeActor.getInstance().getDynamicTileUpdateObservable().addObserver(new Observer() {
+            @Override
+            public void update(Observable o, Object arg) {
+                getNeuronMPRenderer().setIntensityBufferDirty();
+                redrawNow();
+            }
+        });
+
         neuronMPRenderer = setUpActors();
 
         hortaManager = new HortaManager(this, getNeuronMPRenderer(), tracingInteractor);
@@ -434,6 +452,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         // Don't load both ktx and raw tiles...
         if (volumeSource != null) {
             setKtxSource(null);
+            setOmeZarrSource(null);
         }
     }
 
@@ -534,6 +553,14 @@ public final class NeuronTracerTopComponent extends TopComponent
                 vantage.setRotationInGround(new Rotation().setFromQuaternion(q));
             } else {
                 vantage.setRotationInGround(vantage.getDefaultRotation());
+            }
+
+            TmSample tmSample = TmModelManager.getInstance().getCurrentSample();
+            if (tmSample != null) {
+                String zarrPath = tmSample.getFiles().get(FileType.LargeVolumeZarr);
+                if (zarrPath != null && !StringUtils.isBlank(zarrPath)) {
+                    setCubifyVoxels(false);
+                }
             }
 
             currentSource = TmModelManager.getInstance().getTileLoader().getUrl().toString();
@@ -825,6 +852,10 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     private ImageColorModel imageColorModel = new ImageColorModel(65535, 3);
 
+    public ImageColorModel getImageColorModel() {
+        return imageColorModel;
+    }
+
     public void loadStartupPreferences() {
         Preferences prefs = NbPreferences.forModule(getClass());
 
@@ -951,6 +982,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         });
 
         TetVolumeActor.getInstance().setHortaVantage(vantage);
+        OmeZarrVolumeActor.getInstance().setHortaVantage(vantage);
 
         // Set default colors to mouse light standard...
         imageColorModel.getChannel(0).setColor(Color.green);
@@ -1009,6 +1041,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         neuronTraceLoader.loadTileAtCurrentFocus(volumeSource);
     }
 
+    public boolean loadDroppedOmeZarr(String sourceName) throws IOException {
+        setOmeZarrSource(new OmeZarrBlockTileSource(null, getImageColorModel()).init(sourceName));
+        Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
+        neuronTraceLoader.loadOmeZarrTileAtLocation(getOmeZarrSource(), focus, true);
+        return true;
+    }
+
     private void setupDragAndDropYml() {
         final DroppedFileHandler droppedFileHandler = new DroppedFileHandler();
         droppedFileHandler.addLoader(new GZIPFileLoader());
@@ -1018,6 +1057,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         droppedFileHandler.addLoader(new TilebaseYamlLoader(this));
         droppedFileHandler.addLoader(new ObjMeshLoader(this));
         droppedFileHandler.addLoader(new HortaKtxLoader(this.getNeuronMPRenderer()));
+        droppedFileHandler.addLoader(new OmeZarrLoader(this));
 
         // Allow user to drop tilebase.cache.yml on this window
         setDropTarget(new DropTarget(this, new DropTargetListener() {
@@ -1214,6 +1254,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                             volumeCache.toggleUpdateCache();
                             item.setSelected(doesUpdateVolumeCache());
                             TetVolumeActor.getInstance().setAutoUpdate(doesUpdateVolumeCache());
+                            OmeZarrVolumeActor.getInstance().setAutoUpdate(doesUpdateVolumeCache());
                         }
                     });
                 }
@@ -2027,6 +2068,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     public void clearAllTiles() {
         // this is a workaround for clearing RAW tiles until we can clean up the controllers for Horta
         TetVolumeActor.getInstance().setAutoUpdate(false);
+        OmeZarrVolumeActor.getInstance().setAutoUpdate(false);
         reloadSampleLocation();
     }
 
@@ -2174,6 +2216,21 @@ public final class NeuronTracerTopComponent extends TopComponent
         TetVolumeActor.getInstance().setKtxTileSource(ktxSource);
         // Don't load both ktx and raw tiles at the same time
         if (ktxSource != null) {
+            setOmeZarrSource(null);
+            setVolumeSource(null);
+        }
+    }
+
+    OmeZarrBlockTileSource getOmeZarrSource() {
+        return omeZarrSource;
+    }
+
+    void setOmeZarrSource(OmeZarrBlockTileSource omeZarrSource){
+        this.omeZarrSource = omeZarrSource;
+        OmeZarrVolumeActor.getInstance().setOmeZarrTileSource(omeZarrSource);
+        // Don't load ktx and omezarr or raw tiles at the same time
+        if (omeZarrSource != null) {
+            setKtxSource(null);
             setVolumeSource(null);
         }
     }
@@ -2246,7 +2303,8 @@ public final class NeuronTracerTopComponent extends TopComponent
 
     boolean isPreferKtx() {
         TmSample tmSample = TmModelManager.getInstance().getCurrentSample();
-        if (tmSample.getFiles().containsKey(FileType.LargeVolumeZarr)) {
+
+        if (this.omeZarrSource != null || (tmSample != null && tmSample.getFiles().containsKey(FileType.LargeVolumeZarr))) {
             return false;
         } else {
             return true;

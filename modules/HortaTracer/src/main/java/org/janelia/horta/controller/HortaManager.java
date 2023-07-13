@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.janelia.gltools.MeshActor;
+import org.janelia.horta.actors.OmeZarrVolumeActor;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.workstation.controller.model.annotations.neuron.VertexCollectionWithNeuron;
@@ -139,6 +140,7 @@ public class HortaManager {
         try {
             renderer.clearNeuronReconstructions();
             TetVolumeActor.getInstance().clearAllBlocks();
+            OmeZarrVolumeActor.getInstance().clearAllBlocks();
             List<MeshActor> meshActorList = renderer.getMeshActors();
             for (MeshActor meshActor: meshActorList) {
                 renderer.removeMeshActor(meshActor);
