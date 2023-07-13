@@ -2102,32 +2102,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         }
     }
 
-
-    private BoundingBox3d calcBoundingBox (TmNeuronMetadata neuron) {
-        double[] min = new double[]{1000000,1000000,1000000};
-        double[] max = new double[]{0,0,0};
-        Iterator<TmGeoAnnotation> iter = neuron.getGeoAnnotationMap().values().iterator();
-        while (iter.hasNext()) {
-            TmGeoAnnotation point = iter.next();
-            if (min[0]>point.getX())
-                min[0] = point.getX();
-            if (max[0]<point.getX())
-                max[0] = point.getX();
-            if (min[1]>point.getY())
-                min[1] = point.getY();
-            if (max[1]<point.getY())
-                max[1] = point.getY();
-            if (min[2]>point.getZ())
-                min[2] = point.getZ();
-            if (max[2]<point.getZ())
-                max[2] = point.getZ();
-        }
-
-        BoundingBox3d box = new BoundingBox3d(min, max);
-        box.setDomainId(neuron.getId());
-        return box;
-    }
-
     public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
 
     }
