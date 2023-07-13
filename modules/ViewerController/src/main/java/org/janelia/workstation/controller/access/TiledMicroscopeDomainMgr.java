@@ -35,7 +35,7 @@ public class TiledMicroscopeDomainMgr {
 
     // Singleton
     private static TiledMicroscopeDomainMgr instance;
-    
+
     public static TiledMicroscopeDomainMgr getDomainMgr() {
         if (instance==null) {
             instance = new TiledMicroscopeDomainMgr();
@@ -63,7 +63,7 @@ public class TiledMicroscopeDomainMgr {
     private DomainModel getModel() {
         return DomainMgr.getDomainMgr().getModel();
     }
-    
+
     public TmSample getSample(Long sampleId) throws Exception {
         LOG.debug("getSample(sampleId={})",sampleId);
         return getModel().getDomainObject(TmSample.class, sampleId);
@@ -143,11 +143,16 @@ public class TiledMicroscopeDomainMgr {
         return workspace;
     }
 
+    public void createWorkspaceBoundingBoxes(Long workspaceId, List<BoundingBox3d> boundingBoxes) throws Exception {
+        LOG.debug("createWorkspaceBoundingBoxes(workspaceId={})",workspaceId);
+        client.createBoundingBoxes(workspaceId, boundingBoxes);
+    }
+
     public Collection<BoundingBox3d> getWorkspaceBoundingBoxes(Long workspaceId) throws Exception {
         LOG.debug("getWorkspaceBoundingBoxes(workspaceId={})",workspaceId);
         return client.getWorkspaceBoundingBoxes(workspaceId);
     }
-    
+
     public TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {
         LOG.debug("createWorkspace(sampleId={}, name={})", sampleId, name);
         TmSample sample = getSample(sampleId);
@@ -162,13 +167,13 @@ public class TiledMicroscopeDomainMgr {
         workspace.setName(name);
         workspace.setSampleRef(Reference.createFor(TmSample.class, sampleId));
         workspace = save(workspace);
-        
+
         // Server should have put the workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
         getModel().invalidate(defaultWorkspaceFolder);
-        
+
         // Also invalidate the sample, so that the Explorer tree can be updated 
         getModel().invalidate(sample);
-        
+
         return workspace;
     }
 
@@ -185,10 +190,10 @@ public class TiledMicroscopeDomainMgr {
 
         // Server should have put the new workspace in the Workspaces root folder. Refresh the Workspaces folder to show it in the explorer.
         getModel().invalidate(defaultWorkspaceFolder);
-        
+
         // Also invalidate the sample, so that the Explorer tree can be updated 
         getModel().invalidate(sample);
-        
+
         return workspaceCopy;
     }
 
@@ -220,7 +225,7 @@ public class TiledMicroscopeDomainMgr {
         long workspaceId;
 
         RetrieveNeuronsTask(long workspaceId,
-                                 int start, int end) {
+                            int start, int end) {
             this.start = start;
             this.end = end;
             this.workspaceId = workspaceId;
@@ -257,7 +262,7 @@ public class TiledMicroscopeDomainMgr {
         List<TmNeuronMetadata> neurons = client.getNeuronSet(neuronIds, workspace);
         return neurons;
     }
-    
+
     public Stream<TmNeuronMetadata> streamWorkspaceNeurons(Long workspaceId) {
         LOG.debug("getWorkspaceNeurons(workspaceId={})",workspaceId);
         long neuronCount = client.getWorkspaceNeuronCount(workspaceId);
@@ -273,7 +278,7 @@ public class TiledMicroscopeDomainMgr {
         getModel().notifyDomainObjectCreated(savedMetadata);
         return savedMetadata;
     }
-    
+
     public TmReviewTask save(TmReviewTask reviewTask) throws Exception {
         LOG.debug("save({})", reviewTask);
         if (reviewTask.getId()==null) {
@@ -284,17 +289,17 @@ public class TiledMicroscopeDomainMgr {
         getModel().notifyDomainObjectChanged(reviewTask);
         return reviewTask;
     }
-    
+
     public void remove(TmReviewTask reviewTask) throws Exception {
         LOG.debug("remove({})", reviewTask);
         client.remove(reviewTask);
         getModel().notifyDomainObjectRemoved(reviewTask);
     }
-    
+
     public void updateNeuronStyles(BulkNeuronStyleUpdate bulkNeuronStyleUpdate, Long workspaceId) throws Exception {
         client.updateNeuronStyles(bulkNeuronStyleUpdate, workspaceId);
     }
-    
+
     public List<TmReviewTask> getReviewTasks() throws Exception {
         LOG.debug("getReviewTasks()");
         List<TmReviewTask> reviewTasks = getModel().getAllDomainObjectsByClass(TmReviewTask.class);

@@ -39,6 +39,7 @@ class NeuronModelAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(NeuronModelAdapter.class);
 
+
     private static final int MAX_NEURONS = 1000000;
     // Use async work queue to process neuron updates
     private static final boolean USE_NEURON_WORK_QUEUE = ApplicationPanel.isUseNeuronQueue();
@@ -95,6 +96,16 @@ class NeuronModelAdapter {
         } catch (Exception e) {
             FrameworkAccess.handleException(e);
             throw new RuntimeException("Attempt to load bounding boxes failed");
+        }
+    }
+
+    public void createBoundingBoxes (Long workspaceId, List<BoundingBox3d> boundingBoxes) {
+        log.info("Creating bounding boxes for workspace: {}", workspaceId);
+        try {
+            tmDomainMgr.createWorkspaceBoundingBoxes(workspaceId, boundingBoxes);
+        } catch (Exception e) {
+            FrameworkAccess.handleException(e);
+            throw new RuntimeException("Attempt to create bounding boxes failed");
         }
     }
 

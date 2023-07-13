@@ -22,7 +22,7 @@ import java.util.Map;
 public interface NeuronSpatialFilter {
     public String getLabel();
     public Set<Long> filterNeurons();
-    public void initFilter(Collection<BoundingBox3d> boundingBoxes);
+    public void initFilter(Collection<BoundingBox3d> boundingBoxes, Collection<TmNeuronMetadata> neurons);
     public NeuronUpdates deleteNeuron(TmNeuronMetadata neuron);
     public NeuronUpdates addNeuron(TmNeuronMetadata neuron);
     public NeuronUpdates updateNeuron(TmNeuronMetadata neuron);

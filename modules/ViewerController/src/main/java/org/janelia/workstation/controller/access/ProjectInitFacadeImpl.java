@@ -17,7 +17,6 @@ import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
 import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.ClientDomainUtils;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.options.ApplicationOptions;
@@ -191,7 +190,8 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 // if spatial filter is applied, use it to filter neurons
                 NeuronSpatialFilter neuronFilter = modelManager.getCurrentView().getSpatialFilter();
                 if (applyFilter) {
-                    neuronFilter.initFilter(modelManager.getNeuronModel().getBoundingBoxes());
+                    neuronFilter.initFilter(modelManager.getNeuronModel().getBoundingBoxes(),
+                            modelManager.getNeuronModel().getNeurons());
                 }
                 //  fireNeuronSpatialFilterUpdated(applyFilter, neuronFilter);
 

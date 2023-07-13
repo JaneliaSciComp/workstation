@@ -89,7 +89,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<TmSample>>() {});
     }
-        
+
     Map<String,Object> getTmSampleConstants(String samplePath) {
         WebTarget target = getMouselightDataEndpoint("/sample/constants")
                 .queryParam("samplePath", samplePath);
@@ -151,7 +151,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<TmWorkspace>>() {});
     }
-    
+
     public TmWorkspace create(TmWorkspace tmWorkspace) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
@@ -181,7 +181,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         checkBadResponse(target, response);
         return response.readEntity(TmWorkspace.class);
     }
-    
+
     public TmWorkspace update(TmWorkspace tmWorkspace) {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmWorkspace);
@@ -217,13 +217,11 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
 
     public List<TmNeuronMetadata> getNeuronSet(List<Long> neuronIds, TmWorkspace workspace) {
         WebTarget target = getMouselightDataEndpoint("/neuron/metadata")
-                .queryParam("neuronIds", neuronIds)
-                .queryParam("workspaceId", workspace.getId())
-                .queryParam("subjectKey", AccessManager.getSubjectKey());
+                .queryParam("workspaceId", workspace.getId());
 
         Response response = target
                 .request("application/json")
-                .get();
+                .put(Entity.json(neuronIds));
         checkBadResponse(target, response);
         return response.readEntity(new GenericType<List<TmNeuronMetadata>>() {});
     }
@@ -234,6 +232,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
             WebTarget target = getMouselightDataEndpoint("/workspace/neuron")
                     .queryParam("workspaceId", workspaceId)
                     .queryParam("offset", offset)
+                    .queryParam("frags", true)
                     .queryParam("length", length);
             ObjectMapper mapper = new ObjectMapper();
             InputStream is = target
@@ -252,6 +251,22 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
             FrameworkAccess.handleException(e);
             LOG.error ("Problems parsing the neuron stream from the server for workspace id {}",workspaceId);
             throw new RemoteServiceException("Client had problems processing Neuron Server Stream");
+        }
+    }
+    void createBoundingBoxes (Long workspaceId, List<BoundingBox3d> boundingBoxes) {
+        try {
+            WebTarget target = getMouselightDataEndpoint("/workspace/boundingboxes")
+                    .queryParam("subjectKey", AccessManager.getSubjectKey())
+                    .queryParam("workspaceId", workspaceId);
+            Response response = target
+                    .request("application/json")
+                    .put(Entity.json(boundingBoxes));
+            checkBadResponse(target, response);
+            return;
+        } catch (Exception e) {
+            FrameworkAccess.handleException(e);
+            LOG.error ("Problems creating the workspace bounding boxes for {}",workspaceId);
+            throw new RemoteServiceException("Client had problems creating bounding boxes for the workspace");
         }
     }
 
@@ -311,7 +326,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(neuronMetadata);
         WebTarget target = getMouselightDataEndpoint("/shared/workspace/neuron/ownership")
-            .queryParam("targetUser", targetUser);
+                .queryParam("targetUser", targetUser);
         Response response = target
                 .request()
                 .post(Entity.json(query));
@@ -344,7 +359,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
                 .post(Entity.json(neuronIds));
         checkBadResponse(target, response);
     }
-    
+
     public TmReviewTask create(TmReviewTask reviewTask) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
@@ -356,7 +371,7 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         checkBadResponse(target, response);
         return response.readEntity(TmReviewTask.class);
     }
-    
+
     public TmReviewTask update(TmReviewTask reviewTask) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
@@ -367,8 +382,8 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
                 .post(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(TmReviewTask.class);
-    }   
-    
+    }
+
     public void remove(TmReviewTask reviewTask) {
         WebTarget target = getMouselightDataEndpoint("/reviewtask")
                 .queryParam("taskReviewId", reviewTask.getId());
@@ -414,8 +429,8 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
 
     String getNearestChannelFilesURL(String basePath, int[] viewerCoord) {
         return getMouselightStreamURI(basePath, "closest_raw_tile_stream")
-                    .resolve(String.format("?x=%d&y=%d&z=%d", viewerCoord[0], viewerCoord[1], viewerCoord[2]))
-                    .toString();
+                .resolve(String.format("?x=%d&y=%d&z=%d", viewerCoord[0], viewerCoord[1], viewerCoord[2]))
+                .toString();
     }
 
     public boolean isServerPathAvailable(String serverPath, boolean directoryOnly) {

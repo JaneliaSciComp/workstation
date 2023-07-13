@@ -9,9 +9,7 @@ import java.util.Set;
 
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.model.domain.tiledMicroscope.BoundingBox3d;
-import org.janelia.workstation.geom.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,13 +34,18 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     }
 
     @Override
-    public void initFilter(Collection<BoundingBox3d> boundingBoxes) {
+    public void initFilter(Collection<BoundingBox3d> boundingBoxes,
+                           Collection<TmNeuronMetadata> neurons) {
         log.info("Starting to build spatial filter");
         numTotalNeurons = boundingBoxes.size();
         // load all the neuron points into the index
         index = new NeuronProximitySpatialIndex();
         userNeuronIds = new HashSet<>();
+        fragments = new HashSet<>();
         int count = 0;
+        for (TmNeuronMetadata neuron: neurons) {
+            userNeuronIds.add(neuron.getId());
+        }
         for (BoundingBox3d boundingBox: boundingBoxes) {
             count++;
             index.addToIndex(boundingBox);
@@ -72,9 +75,12 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     @Override
     // remove bounding box and fragments in vicinity
     public synchronized NeuronUpdates deleteNeuron(TmNeuronMetadata neuron) {
-        userNeuronIds.remove(neuron.getId());        
-        fragments.remove(neuron.getId());
-        index.removeFromIndex(boxes.get(neuron.getId()));
+        if (!neuron.isFragment())
+            userNeuronIds.remove(neuron.getId());
+        else {
+            fragments.remove(neuron.getId());
+            index.removeFromIndex(boxes.get(neuron.getId()));
+        }
         Set<Long> delSet = new HashSet<>();
         delSet.add(neuron.getId());
         NeuronUpdates updates = new NeuronUpdates();
@@ -84,8 +90,11 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
 
     @Override
     public synchronized NeuronUpdates addNeuron(TmNeuronMetadata neuron) {
-        userNeuronIds.add(neuron.getId());
-        fragments.remove(neuron.getId());
+        if (!neuron.isFragment())
+            userNeuronIds.add(neuron.getId());
+        else {
+            fragments.add(neuron.getId());
+        }
         return new NeuronUpdates();
     }
 

@@ -48,6 +48,11 @@ public class NeuronModel {
         return boundingBoxes;
     }
 
+    public void createBoundingBoxes(Long workspaceId, List<BoundingBox3d> boundingBoxes) {
+        neuronModelAdapter.createBoundingBoxes(workspaceId, boundingBoxes);
+        boundingBoxes.addAll(boundingBoxes);
+    }
+
     public void retrieveFragments (List<Long> fragSet, TmWorkspace workspace) {
         List<TmNeuronMetadata> frags = neuronModelAdapter.loadFragments(fragSet, workspace);
         for (TmNeuronMetadata frag: frags) {
