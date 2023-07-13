@@ -178,7 +178,13 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		String octree = pathToOctreeTextField.getText();
 		String ktx = StringUtils.isBlank(pathToKTXTextField.getText()) ? null : pathToKTXTextField.getText();
 		String alt = StringUtils.isBlank(pathToOmeZarrFormatTextField.getText()) ? null : pathToOmeZarrFormatTextField.getText();
-		if (octree.isEmpty()) {
+		if (sampleFormat.getSelectedItem()=="ktxSample" && octree.isEmpty()) {
+			JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+					"You must specify both a sample name and location!",
+					"Missing values",
+					JOptionPane.ERROR_MESSAGE);
+			return;
+		} else if (alt.isEmpty()) {
 			JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
 					"You must specify both a sample name and location!",
 					"Missing values",
