@@ -195,8 +195,6 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                     NeuronManager.getInstance().setFilterStrategy(neuronFilter);
                 }
 
-                TmModelManager.getInstance().getSpatialIndexManager().initialize();
-
                 //  fireNeuronSpatialFilterUpdated(applyFilter, neuronFilter);
 
                 // Clear neuron selection

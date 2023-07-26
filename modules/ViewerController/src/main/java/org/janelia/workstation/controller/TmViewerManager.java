@@ -245,7 +245,7 @@ public class TmViewerManager implements GlobalViewerController {
 
         TmModelManager.getInstance().setCurrentReviews(new TmReviewState());
         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
-        modelManager.getCurrentView().setFilter(false);
+        TmModelManager.getInstance().getSpatialIndexManager().initialize();
         int nFragments = 0;
         for (TmNeuronMetadata neuron : modelManager.getNeuronModel().getNeurons()) {
             if (neuron.getOwnerKey().equals(systemNeuron)) {
