@@ -44,7 +44,6 @@ public class TmViewState {
     }
 
     public void init() {
-        neuronFilter = new NeuronSelectionSpatialFilter();
         ConcurrentHashMap<Long, Long> threadSafeMap = new ConcurrentHashMap<>();
         hiddenAnnotations = threadSafeMap.newKeySet();
         hiddenMeshes = threadSafeMap.newKeySet();

@@ -262,16 +262,6 @@ public class TmViewerManager implements GlobalViewerController {
                 }
             }
         }
-        if (nFragments >= NUMBER_FRAGMENTS_THRESHOLD) {
-            modelManager.getCurrentView().setFilter(true);
-            NeuronSelectionSpatialFilter neuronFilter = new NeuronSelectionSpatialFilter();
-            neuronManager.setFilterStrategy(neuronFilter);
-            NeuronSpatialFilterUpdateEvent spatialEvent = new NeuronSpatialFilterUpdateEvent(
-                    this, true,neuronFilter, "Neuron Selection Filter");
-            ViewerEventBus.postEvent(spatialEvent);
-        }
-
-        TmModelManager.getInstance().getSpatialIndexManager().initialize();
 
         try {
             loadUserPreferences();

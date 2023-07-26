@@ -7,13 +7,16 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.MatrixUtilities;
 import org.janelia.rendering.utils.ClientProxy;
+import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.LoadMetadataEvent;
 import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
+import org.janelia.workstation.controller.eventbus.NeuronSpatialFilterUpdateEvent;
 import org.janelia.workstation.controller.eventbus.UnloadProjectEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
+import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
 import org.janelia.workstation.controller.tileimagery.*;
 import org.janelia.workstation.core.api.AccessManager;
@@ -177,35 +180,24 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 manager.loadWorkspaceNeurons(workspace);
 
                 // if workspace is flagged as containing fragments, get bounding boxes and init filter
-                boolean applyFilter = false;
                 if (workspace.isContainsFragments()) {
                     modelManager.getCurrentView().setFilter(true);
-                    applyFilter = true;
                     manager.loadWorkspaceBoundingBoxes(workspace);
+                    log.info("Spatial Filtering applied");
                 }
 
-                log.info("Spatial Filtering applied: {}", applyFilter);
                 modelManager.getCurrentView().init();
 
                 // if spatial filter is applied, use it to filter neurons
-                NeuronSpatialFilter neuronFilter = modelManager.getCurrentView().getSpatialFilter();
-                if (applyFilter) {
-                    neuronFilter.initFilter(modelManager.getNeuronModel().getBoundingBoxes(),
-                            modelManager.getNeuronModel().getNeurons());
+                if (workspace.isContainsFragments()) {
+                    modelManager.getCurrentView().setFilter(true);
+                    NeuronSelectionSpatialFilter neuronFilter = new NeuronSelectionSpatialFilter();
+                    NeuronManager.getInstance().setFilterStrategy(neuronFilter);
                 }
-                //  fireNeuronSpatialFilterUpdated(applyFilter, neuronFilter);
 
-                // Create the local tag map for cached access to tags
-                Collection<TmNeuronMetadata> neuronList;
-                if (applyFilter) {
-                    neuronList = new ArrayList<>();
-                    for (Long neuronId : neuronFilter.filterNeurons()) {
-                        TmNeuronMetadata neuron = modelManager.getNeuronModel().getNeuronById(neuronId);
-                        if (neuron != null)
-                            neuronList.add(neuron);
-                    }
-                } else
-                    neuronList = modelManager.getNeuronModel().getNeurons();
+                TmModelManager.getInstance().getSpatialIndexManager().initialize();
+
+                //  fireNeuronSpatialFilterUpdated(applyFilter, neuronFilter);
 
                 // Clear neuron selection
                 log.info("Clearing current neuron for workspace {}", workspace.getId());

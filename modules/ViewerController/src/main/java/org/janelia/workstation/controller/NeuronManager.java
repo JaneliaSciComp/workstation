@@ -2451,7 +2451,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         List<TmNeuronMetadata> deleteList = new ArrayList<>();
 
         if (updates.getAddedNeurons().size()>0)
-            getNeuronModel().retrieveFragments(new ArrayList<>(updates.getAddedNeurons()), currentWorkspace);
+            getNeuronModel().retrieveFragments(new ArrayList<>(updates.getAddedNeurons()), modelManager.getCurrentWorkspace());
         Iterator<Long> addIter = updates.getAddedNeurons().iterator();
         while (addIter.hasNext()) {
             TmNeuronMetadata neuron = getNeuronFromNeuronID(addIter.next());

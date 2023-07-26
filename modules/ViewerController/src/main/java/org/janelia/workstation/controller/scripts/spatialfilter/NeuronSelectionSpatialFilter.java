@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     NeuronProximitySpatialIndex index;
     BoundingBox3d currentRegion;
-    HashMap<Long, BoundingBox3d> boxes = new HashMap<>();
+    HashMap<Long, BoundingBox3d> boxes;
     Set<Long> fragments;
     Set<Long> userNeuronIds;
     int numTotalNeurons;
@@ -37,7 +37,7 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     public void initFilter(Collection<BoundingBox3d> boundingBoxes,
                            Collection<TmNeuronMetadata> neurons) {
         log.info("Starting to build spatial filter");
-        numTotalNeurons = boundingBoxes.size();
+        numTotalNeurons = boundingBoxes.size() + neurons.size();
         // load all the neuron points into the index
         index = new NeuronProximitySpatialIndex();
         userNeuronIds = new HashSet<>();
@@ -46,11 +46,12 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
         for (TmNeuronMetadata neuron: neurons) {
             userNeuronIds.add(neuron.getId());
         }
+
+        boxes = new HashMap<>();
         for (BoundingBox3d boundingBox: boundingBoxes) {
             count++;
             index.addToIndex(boundingBox);
             boxes.put(boundingBox.getDomainId(), boundingBox);
-            userNeuronIds.add(boundingBox.getDomainId());
         }
         log.info("Finished building spatial filter");
     }
@@ -78,8 +79,9 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
         if (!neuron.isFragment())
             userNeuronIds.remove(neuron.getId());
         else {
-            fragments.remove(neuron.getId());
-            index.removeFromIndex(boxes.get(neuron.getId()));
+            if (boxes.containsKey(neuron.getId())) {
+                index.removeFromIndex(boxes.get(neuron.getId()));
+            }
         }
         Set<Long> delSet = new HashSet<>();
         delSet.add(neuron.getId());
@@ -93,7 +95,9 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
         if (!neuron.isFragment())
             userNeuronIds.add(neuron.getId());
         else {
-            fragments.add(neuron.getId());
+            if (boxes.containsKey(neuron.getId())) {
+                index.removeFromIndex(boxes.get(neuron.getId()));
+            }
         }
         return new NeuronUpdates();
     }
@@ -102,7 +106,9 @@ public class NeuronSelectionSpatialFilter implements NeuronSpatialFilter {
     public synchronized NeuronUpdates updateNeuron(TmNeuronMetadata neuron) {
         userNeuronIds.add(neuron.getId());
         fragments.remove(neuron.getId());
-        index.removeFromIndex(boxes.get(neuron.getId()));
+        if (boxes.containsKey(neuron.getId())) {
+            index.removeFromIndex(boxes.get(neuron.getId()));
+        }
         return new NeuronUpdates();
     }
 
