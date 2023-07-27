@@ -2228,6 +2228,9 @@ public final class NeuronTracerTopComponent extends TopComponent
     void setOmeZarrSource(OmeZarrBlockTileSource omeZarrSource){
         this.omeZarrSource = omeZarrSource;
         OmeZarrVolumeActor.getInstance().setOmeZarrTileSource(omeZarrSource);
+        // happens in SharedVolumeImage for KTX
+        TmModelManager.getInstance().setSampleBoundingBox (omeZarrSource.getBoundingBox3d());
+        TmModelManager.getInstance().setVoxelCenter (omeZarrSource.getVoxelCenter());
         // Don't load ktx and omezarr or raw tiles at the same time
         if (omeZarrSource != null) {
             setKtxSource(null);
