@@ -119,6 +119,10 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 				}
 		});
 
+        // default is to not show Zarr field
+		pathToOmeZarrFormatLabel.setVisible(false);
+		pathToOmeZarrFormatTextField.setVisible(false);
+
 		mainPanel.add(attrPanel);
 		add(mainPanel, BorderLayout.CENTER);
 
@@ -178,13 +182,14 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		String octree = pathToOctreeTextField.getText();
 		String ktx = StringUtils.isBlank(pathToKTXTextField.getText()) ? null : pathToKTXTextField.getText();
 		String alt = StringUtils.isBlank(pathToOmeZarrFormatTextField.getText()) ? null : pathToOmeZarrFormatTextField.getText();
-		if (sampleFormat.getSelectedItem()=="ktxSample" && octree.isEmpty()) {
+		if (sampleFormat.getSelectedItem()==ktxSample && octree.isEmpty()) {
 			JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
 					"You must specify both a sample name and location!",
 					"Missing values",
 					JOptionPane.ERROR_MESSAGE);
 			return;
-		} else if (alt.isEmpty()) {
+		}
+		if (sampleFormat.getSelectedItem()==zarrSample && alt.isEmpty()) {
 			JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
 					"You must specify both a sample name and location!",
 					"Missing values",
