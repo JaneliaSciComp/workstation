@@ -3,9 +3,12 @@ package org.janelia.workstation.infopanel.action;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.swing.AbstractAction;
 import javax.swing.JFileChooser;
@@ -15,7 +18,6 @@ import javax.swing.filechooser.FileFilter;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.infopanel.SwcDirAndFileFilter;
-import org.janelia.workstation.infopanel.SwcDirListFilter;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.core.workers.BackgroundWorker;
@@ -119,8 +121,14 @@ public class ImportSWCAction extends AbstractAction {
         List<File> rtnVal = new ArrayList<>();
         List<File> rawFileList = new ArrayList<>();
         if (selectedFile.isDirectory()) {
-            File[] swcFiles = selectedFile.listFiles(new SwcDirListFilter());
-            rawFileList.addAll(Arrays.asList(swcFiles));
+            // recursively walk the directory, collecting files from all subdirs
+            Stream<Path> walker = Files.walk(selectedFile.toPath());
+            List<File> swcFiles = walker.filter(Files::isRegularFile)
+                .filter(p -> p.toString().endsWith(NeuronManager.STD_SWC_EXTENSION))
+                .map(p -> p.toFile())
+                .distinct()
+                .collect(Collectors.toList());
+            rawFileList.addAll(swcFiles);
         } else {
             rawFileList.add(selectedFile);
         }
