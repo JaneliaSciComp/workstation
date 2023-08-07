@@ -15,6 +15,8 @@ import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.workstation.core.api.FileMgr;
+import org.janelia.workstation.geom.BoundingBox3d;
+import org.janelia.workstation.geom.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +44,9 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
 
     private ImageColorModel imageColorModel;
 
+    private BoundingBox3d boundingBox3d = new BoundingBox3d();
+    private Vec3 voxelCenter = new Vec3(0, 0, 0);
+
     private static final double MAX_BLOCKING_RESOLUTION = 30.0;
 
     public OmeZarrBlockTileSource() {
@@ -64,7 +69,7 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     }
 
     public OmeZarrBlockTileSource init(TmSample sample) throws IOException {
-        this.sampleOmeZarrTilesBaseDir = StringUtils.appendIfMissing(sample.getFiles().get(FileType.LargeVolumeZarr),"/");
+        this.sampleOmeZarrTilesBaseDir = StringUtils.appendIfMissing(sample.getFiles().get(FileType.LargeVolumeZarr), "/");
 
         this.reader = new OmeZarrJadeReader(FileMgr.getFileMgr().getStorageService(), this.sampleOmeZarrTilesBaseDir);
 
@@ -108,6 +113,8 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
                     // TODO Respect translate transforms in dataset.
                     origin = new Vector3(0, 0, 0);
                     outerCorner = new Vector3(shape[4] * res.get(2).doubleValue(), shape[3] * res.get(1).doubleValue(), shape[2] * res.get(0).doubleValue());
+                    boundingBox3d = new BoundingBox3d(new Vec3(origin.getX(), origin.getY(), origin.getX()), new Vec3(outerCorner.getX(), outerCorner.getY(), outerCorner.getX()));
+                    voxelCenter = boundingBox3d.getCenter();
 
                     haveExtents = true;
                 }
@@ -140,6 +147,14 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
         }
     }
 
+    public BoundingBox3d getBoundingBox3d() {
+        return boundingBox3d;
+    }
+
+    public Vec3 getVoxelCenter() {
+        return voxelCenter;
+    }
+
     @Override
     public BlockTileResolution getMaximumResolution() {
         return maximumResolution;
@@ -165,7 +180,7 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
         return this.originatingSampleURL;
     }
 
-    public ImageColorModel getColorModel(){
+    public ImageColorModel getColorModel() {
         return imageColorModel;
     }
 
@@ -187,7 +202,7 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
         return tile.loadBrick(autoContrastParameters);
     }
 
-    private void createTileKeysForDataset(OmeZarrBlockResolution resolution, int keyDepth, OmeZarrDataset dataset)  {
+    private void createTileKeysForDataset(OmeZarrBlockResolution resolution, int keyDepth, OmeZarrDataset dataset) {
 
         log.info(String.format("creating tile key set for resolution: %.1f", resolution.getResolutionMicrometers()));
 

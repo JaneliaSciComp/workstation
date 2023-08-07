@@ -41,6 +41,7 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.FileMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
+import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.geom.Vec3;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;

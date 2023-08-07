@@ -130,8 +130,8 @@ public class SharedVolumeImage implements VolumeImage3d {
             TileFormat tf = getLoadAdapter().getTileFormat();
             newBox = tf.calcBoundingBox();
         } catch (Exception ex) {
-            // Fails when sample is OmeZarr format.  Apply a default bounding box for now.
-            newBox = new BoundingBox3d(new Vec3(0, 0, 0), new Vec3(30000, 15000, 15000));
+            // May fail for Ome-Zarr or other non-KTX formats/samples.  Will be populated later.
+            newBox = new BoundingBox3d(new Vec3(0, 0, 0), new Vec3(1, 1, 1));
         }
 
         boundingBox3d.setMin(newBox.getMin());
