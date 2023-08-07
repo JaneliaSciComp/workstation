@@ -39,6 +39,8 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
     private final Vector3 blockOrigin;
 
     private final Vector3 blockExtents;
+    
+    private final Vector3 blockCentroid;
 
     private final int keyDepth;
 
@@ -95,13 +97,15 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
         blockOrigin = new Vector3(originMicrometers[0], originMicrometers[1], originMicrometers[2]);
 
         blockExtents = new Vector3(shapeMicrometers[0], shapeMicrometers[1], shapeMicrometers[2]);
+        
+        blockCentroid = new Vector3(blockExtents.get(0) * 0.5f + blockOrigin.get(0), blockExtents.get(1) * 0.5f + blockOrigin.get(1), blockExtents.get(2) * 0.5f + blockOrigin.get(2));
 
         this.relativePath = String.format("[%s] [%.0f, %.0f, %.0f] [%.0f, %.0f, %.0f]", dataset.getPath(), originMicrometers[0], originMicrometers[1], originMicrometers[2], shapeMicrometers[0], shapeMicrometers[1], shapeMicrometers[2]);
     }
 
     @Override
     public ConstVector3 getCentroid() { // Micrometers?
-        return blockExtents.multiplyScalar(0.5f).plus(blockOrigin);
+        return blockCentroid;
     }
 
     public List<? extends ConstVector3> getCornerLocations() {
@@ -179,9 +183,21 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
 
         return null;
     }
+    
+    public Vector3 getOrigin() {
+    	return blockOrigin;
+    }
+    
+    public Vector3 getExtents() {
+    	return blockExtents;
+    }
 
     public int getKeyDepth() {
         return keyDepth;
+    }
+    
+    public int[] getShape() {
+    	return pixelDims;
     }
 
     @Override
