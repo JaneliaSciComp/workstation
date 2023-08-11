@@ -1042,7 +1042,7 @@ public final class NeuronTracerTopComponent extends TopComponent
     }
 
     public boolean loadDroppedOmeZarr(String sourceName) throws IOException {
-        setOmeZarrSource(new OmeZarrBlockTileSource(null, getImageColorModel()).init(sourceName));
+        setOmeZarrSource(new OmeZarrBlockTileSource(null, getImageColorModel(), true).init(sourceName));
         Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
         neuronTraceLoader.loadOmeZarrTileAtLocation(getOmeZarrSource(), focus, true);
         return true;

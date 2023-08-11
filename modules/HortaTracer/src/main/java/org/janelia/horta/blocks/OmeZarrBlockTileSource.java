@@ -42,19 +42,23 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     private ArrayList<OmeZarrBlockResolution> resolutions = new ArrayList();
     private OmeZarrBlockResolution maximumResolution = null;
 
-    private ImageColorModel imageColorModel;
+    private final ImageColorModel imageColorModel;
+
+    private final boolean useAutoContrast;
 
     private BoundingBox3d boundingBox3d = new BoundingBox3d();
     private Vec3 voxelCenter = new Vec3(0, 0, 0);
 
     private static final double MAX_BLOCKING_RESOLUTION = 30.0;
 
-    public OmeZarrBlockTileSource() {
+    public OmeZarrBlockTileSource(URL originatingSampleURL, ImageColorModel imageColorModel) {
+        this(originatingSampleURL, imageColorModel, false);
     }
 
-    public OmeZarrBlockTileSource(URL originatingSampleURL, ImageColorModel imageColorModel) {
+    public OmeZarrBlockTileSource(URL originatingSampleURL, ImageColorModel imageColorModel, boolean useAutoContrast) {
         this.originatingSampleURL = originatingSampleURL;
         this.imageColorModel = imageColorModel;
+        this.useAutoContrast = useAutoContrast;
     }
 
     public OmeZarrBlockTileSource init(String localPath) throws IOException {
@@ -199,7 +203,7 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     }
 
     public Texture3d loadBrick(OmeZarrBlockTileKey tile) {
-        return tile.loadBrick(autoContrastParameters);
+        return tile.loadBrick(useAutoContrast ? autoContrastParameters : null);
     }
 
     private void createTileKeysForDataset(OmeZarrBlockResolution resolution, int keyDepth, OmeZarrDataset dataset) {

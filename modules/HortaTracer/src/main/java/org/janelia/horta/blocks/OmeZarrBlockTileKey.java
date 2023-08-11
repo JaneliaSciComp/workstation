@@ -172,7 +172,7 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
         Texture3d texture = new Texture3d();
 
         try {
-            WritableRaster[] slices = TCZYXRasterZStack.fromDataset(dataset, readShape, readOffset, 1, false, null, null);
+            WritableRaster[] slices = TCZYXRasterZStack.fromDataset(dataset, readShape, readOffset, 1, parameters != null, parameters, null);
 
             texture.loadRasterSlices(slices, colorModel);
 
