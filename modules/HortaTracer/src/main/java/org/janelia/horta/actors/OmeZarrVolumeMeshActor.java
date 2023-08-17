@@ -27,50 +27,52 @@ public class OmeZarrVolumeMeshActor extends MeshActor implements SortableBlockAc
 
     private final Vector4 homogeneousCentroid;
 
-    private BlockTileResolution resolution;
-    
+    private final BlockTileResolution resolution;
+
     private final List<SortableBlockActor> listOfThis;
-    
+
     private final Vector3 bbox_min;
     private final Vector3 bbox_max;
-    
+
     private double distance;
 
     public OmeZarrVolumeMeshActor(OmeZarrBlockTileSource source, OmeZarrBlockTileKey tile, VolumeMipMaterial.VolumeState volumeState, int colorChannel) throws IOException {
         super(new OmeZarrMesh(tile), new OmeZarrVolumeMeshActor.MeshMaterial(source, tile, source.getColorModel(), volumeState, colorChannel), null);
 
-        this.meshMaterial = (OmeZarrVolumeMeshActor.MeshMaterial)getMaterial();
+        this.meshMaterial = (OmeZarrVolumeMeshActor.MeshMaterial) getMaterial();
 
         ConstVector3 centroid = tile.getCentroid();
 
-        this.homogeneousCentroid= new Vector4(centroid.getX(), centroid.getY(), centroid.getZ(), 1.0f);
-        
+        this.homogeneousCentroid = new Vector4(centroid.getX(), centroid.getY(), centroid.getZ(), 1.0f);
+
         resolution = new OmeZarrBlockResolution(tile.getKeyDepth(), tile.getShape(), tile.getResolutionMicrometers(), 0);
-        
+
         bbox_min = tile.getOrigin();
         Vector3 ext = tile.getExtents();
         bbox_max = new Vector3(bbox_min.get(0) + ext.get(0), bbox_min.get(1) + ext.get(1), bbox_min.get(2) + ext.get(2));
-        
+
         listOfThis = new ArrayList<>();
         listOfThis.add(this);
     }
-    
+
     public void setDistance(double d) {
-    	distance = d;
+        distance = d;
     }
+
     public double getDistance() {
-    	return distance;
+        return distance;
     }
+
     public Vector3 getBBoxMin() {
-    	return bbox_min;
+        return bbox_min;
     }
+
     public Vector3 getBBoxMax() {
-    	return bbox_max;
+        return bbox_max;
     }
 
     @Override
-    public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix)
-    {
+    public void display(GL3 gl, AbstractCamera camera, Matrix4 parentModelViewMatrix) {
         super.display(gl, camera, parentModelViewMatrix); // display child objects
     }
 
@@ -86,7 +88,7 @@ public class OmeZarrVolumeMeshActor extends MeshActor implements SortableBlockAc
     public Vector4 getHomogeneousCentroid() {
         return homogeneousCentroid;
     }
-    
+
     @Override
     public Collection<SortableBlockActor> getSortableBlockActors() {
         return listOfThis;

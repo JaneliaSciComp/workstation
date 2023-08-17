@@ -29,17 +29,14 @@ import java.util.List;
 public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileKey> {
     private static final Logger log = LoggerFactory.getLogger(OmeZarrBlockTileSource.class);
 
-    private URL originatingSampleURL;
+    private final URL originatingSampleURL;
     private String sampleOmeZarrTilesBaseDir;
     private OmeZarrJadeReader reader;
     private OmeZarrGroup omeZarrGroup;
 
-    private ConstVector3 origin;
-    private Vector3 outerCorner;
-
     private AutoContrastParameters autoContrastParameters = null;
 
-    private ArrayList<OmeZarrBlockResolution> resolutions = new ArrayList();
+    private final ArrayList<OmeZarrBlockResolution> resolutions = new ArrayList<>();
     private OmeZarrBlockResolution maximumResolution = null;
 
     private final ImageColorModel imageColorModel;
@@ -115,8 +112,8 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
                     List<Double> res = dataset.getSpatialResolution(OmeZarrAxisUnit.MICROMETER);
 
                     // TODO Respect translate transforms in dataset.
-                    origin = new Vector3(0, 0, 0);
-                    outerCorner = new Vector3(shape[4] * res.get(2).doubleValue(), shape[3] * res.get(1).doubleValue(), shape[2] * res.get(0).doubleValue());
+                    ConstVector3 origin = new Vector3(0, 0, 0);
+                    Vector3 outerCorner = new Vector3(shape[4] * res.get(2), shape[3] * res.get(1), shape[2] * res.get(0));
                     boundingBox3d = new BoundingBox3d(new Vec3(origin.getX(), origin.getY(), origin.getX()), new Vec3(outerCorner.getX(), outerCorner.getY(), outerCorner.getX()));
                     voxelCenter = boundingBox3d.getCenter();
 
@@ -193,8 +190,12 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     }
 
     ConstVector3 getBlockSize(OmeZarrBlockResolution resolution) {
-        Vector3 rootBlockSize = outerCorner.minus(origin);
-        return rootBlockSize.multiplyScalar(1.0f / resolution.getBlockSizeScale());
+        // Vector3 rootBlockSize = outerCorner.minus(origin);
+        // return rootBlockSize.multiplyScalar(1.0f / resolution.getBlockSizeScale());
+
+        return new Vector3(resolution.getChunkSize()[0] * resolution.getResolutionMicrometers(),
+                resolution.getChunkSize()[1] * resolution.getResolutionMicrometers(),
+                resolution.getChunkSize()[2] * resolution.getResolutionMicrometers());
     }
 
     public Texture3d loadBrick(OmeZarrBlockTileKey tile, int colorChannel) {
@@ -216,9 +217,7 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
 
         List<OmeZarrBlockTileKey> chunks = createTilesForResolution(dataset, keyDepth, chunkSize[0], chunkSize[1], chunkSize[2]);
 
-        for (OmeZarrBlockTileKey chunk : chunks) {
-            blockInfoSet.add(chunk);
-        }
+        blockInfoSet.addAll(chunks);
     }
 
     /**

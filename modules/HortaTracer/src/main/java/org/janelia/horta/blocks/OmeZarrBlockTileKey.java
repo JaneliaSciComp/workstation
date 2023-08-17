@@ -22,7 +22,7 @@ import java.util.List;
 public class OmeZarrBlockTileKey implements BlockTileKey {
     private static final Logger log = LoggerFactory.getLogger(OmeZarrBlockTileKey.class);
 
-    private OmeZarrDataset dataset;
+    private final OmeZarrDataset dataset;
 
     private final int[] readShape;
 
@@ -32,19 +32,17 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
 
     private final double[] shapeMicrometers;
 
-    private final double[] originMicrometers;
-
     private final int[] pixelDims;
 
     private final Vector3 blockOrigin;
 
     private final Vector3 blockExtents;
-    
+
     private final Vector3 blockCentroid;
 
     private final int keyDepth;
 
-    private Matrix transform;
+    private final Matrix transform;
 
     private Matrix stageCoordToTexCoord;
 
@@ -60,7 +58,7 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
         this.voxelSize = voxelSize;
 
         // TODO include any translate from multiscale/dataset coordinate transforms.
-        originMicrometers = new double[3];
+        double[] originMicrometers = new double[3];
         shapeMicrometers = new double[3];
         pixelDims = new int[4];
 
@@ -77,10 +75,10 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
         shapeMicrometers[2] = this.voxelSize[2] * pixelDims[2];
 
         transform = new Matrix(
-                new double[][] {
-                        {shapeMicrometers[0]/pixelDims[0], 0, 0, originMicrometers[0]},
-                        {0, shapeMicrometers[1]/pixelDims[1], 0, originMicrometers[1]},
-                        {0, 0, shapeMicrometers[2]/pixelDims[2], originMicrometers[2]},
+                new double[][]{
+                        {shapeMicrometers[0] / pixelDims[0], 0, 0, originMicrometers[0]},
+                        {0, shapeMicrometers[1] / pixelDims[1], 0, originMicrometers[1]},
+                        {0, 0, shapeMicrometers[2] / pixelDims[2], originMicrometers[2]},
                         {0, 0, 0, 1}
                 }
         );
@@ -97,7 +95,7 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
         blockOrigin = new Vector3(originMicrometers[0], originMicrometers[1], originMicrometers[2]);
 
         blockExtents = new Vector3(shapeMicrometers[0], shapeMicrometers[1], shapeMicrometers[2]);
-        
+
         blockCentroid = new Vector3(blockExtents.get(0) * 0.5f + blockOrigin.get(0), blockExtents.get(1) * 0.5f + blockOrigin.get(1), blockExtents.get(2) * 0.5f + blockOrigin.get(2));
 
         this.relativePath = String.format("[%s] [%.0f, %.0f, %.0f] [%.0f, %.0f, %.0f]", dataset.getPath(), originMicrometers[0], originMicrometers[1], originMicrometers[2], shapeMicrometers[0], shapeMicrometers[1], shapeMicrometers[2]);
@@ -131,21 +129,13 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
     public Matrix getStageCoordToTexCoord() {
         // Compute matrix just-in-time
         if (stageCoordToTexCoord == null) {
-/*
-            // For ray casting, convert from stageUm to texture coordinates (i.e. normalized voxels)
-            stageCoordToTexCoord = new Matrix(new double[][]{
-                    {1.0 / shapeMicrometers[0], 0, 0, 0},
-                    {0, 1.0 / shapeMicrometers[1], 0, 0},
-                    {0, 0, 1.0 / shapeMicrometers[2], 0},
-                    {0, 0, 0, 1}});
 
- */
             Matrix stageToVoxel = transform.inverse();
 
-           Matrix nanosToPixel = new Matrix(new double[][] {
-                    {1.0/pixelDims[0], 0, 0, 0},
-                    {0, 1.0/pixelDims[1], 0, 0},
-                    {0, 0, 1.0/pixelDims[2], 0},
+            Matrix nanosToPixel = new Matrix(new double[][]{
+                    {1.0 / pixelDims[0], 0, 0, 0},
+                    {0, 1.0 / pixelDims[1], 0, 0},
+                    {0, 0, 1.0 / pixelDims[2], 0},
                     {0, 0, 0, 1}});
 
             stageCoordToTexCoord = nanosToPixel.times(stageToVoxel);
@@ -183,21 +173,21 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
 
         return null;
     }
-    
+
     public Vector3 getOrigin() {
-    	return blockOrigin;
+        return blockOrigin;
     }
-    
+
     public Vector3 getExtents() {
-    	return blockExtents;
+        return blockExtents;
     }
 
     public int getKeyDepth() {
         return keyDepth;
     }
-    
+
     public int[] getShape() {
-    	return pixelDims;
+        return pixelDims;
     }
 
     @Override

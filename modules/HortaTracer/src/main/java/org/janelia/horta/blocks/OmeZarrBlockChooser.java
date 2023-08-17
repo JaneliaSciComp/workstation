@@ -11,17 +11,18 @@ import java.util.*;
 public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, OmeZarrBlockTileSource> {
     private static final Logger LOG = LoggerFactory.getLogger(OmeZarrBlockChooser.class);
 
-    private List<Float> zoomLevels = new ArrayList<>();
-    private double BLOCK_WIDTH_ACROSS_VIEWPORT = 2.35;
-    private int MAX_SIMULTANEOUS_BLOCKS = 14;
+    private final List<Float> zoomLevels = new ArrayList<>();
+    private static final double BLOCK_WIDTH_ACROSS_VIEWPORT = 2.35;
+    private static final int MAX_NEAREST_BLOCKS = 18;
+    private static final int MAX_SIMULTANEOUS_DISPLAY_BLOCKS = 24;
 
     @Override
     public List<OmeZarrBlockTileKey> chooseBlocks(OmeZarrBlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus, Vantage vantage) {
-        return chooseBlocks(source, focus, previousFocus, vantage, 8);
+        return chooseBlocks(source, focus, vantage, MAX_NEAREST_BLOCKS);
     }
 
-    public List<OmeZarrBlockTileKey> chooseBlocks(OmeZarrBlockTileSource source, ConstVector3 focus, ConstVector3 previousFocus, Vantage vantage, int maxCount) {
-        if (zoomLevels.size() == 0) {
+    public List<OmeZarrBlockTileKey> chooseBlocks(OmeZarrBlockTileSource source, ConstVector3 focus, Vantage vantage, int maxCount) {
+        if (zoomLevels.isEmpty()) {
             initBlockSizes(source);
         }
 
@@ -48,15 +49,15 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
 
         ConstVector3 blockSize = source.getBlockSize(resolution);
 
-        float dxa[] = new float[]{
+        float[] dxa = new float[]{
                 0f,
                 -blockSize.getX(),
                 +blockSize.getX()};
-        float dya[] = new float[]{
+        float[] dya = new float[]{
                 0f,
                 -blockSize.getY(),
                 +blockSize.getY()};
-        float dza[] = new float[]{
+        float[] dza = new float[]{
                 0f,
                 -blockSize.getZ(),
                 +blockSize.getZ()};
@@ -80,7 +81,7 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
         }
 
         // Sort the blocks strictly by distance to focus
-        Collections.sort(neighboringBlocks, new OmeZarrBlockChooser.BlockComparator(focus));
+        neighboringBlocks.sort(new BlockComparator<>(focus));
 
         // Return only the closest 8 blocks
         List<OmeZarrBlockTileKey> result = new ArrayList<>();
@@ -116,10 +117,9 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
             }
         }
         int i = 0;
-        Iterator<Float> tileIter = sortedCurrZoomTiles.keySet().iterator();
-        while (tileIter.hasNext()) {
-            BlockTileKey tileKey = sortedCurrZoomTiles.get(tileIter.next());
-            if (i > MAX_SIMULTANEOUS_BLOCKS) {
+        for (Float aFloat : sortedCurrZoomTiles.keySet()) {
+            BlockTileKey tileKey = sortedCurrZoomTiles.get(aFloat);
+            if (i > MAX_SIMULTANEOUS_DISPLAY_BLOCKS) {
                 obsoleteTiles.put(tileKey, currentTiles.get(tileKey));
             }
             i++;
@@ -159,7 +159,7 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
             ConstVector3 c2 = block2.getCentroid().minus(focus);
             float d1 = c1.dot(c1); // distance squared
             float d2 = c2.dot(c2);
-            return d1 < d2 ? -1 : d1 > d2 ? 1 : 0;
+            return Float.compare(d1, d2);
         }
     }
 }
