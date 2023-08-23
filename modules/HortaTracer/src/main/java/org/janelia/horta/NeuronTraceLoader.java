@@ -219,6 +219,7 @@ public class NeuronTraceLoader {
                     }
                     OmeZarrVolumeActor parentActor = OmeZarrVolumeActor.getInstance();
                     parentActor.addPersistentBlock(loader.blockActor);
+                    parentActor.addPersistentBlock(loader.blockActor);
                     if (!neuronMPRenderer.containsVolumeActor(parentActor)) { // just add singleton actor once...
                         parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
                         neuronMPRenderer.addVolumeActor(parentActor);

@@ -18,7 +18,8 @@ public class OmeZarrBlockInfoSet implements Set<OmeZarrBlockTileKey> {
     private final KDTree<OmeZarrBlockTileKey> centroidIndex = new KDTree<>(3);
 
     public OmeZarrBlockTileKey getBestContainingBrick(ConstVector3 xyz) {
-        double[] key = new double[] {xyz.getX(), xyz.getY(), xyz.getZ()};
+        double[] key = new double[]{xyz.getX(), xyz.getY(), xyz.getZ()};
+
         try {
             return centroidIndex.nearest(key);
         } catch (KeySizeException | ArrayIndexOutOfBoundsException ex) {
@@ -26,19 +27,6 @@ public class OmeZarrBlockInfoSet implements Set<OmeZarrBlockTileKey> {
             return null;
         }
     }
-
-    public Collection<OmeZarrBlockTileKey> getClosestBricks(float[] xyz, int count) {
-        double[] key = new double[] {xyz[0], xyz[1], xyz[2]};
-        try {
-            return centroidIndex.nearest(key, count);
-        } catch (KeySizeException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (IllegalArgumentException ex) {
-            Exceptions.printStackTrace(ex);
-        }
-        return null;
-    }
-
 
     @Override
     public int size() {
@@ -77,12 +65,12 @@ public class OmeZarrBlockInfoSet implements Set<OmeZarrBlockTileKey> {
         // Insert into KDTree for quick search
         // TODO - update tree for all other inserting/deleting operations
         ConstVector3 cv = brickInfo.getCentroid();
-        double[] ca = new double[] {cv.getX(), cv.getY(), cv.getZ()};
+
+        double[] ca = new double[]{cv.getX(), cv.getY(), cv.getZ()};
+
         try {
             centroidIndex.insert(ca, brickInfo);
-        } catch (KeySizeException ex) {
-            Exceptions.printStackTrace(ex);
-        } catch (KeyDuplicateException ex) {
+        } catch (KeySizeException | KeyDuplicateException ex) {
             Exceptions.printStackTrace(ex);
         }
 
@@ -101,7 +89,13 @@ public class OmeZarrBlockInfoSet implements Set<OmeZarrBlockTileKey> {
 
     @Override
     public boolean addAll(Collection<? extends OmeZarrBlockTileKey> c) {
-        return set.addAll(c);
+        boolean result = false;
+
+        for (OmeZarrBlockTileKey chunk : c) {
+            result |= add(chunk);
+        }
+
+        return result;
     }
 
     @Override
