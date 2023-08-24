@@ -23,6 +23,7 @@ import org.janelia.workstation.controller.scripts.spatialfilter.NeuronUpdates;
 import org.janelia.workstation.controller.tools.NoteExporter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.events.Events;
+import org.janelia.workstation.core.events.model.DomainObjectChangeEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionEvent;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionModel;
 import org.janelia.workstation.core.events.selection.DomainObjectSelectionSupport;
@@ -103,8 +104,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     private final TiledMicroscopeDomainMgr tmDomainMgr;
     private SWCDataConverter swcDataConverter;
 
-    private TmSample currentSample;
-    private TmWorkspace currentWorkspace;
     private TmNeuronMetadata currentNeuron;
     private List<TmNeuronMetadata> currentFilteredNeuronList;
 
@@ -142,6 +141,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public void registerEvents() {
         ViewerEventBus.registerForEvents(this);
+        Events.getInstance().registerOnEventBus(this);
     }
 
     public void setViewStateListener(ViewStateListener viewStateListener) {
@@ -174,11 +174,9 @@ public class NeuronManager implements DomainObjectSelectionSupport {
 
     public synchronized void clear() {
         log.info("Clearing annotation model");
-        currentWorkspace = null;
-        currentSample = null;
         setCurrentNeuron(null);
 
-        SwingUtilities.invokeLater(() -> fireWorkspaceUnloaded(currentWorkspace));
+        SwingUtilities.invokeLater(() -> fireWorkspaceUnloaded(modelManager.getCurrentWorkspace()));
     }
 
     public SWCDataConverter getSwcDataConverter() {
@@ -218,6 +216,17 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     public void selectNeuronInDataInspector(SelectionNeuronsEvent event) {
         Events.getInstance().postOnEventBus(new DomainObjectSelectionEvent(null,
                 event.getItems(), true, true, true));
+    }
+
+    @Subscribe
+    public void updateCurrentWorkspace (DomainObjectChangeEvent event) {
+        if (event.getDomainObject() instanceof TmWorkspace) {
+            TmWorkspace workspace = (TmWorkspace) event.getDomainObject();
+
+            if (modelManager.getCurrentWorkspace().getName().equals(workspace.getName())) {
+                modelManager.setCurrentWorkspace(workspace);
+            }
+        }
     }
 
     @Subscribe
@@ -496,7 +505,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         fireNeuronDeleted(deletedNeuron);
 
         // Now update the database
-        neuronModel.deleteNeuron(currentWorkspace, deletedNeuron).thenApply((neuron) -> {
+        neuronModel.deleteNeuron(modelManager.getCurrentWorkspace(), deletedNeuron).thenApply((neuron) -> {
             if (neuron != null) {
                 log.info("Neuron '{}' ({}) was deleted", neuron.getName(), neuron.getId());
             }
@@ -951,7 +960,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         // If source neuron is now empty, delete it, otherwise save it.
         final boolean sourceDeleted = sourceNeuron.getGeoAnnotationMap().isEmpty();
         if (sourceDeleted) {
-            CompletableFuture<Void> result = neuronModel.deleteNeuron(currentWorkspace, sourceNeuron).thenAccept((neuron) -> {
+            CompletableFuture<Void> result = neuronModel.deleteNeuron(modelManager.getCurrentWorkspace(),
+                    sourceNeuron).thenAccept((neuron) -> {
                 if (applyFilter) {
                     NeuronUpdates updates = neuronFilter.deleteNeuron(sourceNeuron);
                     updateFrags(updates);

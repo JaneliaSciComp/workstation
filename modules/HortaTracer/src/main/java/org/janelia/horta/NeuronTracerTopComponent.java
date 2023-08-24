@@ -2216,7 +2216,7 @@ public final class NeuronTracerTopComponent extends TopComponent
         TetVolumeActor.getInstance().setKtxTileSource(ktxSource);
         // Don't load both ktx and raw tiles at the same time
         if (ktxSource != null) {
-            setOmeZarrSource(null);
+            omeZarrSource = null;
             setVolumeSource(null);
         }
     }
