@@ -340,11 +340,11 @@ public class TiledMicroscopeDomainMgr {
         if (neuronMetadata.getId()==null) {
             throw new IllegalStateException("Attempt to update neuron which does not have a GUID");
         }
-        TmNeuronMetadata savedMetadata = client.updateNeuron(neuronMetadata);
+        client.updateNeuron(neuronMetadata);
         // We assume that the neuron data was saved on the server, but it only returns metadata for efficiency. We
         // already have the data, so let's copy it over into the new object.
         // exchanger.copyNeuronData(neuronMetadata, savedMetadata);
-        return savedMetadata;
+        return neuronMetadata;
     }
 
     public TmNeuronMetadata changeOwnership(TmNeuronMetadata neuronMetadata, String targetUser) throws Exception {
