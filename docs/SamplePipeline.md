@@ -256,7 +256,7 @@ Outputs:
 
 Color depth MIPs are created from the aligned image stacks to support neuron searching on [NeuronBridge](https://neuronbridge.janelia.org). 
 
-This step is implemented by the [[colorDepthMIP.sh](https://github.com/JaneliaSciComp/jacs-tools-docker/blob/master/flylight_tools/scripts/cmd/colorDepthMIP.sh) script in the flylight_tools container.
+This step is implemented by the [colorDepthMIP.sh](https://github.com/JaneliaSciComp/jacs-tools-docker/blob/master/flylight_tools/scripts/cmd/colorDepthMIP.sh) script in the flylight_tools container.
 
   
 ## Compression
