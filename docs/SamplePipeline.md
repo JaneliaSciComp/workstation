@@ -39,7 +39,6 @@ Confocal scanned images have optical distortions. Without the distortion correct
 Left panel: The neuron with chromatic aberration. The green and purple signals are shifted. Right panel: After the chromatic aberration correction. The green and purple are staying in same position.
 
 2. Double blended signals between overlapping tiles. The optical distortion leads to image distortion. If the multiple distorted images are stitched together, the overlapped area will not match perfectly. This mismatch can be seen as “double blended signals”.   
-
 ![Canceling double blending](distcorrection_1.png)
 
 Left panel: Before the distortion correction. Right panel: After the distortion correction.
@@ -66,10 +65,9 @@ If the sample capture date is earlier than the field capture date, our pipeline 
 
 The distortion fields for each microscope can be found in the [confocal-distortion-fields](https://github.com/JaneliaSciComp/confocal-distortion-fields) repository.
 
-
 ## Sample Processing
 
-The sample processing step reconstructs a single image for each objective/area combination in the sample. 
+The sample processing step reconstructs a single image for each objective/area combination in the sample by merging tiles, stitching them together, and converting the file into a normalized "sample image" representation with predictable channel ordering. 
 
 ### Merging
 
@@ -84,6 +82,17 @@ transformation type. If the transformation type is pure translations, we use a f
 
 This step is implemented by the [merge.sh](https://github.com/JaneliaSciComp/jacs-tools-docker/blob/master/flylight_tools/scripts/cmd/merge.sh) script in the flylight_tools container.
 
+### Stitching 
+
+In cases where there is only a single tile per objective and anatomical area, this step is skipped.
+
+In cases where multiple image tiles have the same objective and anatomical area, they are clustered into non-overlapping groups by the "grouping" algorithm. There is currently no pipeline support for stitching multiple groups of images per Sample,
+so only the largest group is stitched together and blended.
+
+This step is implemented by the [stitchAndBlend.sh](https://github.com/JaneliaSciComp/jacs-tools-docker/blob/master/flylight_tools/scripts/cmd/stitchAndBlend.sh) script in the flylight_tools container.
+
+The actual stitching is done using Yang Yu's [iStitch and iFusion plugins](https://code.google.com/p/vaa3d/wiki/imageStitch) for Vaa3d. The underlying stitching algorithm is described in [this paper](http://home.penglab.com/papersall/docpdf/2011_ISBI_istitch.pdf).
+  
 ### Conversion to Sample Image
 
 In many cases, the LSMs that come off the scopes do not have their channels in any particular order, and the order can change with the imaging protocol. In some cases the channel order is rearranged by the LSM Merging step as described in the previous section. 
@@ -94,21 +103,8 @@ In order to normalize the order of the channels, each pipeline is configured to 
 * Dye Specification - each pipeline using this method is configured to associate certain dye names to content types. For example if the dye is "Alexa Fluor 633" or "Alexa Fluor 647" then the channel content is "presynaptic".
   The dye information that was read from the LSM files during the LSM Metadata Extraction step is used to rearrange the channels in some predetermined order (e.g. presynaptic, membrance, reference). Unused channels are discarded.
 
-Aside from channel reordering, this step also ensures that the sample images are in v3draw format. This is important in cases where a single LSM is neither merged nor stitched and so is never implicitly converted out of TIFF format.
+Aside from channel reordering, this step also ensures that the sample images are in v3draw/v3dpbd format to be ready for further processing.
 
-### Stitching 
-
-In cases where there is only a single tile per objective and anatomical area, this step is skipped.
-
-In cases where multiple image tiles have the same objective and anatomical area, they are clustered into non-overlapping groups by the "grouping" algorithm. There is currently no pipeline support for stitching multiple groups of images per Sample,
-so only the largest group is stitched together and blended.
-
-This step is implemented by the [stitchAndBlend.sh](https://github.com/JaneliaSciComp/jacs-tools-docker/blob/master/flylight_tools/scripts/cmd/stitchAndBlend.sh) script in the flylight_tools container.
-
-The actual stitching is done using Yang Yu's iStitch and iFusion plugins for Vaa3d, available here: https://code.google.com/p/vaa3d/wiki/imageStitch
-
-The underlying stitching algorithm is described here: http://home.penglab.com/papersall/docpdf/2011_ISBI_istitch.pdf
-  
 ## Post Processing
 
 The post processing step generates MIPs and movies for merged tiles and stitched images. In the case of 20x images, the MIPs are generated using a [basicMIP.sh](https://github.com/JaneliaSciComp/jacs-tools-docker/blob/master/flylight_tools/scripts/cmd/basicMIP.sh) script, which is the same as for the raw LSMs. The options used are different however.
@@ -147,7 +143,6 @@ The specific options passed to this script for 63x Polarity imagery are:
 * `CHAN_SPEC`: channel specification string listing (s)ignal and (r)eference channels contained in the LSM file. Because the channels are normalized at this stage, the reference always comes last, e.g. `sssr`
 * `COLOR_SPEC`: colors to use for each channel: `G1`, `MG1`, or `MGR1` depending on the number of channels
 * `OPTIONS`: options used by the Fiji macro, in the case of LSMs we use "mips:movies:legends:hist"
-
 
 ## Alignment
 
