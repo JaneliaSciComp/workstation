@@ -223,7 +223,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         if (event.getDomainObject() instanceof TmWorkspace) {
             TmWorkspace workspace = (TmWorkspace) event.getDomainObject();
 
-            if (modelManager.getCurrentWorkspace().getName().equals(workspace.getName())) {
+            if (modelManager.getCurrentWorkspace().getId().equals(workspace.getId())) {
                 modelManager.setCurrentWorkspace(workspace);
             }
         }
@@ -2056,7 +2056,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         try {
             // need to save neuron now; notes have to be attached to the final
             //  annotation IDs, not the placeholders that exist before the save
-            neuronModel.saveNeuronData(neuron);
+            CompletableFuture<TmNeuronMetadata> future = neuronModel.saveNeuronData(neuron);
 
             // check for corresponding notes file; if present, import notes
             // find file; read and parse it
@@ -2065,12 +2065,13 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                 // read and parse
                 Map<Vec3, String> notes = parseNotesFile(notesFile);
                 if (notes.size() > 0) {
-                    // add notes to neuron; get a fresh copy that has updated ann IDs
-                    neuron = neuronModel.getNeuronById(neuron.getId());
-                    if (neuron == null) {
+                    // add notes to neuron; we need to wait for the future to complete so we get
+                    //  the saved neuron, because this has to happen synchronously
+                    TmNeuronMetadata savedNeuron = future.get();
+                    if (savedNeuron == null) {
                         // this should really never happen...neuron was just imported, should never had any opportunity
                         //  for a user to do anything with it...but if so, can't import notes; log warning
-                        log.warn("could not retrieve neuron ID {} while attaching notes during import", neuron.getId());
+                        log.warn("could not retrieve neuron ID {} after saving, before attaching notes during import", neuron.getId());
 
                     } else {
                         ObjectMapper mapper = new ObjectMapper();
@@ -2082,38 +2083,32 @@ public class NeuronManager implements DomainObjectSelectionSupport {
                         //  and asynchronously, so we don't have access to it now
                         // later testing: added a few random notes to a neuron with 28k nodes;
                         //  import took ~1s with or without notes
-                        for (TmGeoAnnotation root : neuron.getRootAnnotations()) {
-                            for (TmGeoAnnotation ann : neuron.getSubTreeList(root)) {
+                        for (TmGeoAnnotation root : savedNeuron.getRootAnnotations()) {
+                            for (TmGeoAnnotation ann : savedNeuron.getSubTreeList(root)) {
                                 Vec3 loc = new Vec3(ann.getX(), ann.getY(), ann.getZ());
                                 if (notes.containsKey(loc)) {
                                     // fortunately, we only need the simplest case seen in setNotes():
                                     ObjectNode node = mapper.createObjectNode();
                                     node.put("note", notes.get(loc));
-                                    neuronModel.addStructuredTextAnnotation(neuron, ann.getId(), mapper.writeValueAsString(node));
+                                    neuronModel.addStructuredTextAnnotation(savedNeuron, ann.getId(), mapper.writeValueAsString(node));
                                 }
                             }
                         }
                         // now save again, with the note data
-                        neuronModel.saveNeuronData(neuron);
+                        neuronModel.saveNeuronData(savedNeuron);
 
                         if (applyFilter) {
-                            NeuronUpdates updates = neuronFilter.updateNeuron(neuron);
+                            NeuronUpdates updates = neuronFilter.updateNeuron(savedNeuron);
                             updateFrags(updates);
                         }
-                        fireNeuronChanged(neuron);
-                        fireNeuronSelected(neuron);
+                        fireNeuronChanged(savedNeuron);
+                        fireNeuronSelected(savedNeuron);
                     }
                 }
             }
-
-            postWorkspaceUpdate(neuron);
         } catch (Exception e) {
             log.info("Error saving neurons", e);
         }
-    }
-
-    public synchronized void postWorkspaceUpdate(TmNeuronMetadata neuron) {
-
     }
 
     private File findNotesFile(File swcFile) {
