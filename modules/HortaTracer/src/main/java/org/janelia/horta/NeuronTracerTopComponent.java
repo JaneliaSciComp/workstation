@@ -3,6 +3,7 @@ package org.janelia.horta;
 import java.awt.*;
 
 import org.apache.commons.lang.StringUtils;
+import org.janelia.horta.omezarr.OmeZarrReaderCompletionObserver;
 import org.janelia.model.domain.enums.FileType;
 import java.awt.datatransfer.*;
 import java.awt.dnd.*;
@@ -29,7 +30,6 @@ import javax.swing.*;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.MouseInputListener;
-import javax.swing.text.Keymap;
 
 import Jama.Matrix;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,9 +40,8 @@ import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
 import org.janelia.geometry3d.ObservableInterface;
 import org.janelia.horta.actors.OmeZarrVolumeActor;
 import org.janelia.horta.blocks.OmeZarrBlockTileSource;
+import org.janelia.horta.omezarr.OmeZarrReaderProgressObserver;
 import org.janelia.horta.loader.*;
-import org.janelia.horta.volume.*;
-import org.janelia.model.domain.enums.FileType;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.controller.dialog.NeuronColorDialog;
 import org.janelia.workstation.controller.listener.ColorModelListener;
@@ -78,7 +77,6 @@ import org.janelia.horta.loader.ObjMeshLoader;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
-import org.janelia.horta.movie.HortaMovieSource;
 import org.janelia.horta.render.NeuronMPRenderer;
 import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
@@ -99,7 +97,6 @@ import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.access.ModelTranslation;
 import org.janelia.workstation.controller.action.*;
 import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
-import org.janelia.workstation.controller.dialog.NeuronHistoryDialog;
 import org.janelia.workstation.controller.eventbus.*;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
@@ -111,18 +108,17 @@ import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
+import org.netbeans.api.progress.ProgressHandle;
+import org.netbeans.api.progress.ProgressHandleFactory;
 import org.netbeans.api.settings.ConvertAsProperties;
-import org.openide.actions.RedoAction;
-import org.openide.actions.UndoAction;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.MouseUtils;
 import org.openide.awt.StatusDisplayer;
 import org.openide.awt.UndoRedo;
-import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import org.openide.util.NbPreferences;
-import org.openide.util.actions.SystemAction;
+import org.openide.util.RequestProcessor;
 import org.openide.util.lookup.Lookups;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
@@ -1041,10 +1037,66 @@ public final class NeuronTracerTopComponent extends TopComponent
         neuronTraceLoader.loadTileAtCurrentFocus(volumeSource);
     }
 
-    public boolean loadDroppedOmeZarr(String sourceName) throws IOException {
-        setOmeZarrSource(new OmeZarrBlockTileSource(null, getImageColorModel(), true).init(sourceName));
-        Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
-        neuronTraceLoader.loadOmeZarrTileAtLocation(getOmeZarrSource(), focus, true);
+    public boolean loadDroppedOmeZarr(String sourceName) {
+        Runnable task = () -> {
+            ProgressHandle progress = ProgressHandleFactory.createHandle("Loading OME-Zarr brain metadata...", null, null);
+            progress.start();
+
+            try {
+                progress.setDisplayName("Loading OME-Zarr brain metadata...");
+
+                setCubifyVoxels(false);
+
+                final boolean[] haveSetBoundingBox = {false};
+
+                setOmeZarrSource(new OmeZarrBlockTileSource(null, getImageColorModel(), true).init(sourceName,
+                        (source, update) -> SwingUtilities.invokeLater(() -> {
+                            progress.setDisplayName(update);
+
+                            if (!haveSetBoundingBox[0] && !source.getResolutions().isEmpty()) {
+                                haveSetBoundingBox[0] = true;
+
+                                TmModelManager.getInstance().setSampleBoundingBox(source.getBoundingBox3d());
+                                TmModelManager.getInstance().setVoxelCenter(source.getVoxelCenter());
+
+                                PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
+                                Vantage v = pCam.getVantage();
+
+                                Vector3 focusVector3 = new Vector3(
+                                        (float) source.getVoxelCenter().getX(),
+                                        (float) source.getVoxelCenter().getY(),
+                                        (float) source.getVoxelCenter().getZ());
+
+                                v.setDefaultFocus(focusVector3);
+
+                                v.setSceneUnitsPerViewportHeight((float) 15000);
+                                v.setDefaultSceneUnitsPerViewportHeight((float) 15000);
+
+                                neuronTraceLoader.animateToFocusXyz(focusVector3, pCam.getVantage(), 150);
+
+                                Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
+
+                                neuronTraceLoader.loadOmeZarrTileAtLocation(getOmeZarrSource(), focus, true);
+
+                                redrawNow();
+                            }
+                        }),
+                        (source) -> SwingUtilities.invokeLater(progress::finish)));
+            } catch (final Exception ex) {
+                logger.error("Error setting up the tile source", ex);
+
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                        sceneWindow.getOuterComponent(),
+                        "Error loading OME-Zarr brain metadata: " + ex.getMessage(),
+                        "OME-Zarr Error",
+                        JOptionPane.ERROR_MESSAGE));
+
+                progress.finish();
+            }
+        };
+
+        RequestProcessor.getDefault().post(task);
+
         return true;
     }
 
@@ -2225,14 +2277,14 @@ public final class NeuronTracerTopComponent extends TopComponent
         return omeZarrSource;
     }
 
-    void setOmeZarrSource(OmeZarrBlockTileSource omeZarrSource){
+    void setOmeZarrSource(OmeZarrBlockTileSource omeZarrSource) {
         this.omeZarrSource = omeZarrSource;
         OmeZarrVolumeActor.getInstance().setOmeZarrTileSource(omeZarrSource);
-        // happens in SharedVolumeImage for KTX
-        TmModelManager.getInstance().setSampleBoundingBox (omeZarrSource.getBoundingBox3d());
-        TmModelManager.getInstance().setVoxelCenter (omeZarrSource.getVoxelCenter());
-        // Don't load ktx and omezarr or raw tiles at the same time
         if (omeZarrSource != null) {
+            // happens in SharedVolumeImage for KTX
+            TmModelManager.getInstance().setSampleBoundingBox(omeZarrSource.getBoundingBox3d());
+            TmModelManager.getInstance().setVoxelCenter(omeZarrSource.getVoxelCenter());
+            // Don't load ktx and omezarr or raw tiles at the same time
             setKtxSource(null);
             setVolumeSource(null);
         }

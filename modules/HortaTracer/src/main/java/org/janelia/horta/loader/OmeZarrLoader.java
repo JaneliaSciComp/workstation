@@ -2,7 +2,6 @@ package org.janelia.horta.loader;
 
 import org.apache.commons.io.FilenameUtils;
 import org.janelia.horta.NeuronTracerTopComponent;
-import org.janelia.horta.volume.StaticVolumeBrickSource;
 
 import java.io.IOException;
 

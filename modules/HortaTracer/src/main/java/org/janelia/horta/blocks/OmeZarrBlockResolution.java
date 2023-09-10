@@ -9,7 +9,7 @@ public class OmeZarrBlockResolution implements BlockTileResolution {
 
     private final int blockPowerScale;
 
-    private OmeZarrBlockInfoSet blockInfoSet = new OmeZarrBlockInfoSet();
+    private final OmeZarrBlockInfoSet blockInfoSet = new OmeZarrBlockInfoSet();
 
     public OmeZarrBlockResolution(int depth, int[] chunkSizeXYZ, double resolutionMicrometers, int blockPowerScale) {
         this.depth = depth;
@@ -23,27 +23,8 @@ public class OmeZarrBlockResolution implements BlockTileResolution {
         return depth;
     }
 
-    public double getResolutionMicrometers() {
-        return resolutionMicrometers;
-    }
-
-    public double getBlockPowerScale() {
-        return blockPowerScale;
-    }
-
-    public OmeZarrBlockInfoSet getBlockInfoSet() {
-        return blockInfoSet;
-    }
-
-    public float getBlockSizeScale() {
-        return (float) Math.pow(2.5, getBlockPowerScale());
-    }
-
-    public int[] getChunkSize() {
-        float scale = getBlockSizeScale();
-
-        // return new int[]{(int) (shape[4] / scale), (int) (shape[3] / scale), (int) (shape[2] / scale)};
-        return chunkSizeXYZ;
+    public int getDepth() {
+        return depth;
     }
 
     @Override
@@ -69,11 +50,23 @@ public class OmeZarrBlockResolution implements BlockTileResolution {
     @Override
     public int compareTo(BlockTileResolution o) {
         OmeZarrBlockResolution rhs = (OmeZarrBlockResolution) o;
-        return depth < rhs.depth ? -1 : depth > rhs.depth ? 1 : 0;
+        return Integer.compare(depth, rhs.depth);
     }
 
     @Override
     public String toString() {
         return String.format("depth: %d; um/voxel: %.1f; scaleFactor: %d", depth, resolutionMicrometers, blockPowerScale);
+    }
+
+    public double getResolutionMicrometers() {
+        return resolutionMicrometers;
+    }
+
+    public OmeZarrBlockInfoSet getBlockInfoSet() {
+        return blockInfoSet;
+    }
+
+    public int[] getChunkSize() {
+        return chunkSizeXYZ;
     }
 }

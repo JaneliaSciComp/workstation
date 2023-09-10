@@ -22,7 +22,13 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
     }
 
     public List<OmeZarrBlockTileKey> chooseBlocks(OmeZarrBlockTileSource source, ConstVector3 focus, Vantage vantage, int maxCount) {
-        if (zoomLevels.isEmpty()) {
+        List<OmeZarrBlockTileKey> result = new ArrayList<>();
+
+        if (source.getResolutions().size() == 0) {
+            return result;
+        }
+
+        if (zoomLevels.isEmpty() || zoomLevels.size() != source.getResolutions().size()) {
             initBlockSizes(source);
         }
 
@@ -84,8 +90,9 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
         neighboringBlocks.sort(new BlockComparator<>(focus));
 
         // Return only the closest 8 blocks
-        List<OmeZarrBlockTileKey> result = new ArrayList<>();
+
         int listLen = Math.min(maxCount, neighboringBlocks.size());
+
         for (int i = 0; i < listLen; ++i) {
             result.add(neighboringBlocks.get(i));
         }
@@ -133,6 +140,8 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
     }
 
     private void initBlockSizes(OmeZarrBlockTileSource source) {
+        zoomLevels.clear();
+
         ArrayList<OmeZarrBlockResolution> resolutions = source.getResolutions();
 
         resolutions.forEach(resolution -> {
@@ -140,7 +149,6 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
             LOG.info("block size [{}, {}, {}] for resolution {}", blockSize.getX(), blockSize.getY(), blockSize.getZ(), resolution);
             float blockHeight = blockSize.getY();
             zoomLevels.add((float) (blockHeight * BLOCK_WIDTH_ACROSS_VIEWPORT));
-            ///LOG.info("ZOOM LEVEL {} is {}", resolution.getResolution(), (float) (blockHeight * BLOCK_WIDTH_ACROSS_VIEWPORT));
         });
     }
 
