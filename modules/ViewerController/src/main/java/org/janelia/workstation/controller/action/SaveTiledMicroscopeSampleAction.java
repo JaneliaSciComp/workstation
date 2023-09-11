@@ -91,7 +91,8 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
             
             @Override
             protected void hadError(Throwable error) {
-                FrameworkAccess.handleException("Error saving sample - make sure the provided sample paths are correct.", error);
+                FrameworkAccess.handleException("Error saving sample; name = " + name + "; octree = " + octreePath +
+                        "; ktx = "+ ktxPath + ".", error);
             }
         };
         worker.setProgressMonitor(new IndeterminateProgressMonitor(mainFrame, "Saving sample...", ""));
