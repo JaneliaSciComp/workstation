@@ -1,7 +1,10 @@
 package org.janelia.workstation.controller;
 
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Stopwatch;
 import com.google.common.eventbus.Subscribe;
@@ -2117,6 +2120,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         return notePath.toFile();
     }
 
+    // returns map of pixel coordinates to notes
     private Map<Vec3, String> parseNotesFile(File notesFile) {
         Map<Vec3, String> notes = new HashMap<>();
 
@@ -2161,8 +2165,40 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         return notes;
     }
 
-    // and now we have all the NeuronTagMap methods...in each case, it's a simple
-    //  wrapper where for mutating calls, we save the map and fire appropriate updates
+    // variant of parseNotesFile() above; this version doesn't apply the
+    //  offset and doesn't convert to pixel coords; so it's a closer
+    //  representation of what's in the notes file, useful for comparing
+    //  against the corresponding swc file raw nodes (which are also microns, no offset)
+    private Map<Vec3, String> parseNotesFilePartial(File notesFile) {
+        Map<Vec3, String> notes = new HashMap<>();
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = null;
+        try {
+            rootNode = mapper.readTree(notesFile);
+        }
+        catch (IOException e) {
+            FrameworkAccess.handleException(e);
+        }
+        JsonNode neuronsNode = rootNode.path("neurons");
+        if (neuronsNode.isMissingNode()) {
+            // trouble; bail out
+            return notes;
+        }
+
+        for (JsonNode neuronNode: neuronsNode) {
+            JsonNode notesNode = neuronNode.path("notes");
+            if (notesNode.isMissingNode()) {
+                // trouble; skip this node
+                continue;
+            }
+            for (JsonNode noteNode: notesNode) {
+                Vec3 loc = new Vec3(noteNode.get(0).asDouble(), noteNode.get(1).asDouble(), noteNode.get(2).asDouble());
+                notes.put(loc, noteNode.get(3).asText());
+            }
+        }
+        return notes;
+    }
 
     public Set<String> getPredefinedNeuronTags() {
         return modelManager.getAllTagMeta().getPredefinedTags();
@@ -2287,7 +2323,127 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public List<File> breakOutByRoots(File infile) throws IOException {
-        return new SWCData().breakOutByRoots(infile);
+        // yes, it's a little odd that SWCData handles breaking up an swc file
+        //  but we break up the notes file here; for notes, we need routines used
+        //  in import (which are in this class) that we don't need for swc files
+        List<File> swcList = new SWCData().breakOutByRoots(infile);
+        breakNotesOutByRoots(swcList, infile);
+        return swcList;
+    }
+
+    private void breakNotesOutByRoots(List<File> swcFiles, File fullSwcFile) {
+        File notesFile = findNotesFile(fullSwcFile);
+        if (notesFile.exists()) {
+            // note, using the parse function that doesn't convert to pixel or apply offset
+            Map<Vec3, String> notes = parseNotesFilePartial(notesFile);
+            if (notes.size() > 0) {
+                for (File f: swcFiles) {
+                    writeNotesFile(f, notes);
+                }
+            }
+        }
+    }
+
+    private void writeNotesFile(File swcFile, Map<Vec3, String> notes) {
+        // NOTE: this routine only used when importing a big single SWC as
+        //  separate neurons; we break the file up into equivalent single files,
+        //  and this routine does the note files
+        // for normal export of notes, see class NoteExporter
+
+        // read the swc file, and if any of the notes in the map belong to a
+        //  node in the file, write a new notes file
+        Map<Vec3, String> myNotes = new HashMap<>();
+        SWCData swcData;
+        try {
+            swcData = SWCData.read(swcFile);
+            // we wrote this file, generated from another file that was just read in
+            //  and validated; don't need to validate here
+        } catch (IOException e) {
+            log.warn("could not read broken-out swc file {} while generating broken-out notes files", swcFile);
+            return;
+        }
+
+        // first off, nodes out of SWCData don't have offset applied and are in physical units,
+        //  and the "partial" note parsing routine is the same
+
+        // second, enormous hack ahead: normally, when we match notes to nodes on import, we're
+        //  doing it after the swc has been snapped to a pixel grid internally, and we
+        //  then (shudder) are able to exactly match floating point numbers in a hash
+        //  since they are actually quantized (and quantized consistently)
+        // here, we are *not* operating in the pixelized space (for reasons); so to match
+        //  notes to nodes here, I'm going to round to three decimal places, which ought
+        //  to be more than enough (pixel size is like 0.3 um)
+        // actually going to use Math.floor(coordinates * 1000) because Java sucks at
+        //  providing library functions I actually want to use (I want
+        //  Math.round(x, decimal places) returning double)
+        Map<Vec3, Vec3> roundedLocations = new HashMap<>();
+        for (Vec3 v: notes.keySet()) {
+            Vec3 roundedV = new Vec3(
+                    Math.floor(v.getX() * 1000),
+                    Math.floor(v.getY() * 1000),
+                    Math.floor(v.getZ() * 1000)
+            );
+            roundedLocations.put(roundedV, v);
+        }
+        for (SWCNode node: swcData.getNodeList()) {
+            Vec3 roundedV = new Vec3(
+                    Math.floor(node.getX() * 1000),
+                    Math.floor(node.getY() * 1000),
+                    Math.floor(node.getZ() * 1000));
+            if (roundedLocations.containsKey(roundedV)) {
+                Vec3 realV = roundedLocations.get(roundedV);
+                myNotes.put(realV, notes.get(realV));
+            }
+        }
+
+        if (!myNotes.isEmpty()) {
+            // write notes file; copied some code from NoteExporter class
+            String swcBase = FilenameUtils.removeExtension(swcFile.getName());
+            Path notePath = swcFile.toPath().getParent().resolve(swcBase + ".json");
+            File noteFile = notePath.toFile();
+
+            // Java sure loves json handling...Java loves it so much, it requires
+            //  LOTS AND LOTS AND LOTS of code to do it...
+
+            ObjectMapper mapper = new ObjectMapper();
+            ObjectNode rootNode = mapper.createObjectNode();
+            ArrayNode neuronNode = mapper.createArrayNode();
+
+            ObjectNode neuronRoot = mapper.createObjectNode();
+            // this is fake, not used for this bulk import sequence
+            neuronRoot.put("neuronID", -1);
+
+            ArrayNode notesNode = mapper.createArrayNode();
+            for (Vec3 v: myNotes.keySet()) {
+                ArrayNode notesArray = mapper.createArrayNode();
+                notesArray.add(v.getX());
+                notesArray.add(v.getY());
+                notesArray.add(v.getZ());
+                notesArray.add(myNotes.get(v));
+                notesNode.add(notesArray);
+            }
+            neuronRoot.set("notes", notesNode);
+            neuronNode.add(neuronRoot);
+
+            rootNode.set("neurons", neuronNode);
+
+            ArrayNode offsetNode = mapper.createArrayNode();
+            double[] offset = swcData.parseOffset();
+            for (int i=0; i<3; i++) {
+                offsetNode.add(offset[i]);
+            }
+            rootNode.set("offset", offsetNode);
+
+            ObjectWriter writer = mapper.writer(new DefaultPrettyPrinter());
+            try {
+                writer.writeValue(noteFile, rootNode);
+                log.info("writing temp notes file {}", noteFile);
+            }
+            catch (IOException e) {
+                log.warn("could not write broken-out notes file for swc file {}", noteFile);
+                return;
+            }
+        }
     }
 
 
