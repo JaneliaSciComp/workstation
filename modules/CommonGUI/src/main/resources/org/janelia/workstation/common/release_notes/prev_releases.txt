@@ -1,3 +1,14 @@
+// 9.14.4
+
+* fixed bulk import of SWC files; notes should also import properly now
+
+Horta
+* When importing SWC files interactively, traverse all subfolders recursively when collecting SWC files
+* Fixed issue with undo action causing neuron to become unselectable
+* Fixed issue with workspace permissions changes being overwritten by Horta3D workspace updates
+* Removed texture-mapping artifacts at highest Zarr tileset resolutions
+* Fixed Blosc DLL installation for Zarr tile source support on HortaCloud
+
 // 9.14
 
 Core
