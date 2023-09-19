@@ -96,8 +96,6 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
         cachedThreadPool.submit(() -> {
             int datasetCount = omeZarrGroup.getAttributes().getMultiscales()[0].getDatasets().size();
 
-            int maxBlockingResolutionIndex = Integer.MIN_VALUE;
-
             boolean haveExtents = false;
 
             for (int idx = datasetCount - 1; idx >= 0; idx--) {
@@ -120,9 +118,11 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
 
                     double resolutionMicrometers = dataset.getMinSpatialResolution();
 
+                    List<Double> res = dataset.getSpatialResolution(OmeZarrAxisUnit.MICROMETER);
+                    double[] voxelSize = new double[]{res.get(2), res.get(1), res.get(0)};
+
                     if (!haveExtents) {
                         // z, y,x order
-                        List<Double> res = dataset.getSpatialResolution(OmeZarrAxisUnit.MICROMETER);
 
                         // TODO Respect translate transforms in dataset.
                         ConstVector3 origin = new Vector3(0, 0, 0);
@@ -133,19 +133,7 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
                         haveExtents = true;
                     }
 
-                    OmeZarrBlockResolution resolution = new OmeZarrBlockResolution(idx, chunkSizeXYZ, resolutionMicrometers, 0);
-
-                    if (resolutionMicrometers < MAX_BLOCKING_RESOLUTION) {
-                        if (idx > maxBlockingResolutionIndex) {
-                            maxBlockingResolutionIndex = idx;
-                        }
-
-                        resolution = new OmeZarrBlockResolution(idx, chunkSizeXYZ, resolutionMicrometers, maxBlockingResolutionIndex - idx + 1);
-
-                        if (maxBlockingResolutionIndex == idx) {
-                            maximumResolution = resolution;
-                        }
-                    }
+                    OmeZarrBlockResolution resolution = new OmeZarrBlockResolution(idx, chunkSizeXYZ, voxelSize, resolutionMicrometers);
 
                     createTileKeysForDataset(resolution, dataset, progressObserver);
 
@@ -298,7 +286,7 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
 
                         if (chunkCount % 250000 == 0) {
                             if (progressReceiver != null) {
-                                progressReceiver.update(this,"Loading dataset " + dataset.getPath() + " (" + chunkCount + " tiles remaining)");
+                                progressReceiver.update(this,"Parsing dataset " + dataset.getPath() + " (" + chunkCount + " tiles remaining)");
                             }
                         }
                     }
@@ -306,7 +294,7 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
             }
 
             if (progressReceiver != null) {
-                progressReceiver.update(this, "Loading dataset " + dataset.getPath() + " (building spatial tree)");
+                progressReceiver.update(this, "Loading dataset " + dataset.getPath() + " (building index)");
             }
 
             long startTime = System.currentTimeMillis();

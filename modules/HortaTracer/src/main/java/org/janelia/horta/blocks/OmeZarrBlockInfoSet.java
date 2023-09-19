@@ -15,6 +15,14 @@ public class OmeZarrBlockInfoSet implements Set<OmeZarrBlockTileKey> {
     private final Set<OmeZarrBlockTileKey> set = new HashSet<>();
     private final KDTree<OmeZarrBlockTileKey> centroidIndex = new KDTree<>(3);
 
+    private final double[] voxelSize;
+
+    private final int[] chunkSize;
+
+    public OmeZarrBlockInfoSet(double[] voxelSize, int[] chunkSize) {
+        this.voxelSize = voxelSize;
+        this.chunkSize = chunkSize;
+    }
     public OmeZarrBlockTileKey getBestContainingBrick(ConstVector3 xyz, int maxCount) {
         double[] key = new double[]{xyz.getX(), xyz.getY(), xyz.getZ()};
 

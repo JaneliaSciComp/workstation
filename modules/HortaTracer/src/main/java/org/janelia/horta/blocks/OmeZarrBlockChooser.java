@@ -24,49 +24,27 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
     public List<OmeZarrBlockTileKey> chooseBlocks(OmeZarrBlockTileSource source, ConstVector3 focus, Vantage vantage, int maxCount) {
         List<OmeZarrBlockTileKey> result = new ArrayList<>();
 
-        if (source.getResolutions().size() == 0) {
+        if (source.getResolutions().isEmpty()) {
             return result;
         }
 
-        if (zoomLevels.isEmpty() || zoomLevels.size() != source.getResolutions().size()) {
+        List<Float> zoomLevelsCopy;
+
+        synchronized (this) {
+            zoomLevelsCopy = new ArrayList<>(zoomLevels);
+        }
+
+        if (zoomLevelsCopy.isEmpty() || zoomLevelsCopy.size() != source.getResolutions().size()) {
             initBlockSizes(source);
         }
 
-        ArrayList<OmeZarrBlockResolution> resolutions = source.getResolutions();
-
-        // Find up to eight closest blocks adjacent to focus
-        int zoomIndex = resolutions.size() - 1;
-
-        float screenHeight = vantage.getSceneUnitsPerViewportHeight();
-
-        while (zoomIndex >= 0) {
-            if (screenHeight < zoomLevels.get(zoomIndex)) {
-                break;
-            }
-
-            zoomIndex--;
-        }
-
-        if (zoomIndex < 0) {
-            zoomIndex = 0;
-        }
-
-        OmeZarrBlockResolution resolution = resolutions.get(zoomIndex);
+        OmeZarrBlockResolution resolution = getOmeZarrBlockResolution(source, vantage, zoomLevelsCopy);
 
         ConstVector3 blockSize = source.getBlockSize(resolution);
 
-        float[] dxa = new float[]{
-                0f,
-                -blockSize.getX(),
-                +blockSize.getX()};
-        float[] dya = new float[]{
-                0f,
-                -blockSize.getY(),
-                +blockSize.getY()};
-        float[] dza = new float[]{
-                0f,
-                -blockSize.getZ(),
-                +blockSize.getZ()};
+        float[] dxa = new float[]{0f, -blockSize.getX(), +blockSize.getX()};
+        float[] dya = new float[]{0f, -blockSize.getY(), +blockSize.getY()};
+        float[] dza = new float[]{0f, -blockSize.getZ(), +blockSize.getZ()};
 
         List<OmeZarrBlockTileKey> neighboringBlocks = new ArrayList<>();
 
@@ -100,8 +78,35 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
         return result;
     }
 
+    private static OmeZarrBlockResolution getOmeZarrBlockResolution(OmeZarrBlockTileSource source, Vantage vantage, List<Float> zoomLevelsCopy) {
+        ArrayList<OmeZarrBlockResolution> resolutions = source.getResolutions();
+
+        // Find up to eight closest blocks adjacent to focus
+        int zoomIndex = Math.min(resolutions.size() - 1, zoomLevelsCopy.size() - 1);
+
+        float screenHeight = vantage.getSceneUnitsPerViewportHeight();
+
+        while (zoomIndex >= 0) {
+            if (screenHeight < zoomLevelsCopy.get(zoomIndex)) {
+                break;
+            }
+
+            zoomIndex--;
+        }
+
+        if (zoomIndex < 0) {
+            zoomIndex = 0;
+        }
+
+
+        OmeZarrBlockResolution resolution = resolutions.get(zoomIndex);
+        return resolution;
+    }
+
     @Override
-    public Map<BlockTileKey, BlockTileData> chooseObsoleteTiles(Map<BlockTileKey, BlockTileData> currentTiles, Map<BlockTileKey, BlockTileData> desiredTiles, BlockTileKey finishedTile) {
+    public Map<BlockTileKey, BlockTileData> chooseObsoleteTiles
+            (Map<BlockTileKey, BlockTileData> currentTiles, Map<BlockTileKey, BlockTileData> desiredTiles, BlockTileKey
+                    finishedTile) {
 
         Map<BlockTileKey, BlockTileData> obsoleteTiles = new HashMap<>();
         SortedMap<Float, BlockTileKey> sortedCurrZoomTiles = new TreeMap<>();
@@ -140,16 +145,18 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
     }
 
     private void initBlockSizes(OmeZarrBlockTileSource source) {
-        zoomLevels.clear();
+        synchronized (this) {
+            zoomLevels.clear();
 
-        ArrayList<OmeZarrBlockResolution> resolutions = source.getResolutions();
+            OmeZarrBlockResolution[] resolutions = source.getResolutions().toArray(new OmeZarrBlockResolution[]{});
 
-        resolutions.forEach(resolution -> {
-            ConstVector3 blockSize = source.getBlockSize(resolution);
-            LOG.info("block size [{}, {}, {}] for resolution {}", blockSize.getX(), blockSize.getY(), blockSize.getZ(), resolution);
-            float blockHeight = blockSize.getY();
-            zoomLevels.add((float) (blockHeight * BLOCK_WIDTH_ACROSS_VIEWPORT));
-        });
+            for (OmeZarrBlockResolution resolution : resolutions) {
+                ConstVector3 blockSize = source.getBlockSize(resolution);
+                LOG.info("block size [{}, {}, {}] for resolution {}", blockSize.getX(), blockSize.getY(), blockSize.getZ(), resolution);
+                float blockHeight = blockSize.getY();
+                zoomLevels.add((float) (blockHeight * BLOCK_WIDTH_ACROSS_VIEWPORT));
+            }
+        }
     }
 
     // Sort blocks by distance from focus to block centroid

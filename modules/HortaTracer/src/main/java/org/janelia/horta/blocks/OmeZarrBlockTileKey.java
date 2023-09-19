@@ -188,6 +188,14 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
         return pixelDims;
     }
 
+    public double[] getVoxelSize(){
+        return voxelSize;
+    }
+
+    public int[] getReadOffset() {
+        return readOffset;
+    }
+
     public String getRelativePath() {
         if (relativePath == null) {
             relativePath = String.format("[%s] [%.0f, %.0f, %.0f] [%.0f, %.0f, %.0f]", dataset.getPath(), blockOrigin.getX(), blockOrigin.getY(), blockOrigin.getY(), shapeMicrometers[0], shapeMicrometers[1], shapeMicrometers[2]);
