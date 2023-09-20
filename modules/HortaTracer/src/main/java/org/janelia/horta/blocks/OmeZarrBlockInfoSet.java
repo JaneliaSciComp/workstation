@@ -1,8 +1,6 @@
 package org.janelia.horta.blocks;
 
 import edu.wlu.cs.levy.CG.KDTree;
-import edu.wlu.cs.levy.CG.KeyDuplicateException;
-import edu.wlu.cs.levy.CG.KeySizeException;
 import org.janelia.geometry3d.ConstVector3;
 import org.openide.util.Exceptions;
 
@@ -17,15 +15,24 @@ public class OmeZarrBlockInfoSet implements Set<OmeZarrBlockTileKey> {
     private final Set<OmeZarrBlockTileKey> set = new HashSet<>();
     private final KDTree<OmeZarrBlockTileKey> centroidIndex = new KDTree<>(3);
 
-    public OmeZarrBlockTileKey getBestContainingBrick(ConstVector3 xyz) {
+    private final double[] voxelSize;
+
+    private final int[] chunkSize;
+
+    public OmeZarrBlockInfoSet(double[] voxelSize, int[] chunkSize) {
+        this.voxelSize = voxelSize;
+        this.chunkSize = chunkSize;
+    }
+    public OmeZarrBlockTileKey getBestContainingBrick(ConstVector3 xyz, int maxCount) {
         double[] key = new double[]{xyz.getX(), xyz.getY(), xyz.getZ()};
 
         try {
             return centroidIndex.nearest(key);
-        } catch (KeySizeException | ArrayIndexOutOfBoundsException ex) {
+        } catch (Exception ex) {
             Exceptions.printStackTrace(ex);
-            return null;
         }
+
+        return null;
     }
 
     @Override
@@ -66,12 +73,21 @@ public class OmeZarrBlockInfoSet implements Set<OmeZarrBlockTileKey> {
         // TODO - update tree for all other inserting/deleting operations
         ConstVector3 cv = brickInfo.getCentroid();
 
-        double[] ca = new double[]{cv.getX(), cv.getY(), cv.getZ()};
-
         try {
+            double[] ca = new double[]{cv.getX(), cv.getY(), cv.getZ()};
             centroidIndex.insert(ca, brickInfo);
-        } catch (KeySizeException | KeyDuplicateException ex) {
-            Exceptions.printStackTrace(ex);
+        } catch (Exception ignored) {
+        }
+
+        return result;
+    }
+
+    @Override
+    public boolean addAll(Collection<? extends OmeZarrBlockTileKey> c) {
+        boolean result = false;
+
+        for (OmeZarrBlockTileKey chunk : c) {
+            result |= add(chunk);
         }
 
         return result;
@@ -85,17 +101,6 @@ public class OmeZarrBlockInfoSet implements Set<OmeZarrBlockTileKey> {
     @Override
     public boolean containsAll(Collection<?> c) {
         return set.containsAll(c);
-    }
-
-    @Override
-    public boolean addAll(Collection<? extends OmeZarrBlockTileKey> c) {
-        boolean result = false;
-
-        for (OmeZarrBlockTileKey chunk : c) {
-            result |= add(chunk);
-        }
-
-        return result;
     }
 
     @Override

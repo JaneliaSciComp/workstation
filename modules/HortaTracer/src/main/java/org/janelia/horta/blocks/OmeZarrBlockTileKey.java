@@ -48,7 +48,7 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
 
     private List<ConstVector3> cornerLocations;
 
-    private final String relativePath;
+    private String relativePath = null;
 
     public OmeZarrBlockTileKey(OmeZarrDataset dataset, int keyDepth, int[] shape, int[] offset, double[] voxelSize, int channelCount) {
         this.dataset = dataset;
@@ -97,8 +97,6 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
         blockExtents = new Vector3(shapeMicrometers[0], shapeMicrometers[1], shapeMicrometers[2]);
 
         blockCentroid = new Vector3(blockExtents.get(0) * 0.5f + blockOrigin.get(0), blockExtents.get(1) * 0.5f + blockOrigin.get(1), blockExtents.get(2) * 0.5f + blockOrigin.get(2));
-
-        this.relativePath = String.format("[%s] [%.0f, %.0f, %.0f] [%.0f, %.0f, %.0f]", dataset.getPath(), originMicrometers[0], originMicrometers[1], originMicrometers[2], shapeMicrometers[0], shapeMicrometers[1], shapeMicrometers[2]);
     }
 
     @Override
@@ -190,8 +188,18 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
         return pixelDims;
     }
 
-    @Override
-    public String toString() {
+    public double[] getVoxelSize(){
+        return voxelSize;
+    }
+
+    public int[] getReadOffset() {
+        return readOffset;
+    }
+
+    public String getRelativePath() {
+        if (relativePath == null) {
+            relativePath = String.format("[%s] [%.0f, %.0f, %.0f] [%.0f, %.0f, %.0f]", dataset.getPath(), blockOrigin.getX(), blockOrigin.getY(), blockOrigin.getY(), shapeMicrometers[0], shapeMicrometers[1], shapeMicrometers[2]);
+        }
         return relativePath;
     }
 }

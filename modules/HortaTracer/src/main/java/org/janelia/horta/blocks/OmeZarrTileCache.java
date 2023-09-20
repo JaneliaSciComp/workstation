@@ -43,4 +43,9 @@ public class OmeZarrTileCache  extends BasicTileCache<OmeZarrBlockTileKey, Sorta
         }
         group.clear();
     }
+
+    @Override
+    protected String getTileName(OmeZarrBlockTileKey key) {
+        return key.getRelativePath();
+    }
 }

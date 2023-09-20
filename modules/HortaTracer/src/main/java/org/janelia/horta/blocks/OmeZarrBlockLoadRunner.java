@@ -19,8 +19,8 @@ public class OmeZarrBlockLoadRunner extends ComposableObservable implements Runn
         FAILED,
     }
 
-    private OmeZarrBlockTileSource omeZarrBlockTileSource;
-    private OmeZarrBlockTileKey omeZarrOctreeBlockTileKey;
+    private final OmeZarrBlockTileSource omeZarrBlockTileSource;
+    private final OmeZarrBlockTileKey omeZarrOctreeBlockTileKey;
 
     public OmeZarrBlockLoadRunner.State state = OmeZarrBlockLoadRunner.State.INITIAL;
 
@@ -46,16 +46,16 @@ public class OmeZarrBlockLoadRunner extends ComposableObservable implements Runn
             state = OmeZarrBlockLoadRunner.State.LOADED;
             setChanged();
             long endTime = System.currentTimeMillis();
-            LOG.info("Loading OmeZarr tile {} took {} ms", omeZarrOctreeBlockTileKey, endTime - startTime);
+            LOG.info("Loading Ome-Zarr tile {} took {} ms", omeZarrOctreeBlockTileKey.getRelativePath(), endTime - startTime);
             // notify listeners
             notifyObservers();
         } catch (IllegalStateException ex) {
             // these are 404 errors for files which are missing (possibly correctly, our octree
             //  isn't 100% complete) on disk
-            LOG.warn("IllegalStateException loading OmeZarr tile {} from block source", omeZarrOctreeBlockTileKey, ex);
+            LOG.warn("IllegalStateException loading Ome-Zarr tile {} from block source", omeZarrOctreeBlockTileKey.getRelativePath(), ex);
             state = OmeZarrBlockLoadRunner.State.FAILED;
         } catch (IOException ex) {
-            LOG.warn("Exception loading OmeZarr tile {} from block source", omeZarrOctreeBlockTileKey, ex);
+            LOG.warn("Exception loading Ome-Zarr tile {} from block source", omeZarrOctreeBlockTileKey.getRelativePath(), ex);
             state = OmeZarrBlockLoadRunner.State.FAILED;
         }
     }

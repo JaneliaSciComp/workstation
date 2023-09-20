@@ -158,15 +158,15 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                 synchronized (queuedTiles) {
                     RequestProcessor.Task task = queuedTiles.get(key);
                     if (task == null) {
-                        log.warn("Tile has no task: " + key.toString());
+                        log.warn("Tile has no task: " + getTileName(key));
                         return;
                     }
-                    log.info("Tile has loaded: {}",key.toString());
+                    log.info("Tile has loaded: {}", getTileName(key));
                     loadingTiles.put(key, task);
                     queuedTiles.remove(key);
                 }
 
-                ProgressHandle progress = ProgressHandleFactory.createHandle("Loading Tile " + key.toString() + " ...", null, null);
+                ProgressHandle progress = ProgressHandleFactory.createHandle("Loading Tile " + getTileName(key) + " ...", null, null);
 
                 try {
                     // Check whether this tile is still relevant
@@ -175,7 +175,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                     }
 
                     progress.start();
-                    progress.setDisplayName("Loading Tile " + key.toString() + " ...");
+                    progress.setDisplayName("Loading Tile " + getTileName(key) + " ...");
                     progress.switchToIndeterminate();
 
                     log.debug("Tile cache load tile data for {}", key);
@@ -183,17 +183,17 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                     TILE_DATA tileTexture = loadRunner.loadTile(key);
 
                     if (tileTexture == null) {
-                        log.info("Tile loaded was null {}", key.toString());
+                        log.info("Tile loaded was null {}", getTileName(key));
                         return;
                     }
 
                     if (!nearVolumeMetadata.contains(key)) {
-                        log.info("Tile loaded was no longer needed {}", key.toString());
+                        log.info("Tile loaded was no longer needed {}", getTileName(key));
                         return; // no longer needed
                     }
 
                     if (nearVolumeInRam.containsKey(key)) {
-                        log.info("Tile loaded was already loaded {}", key.toString());
+                        log.info("Tile loaded was already loaded {}", getTileName(key));
                         return; // already loaded by another thread?
                     }
 
@@ -201,9 +201,9 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
                     displayChangeObservable.setChanged();
                     displayChangeObservable.notifyObservers();
                 } catch (IOException ex) {
-                    log.info("loadTask was IOException {}", key.toString(), ex);
+                    log.info("loadTask was IOException {}", getTileName(key), ex);
                 } catch (InterruptedException ex) {
-                    log.info("loadTask was interrupted {}", key.toString(), ex);
+                    log.info("loadTask was interrupted {}", getTileName(key), ex);
                 } finally {
                     loadingTiles.remove(key);
                     // figure out if there are tiles we need to remove after successful load of a tile
@@ -220,7 +220,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
 
         // Submit load task asynchronously
         synchronized (queuedTiles) {
-            log.info("Queueing brick {} (queued={}, loading={})", key.toString(), queuedTiles.size(), loadingTiles.size());
+            log.info("Queueing brick {} (queued={}, loading={})", getTileName(key), queuedTiles.size(), loadingTiles.size());
             queuedTiles.put(key, loadProcessor.post(loadTask));
         }
         return true;
@@ -268,4 +268,7 @@ public abstract class BasicTileCache<TILE_KEY, TILE_DATA> {
         this.blockStrategy = blockStrategy;
     }
 
+    protected String getTileName(TILE_KEY key) {
+        return key.toString();
+    }
 }
