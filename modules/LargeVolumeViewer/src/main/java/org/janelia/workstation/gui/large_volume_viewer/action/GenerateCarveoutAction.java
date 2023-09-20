@@ -83,7 +83,7 @@ public class GenerateCarveoutAction extends AbstractAction {
                 // specify save directory for all these files
                 List<Long> root = neuron.getNeuronData().getRootAnnotationIds();
                 final int requiredZoomLevel = 0;
-                String[][][] tileCube = new String[3][3][3];
+                String[][][] tileCube =  new String[6][5][11];
                 HashSet<String> finalTileSet = new HashSet<>();
                 for (Long rootId: root) {
                     TmGeoAnnotation rootNode = neuron.getGeoAnnotationMap().get(rootId);
@@ -92,9 +92,9 @@ public class GenerateCarveoutAction extends AbstractAction {
 
                     int cubeIndex = 0;
                     int x=0, y=0, z=0;
-                    for (float xind = convVec[0] - 50; xind <= convVec[0] + 50; xind += 50) {
-                        for (float yind = convVec[1] - 50; yind <= convVec[1] + 50; yind += 50) {
-                            for (float zind = convVec[2] - 150; zind <= convVec[2] + 150; zind += 150) {
+                    for (float xind = convVec[0] - 150; xind <= convVec[0] + 100; xind += 50) {
+                        for (float yind = convVec[1] - 100; yind <= convVec[1] + 100; yind += 50) {
+                            for (float zind = convVec[2] - 250; zind <= convVec[2] + 250; zind += 50) {
                                 Vec3 vertexLoc = new Vec3(xind, yind, zind);
                                 TileIndex index = tileFormat.tileIndexForXyz(vertexLoc, requiredZoomLevel, CoordinateAxis.Z);
                                 Path path = FileBasedOctreeMetadataSniffer.getOctreeFilePath(index, tileFormat);
@@ -111,9 +111,9 @@ public class GenerateCarveoutAction extends AbstractAction {
 
                     String baseUrl = renderedVolumeLocation.getBaseStorageLocationURI().toString().replace("/SAMPLES","/data_content/SAMPLES");
                     Client httpClient = RestJsonClientManager.getInstance().getHttpClient(true);
-                    for (int xind = 0; xind<3; xind++) {
-                        for (int yind = 0; yind < 3; yind++) {
-                            for (int zind = 0; zind < 3; zind++) {
+                    for (int xind = 0; xind<6; xind++) {
+                        for (int yind = 0; yind < 5; yind++) {
+                            for (int zind = 0; zind < 11; zind++) {
                                 if (finalTileSet.contains(tileCube[xind][yind][zind]))
                                     continue;
                                 WebTarget target = httpClient.target(baseUrl)
@@ -133,61 +133,8 @@ public class GenerateCarveoutAction extends AbstractAction {
                         }
                     }
 
-                    /*TIFFEncodeParam params = new TIFFEncodeParam();
-                    Iterator<BufferedImage> it = Iterators.forArray(outSlices);
-                    if (it.hasNext()) it.next(); // Avoid duplicate first slice
-                    params.setExtraImages(it);
-                    OutputStream out = new FileOutputStream(new File("C:/mouselightwow/carveouts/carveout.tiff"));
-                    ImageEncoder encoder = ImageCodec.createImageEncoder("tiff", out, params);
-                    encoder.encode(outSlices[0]);
-                    out.close();*/
+
                 }
-                /*tileSet = new HashMap<>();
-                final int requiredZoomLevel = 0;
-                List<TmGeoAnnotation> vertices = neuron.getNeuronData().getGeoAnnotations();
-                HashMap<String, CarveoutMeta> carveoutMeta = new HashMap<>();
-                for (TmGeoAnnotation vertex: vertices) {
-                    float[] convVec = TmModelManager.getInstance().getLocationInMicrometers(vertex.getX(), vertex.getY(), vertex.getZ());
-                    Vec3 vertexLoc = new Vec3(convVec[0], convVec[1], convVec[2]);
-                    TileIndex index = tileFormat.tileIndexForXyz(vertexLoc, requiredZoomLevel, CoordinateAxis.Z);
-                    Path path = FileBasedOctreeMetadataSniffer.getOctreeFilePath(index, tileFormat);
-                    String filePathStr = path.toString().replace(FILE_SEP, LINUX_FILE_SEP) + "/default.0.tif";
-                    String baseUrl = renderedVolumeLocation.getBaseStorageLocationURI().toString().replace("/SAMPLES","/data_content/SAMPLES");
-
-                    CarveoutMeta newEntry;
-                    if (carveoutMeta.containsKey(filePathStr)) {
-                        newEntry = carveoutMeta.get(filePathStr);
-                        newEntry.addVertex(vertexLoc);
-                    } else {
-                        newEntry = new CarveoutMeta();
-                        newEntry.tileIndex = index;
-                        newEntry.relativePath = filePathStr;
-                        newEntry.baseUrl = baseUrl;
-                        carveoutMeta.put(filePathStr, newEntry);
-                    }
-                }
-
-                Client httpClient = RestJsonClientManager.getInstance().getHttpClient(true);
-                ObjectMapper metaSerializer = new ObjectMapper();
-                JsonGenerator g = metaSerializer.getFactory().createGenerator(
-                        new FileOutputStream(new File("C:/mouselightwow/foo/info.json")));
-
-                for (CarveoutMeta meta: carveoutMeta.values()) {
-                    metaSerializer.writeValue(g, meta);
-                    WebTarget target = httpClient.target(meta.baseUrl)
-                            .path(meta.relativePath);
-                    Response response = target.request()
-                            .get();
-                    int responseStatus = response.getStatus();
-                    if (responseStatus == Response.Status.OK.getStatusCode()) {
-                        File targetFile = new File("C:/mouselightwow/foo/" + meta.tileIndex.getX()+
-                                "_" + meta.tileIndex.getY() + "_" + meta.tileIndex.getZ() + ".tif");
-                        InputStream is = (InputStream) response.getEntity();
-                        FileUtils.copyInputStreamToFile(is, targetFile);
-                    }
-                }*/
-
-
             }
         };
         saver.executeWithEvents();

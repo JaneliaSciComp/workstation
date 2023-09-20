@@ -16,6 +16,7 @@ import org.janelia.workstation.controller.eventbus.NeuronSpatialFilterUpdateEven
 import org.janelia.workstation.controller.eventbus.UnloadProjectEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
+import org.janelia.workstation.controller.scripts.spatialfilter.BoundingBoxSpatialFilter;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
 import org.janelia.workstation.controller.tileimagery.*;
@@ -191,7 +192,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 // if spatial filter is applied, use it to filter neurons
                 if (workspace.isContainsFragments()) {
                     modelManager.getCurrentView().setFilter(true);
-                    NeuronSelectionSpatialFilter neuronFilter = new NeuronSelectionSpatialFilter();
+                    BoundingBoxSpatialFilter neuronFilter = new BoundingBoxSpatialFilter();
                     NeuronManager.getInstance().setFilterStrategy(neuronFilter);
                 }
 

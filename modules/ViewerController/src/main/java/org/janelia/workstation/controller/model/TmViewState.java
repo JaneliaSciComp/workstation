@@ -6,6 +6,7 @@ import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.scripts.spatialfilter.BoundingBoxSpatialFilter;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
 
@@ -18,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * this class manages visibilities of annotations as well as
  */
 public class TmViewState {
-    private NeuronSelectionSpatialFilter neuronFilter;
+    private BoundingBoxSpatialFilter neuronFilter;
     private boolean applyFilter;
     private boolean projectReadOnly;
     private Set<ViewerEvent.VIEWER> viewerSet;
