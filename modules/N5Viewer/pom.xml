@@ -5,14 +5,14 @@
     <parent>
         <artifactId>workstation</artifactId>
         <groupId>org.janelia</groupId>
-        <version>9.14.4</version>
+        <version>9.15</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>N5Viewer</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>n5viewer</artifactId>
-    <version>9.14.4</version>
+    <version>9.15</version>
     <packaging>nbm</packaging>
 
     <dependencies>
