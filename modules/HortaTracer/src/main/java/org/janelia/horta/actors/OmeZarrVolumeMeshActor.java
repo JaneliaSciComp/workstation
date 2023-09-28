@@ -45,7 +45,7 @@ public class OmeZarrVolumeMeshActor extends MeshActor implements SortableBlockAc
 
         this.homogeneousCentroid = new Vector4(centroid.getX(), centroid.getY(), centroid.getZ(), 1.0f);
 
-        resolution = new OmeZarrBlockResolution(tile.getKeyDepth(), tile.getShape(), tile.getVoxelSize(), tile.getResolutionMicrometers());
+        resolution = new OmeZarrBlockResolution(tile.getDataset(), tile.getKeyDepth(), tile.getShape(), tile.getVoxelSize(), tile.getResolutionMicrometers());
 
         bbox_min = tile.getOrigin();
         Vector3 ext = tile.getExtents();
