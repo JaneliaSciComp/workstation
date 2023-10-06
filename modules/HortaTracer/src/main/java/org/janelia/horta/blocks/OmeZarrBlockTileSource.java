@@ -1,8 +1,6 @@
 package org.janelia.horta.blocks;
 
-import org.aind.omezarr.OmeZarrAxisUnit;
-import org.aind.omezarr.OmeZarrDataset;
-import org.aind.omezarr.OmeZarrGroup;
+import org.aind.omezarr.*;
 import org.aind.omezarr.image.AutoContrastParameters;
 import org.aind.omezarr.image.TCZYXRasterZStack;
 import org.apache.commons.lang3.StringUtils;
@@ -112,28 +110,28 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
                     }
 
                     // z, y, x order
-                    int[] shape = dataset.getRawShape();
-                    int[] chunkSize = dataset.getRawChunks();
-                    int[] chunkSizeXYZ = {chunkSize[4], chunkSize[3], chunkSize[2]};
+                    OmeZarrIndex shapeIndex = dataset.getShapeIndex();
+                    OmeZarrIndex chunkSize = dataset.getChunksIndex();
+                    int[] chunkSizeXYZ = {chunkSize.getX(), chunkSize.getY(), chunkSize.getZ()};
 
                     double resolutionMicrometers = dataset.getMinSpatialResolution();
 
-                    List<Double> res = dataset.getSpatialResolution(OmeZarrAxisUnit.MICROMETER);
-                    double[] voxelSize = new double[]{res.get(2), res.get(1), res.get(0)};
+                    OmeZarrValue res = dataset.getSpatialResolution(OmeZarrAxisUnit.MICROMETER);
+                    double[] voxelSize = new double[]{res.getX(), res.getY(), res.getZ()};
 
                     if (!haveExtents) {
                         // z, y,x order
 
                         // TODO Respect translate transforms in dataset.
                         ConstVector3 origin = new Vector3(0, 0, 0);
-                        Vector3 outerCorner = new Vector3(shape[4] * res.get(2), shape[3] * res.get(1), shape[2] * res.get(0));
-                        boundingBox3d = new BoundingBox3d(new Vec3(origin.getX(), origin.getY(), origin.getX()), new Vec3(outerCorner.getX(), outerCorner.getY(), outerCorner.getX()));
+                        Vector3 outerCorner = new Vector3(shapeIndex.getX() * res.getX(), shapeIndex.getY() * res.getY(), shapeIndex.getZ() * res.getZ());
+                        boundingBox3d = new BoundingBox3d(new Vec3(origin.getX(), origin.getY(), origin.getZ()), new Vec3(outerCorner.getX(), outerCorner.getY(), outerCorner.getZ()));
                         voxelCenter = boundingBox3d.getCenter();
 
                         haveExtents = true;
                     }
 
-                    OmeZarrBlockResolution resolution = new OmeZarrBlockResolution(idx, chunkSizeXYZ, voxelSize, resolutionMicrometers);
+                    OmeZarrBlockResolution resolution = new OmeZarrBlockResolution(dataset, idx, chunkSizeXYZ, voxelSize, resolutionMicrometers);
 
                     createTileKeysForDataset(resolution, dataset, progressObserver);
 
@@ -173,7 +171,27 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
             return null;
         }
 
-        return ((OmeZarrBlockResolution) resolution).getBlockInfoSet().getBestContainingBrick(focus, 1);
+        OmeZarrBlockTileKey key1 =  ((OmeZarrBlockResolution) resolution).getBlockInfoSet().getBestContainingBrick(focus, 1);
+
+        OmeZarrBlockResolution res = (OmeZarrBlockResolution) resolution;
+
+        OmeZarrDataset dataset = res.getDataset();
+
+        OmeZarrValue location = new OmeZarrValue(0, 0, focus.getZ(), focus.getY(), focus.getX());
+
+        OmeZarrBlockTileKey key2 = null;
+
+        try {
+            OmeZarrReadChunk chunk = dataset.readChunkForLocation(location);
+
+            if (chunk != null) {
+                key2 = new OmeZarrBlockTileKey(dataset, res.getDepth(), chunk.getShape(), chunk.getOffset(), res.getVoxelSize(), 1);
+            }
+        } catch (Exception ignored) {
+        }
+
+        return key2;
+
     }
 
     @Override
@@ -231,11 +249,10 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
             // [t, c, z, y, x]
             int[] shape = dataset.getRawShape();
 
-            // [z, y, x]
-            List<Double> spatialShape = dataset.getSpatialResolution(OmeZarrAxisUnit.MICROMETER);
+            OmeZarrValue spatialShape = dataset.getSpatialResolution(OmeZarrAxisUnit.MICROMETER);
 
             // [x, y, z]
-            double[] voxelSize = {spatialShape.get(2), spatialShape.get(1), spatialShape.get(0)};
+            double[] voxelSize = {spatialShape.getX(), spatialShape.getY(), spatialShape.getZ()};
 
             int chunkCount = (int) (Math.ceil(1.0 * shape[4] / xChunkSegment) * Math.ceil(1.0 * shape[3] / yChunkSegment) * Math.ceil(1.0 * shape[2] / zChunkSegment));
 
@@ -266,7 +283,7 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
             // [x, y, z]
             int[] actualChunkSize = new int[3];
             int[] offset = new int[3];
-
+/*
             for (int xIdx = 0; xIdx < shape[4]; xIdx += xChunkSegment) {
                 for (int yIdx = 0; yIdx < shape[3]; yIdx += yChunkSegment) {
                     for (int zIdx = 0; zIdx < shape[2]; zIdx += zChunkSegment) {
@@ -286,12 +303,12 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
 
                         if (chunkCount % 250000 == 0) {
                             if (progressReceiver != null) {
-                                progressReceiver.update(this,"Parsing dataset " + dataset.getPath() + " (" + chunkCount + " tiles remaining)");
+                                progressReceiver.update(this, "Parsing dataset " + dataset.getPath() + " (" + chunkCount + " tiles remaining)");
                             }
                         }
                     }
                 }
-            }
+            }*/
 
             if (progressReceiver != null) {
                 progressReceiver.update(this, "Loading dataset " + dataset.getPath() + " (building index)");

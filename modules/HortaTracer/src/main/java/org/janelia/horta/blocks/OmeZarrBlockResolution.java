@@ -1,5 +1,7 @@
 package org.janelia.horta.blocks;
 
+import org.aind.omezarr.OmeZarrDataset;
+
 public class OmeZarrBlockResolution implements BlockTileResolution {
     private final int depth;
 
@@ -11,7 +13,10 @@ public class OmeZarrBlockResolution implements BlockTileResolution {
 
     private final OmeZarrBlockInfoSet blockInfoSet;
 
-    public OmeZarrBlockResolution(int depth, int[] chunkSizeXYZ, double[] voxelSize, double resolutionMicrometers) {
+    private final OmeZarrDataset dataset;
+
+    public OmeZarrBlockResolution(OmeZarrDataset dataset, int depth, int[] chunkSizeXYZ, double[] voxelSize, double resolutionMicrometers) {
+        this.dataset = dataset;
         this.depth = depth;
         this.chunkSizeXYZ = chunkSizeXYZ;
         this.resolutionMicrometers = resolutionMicrometers;
@@ -27,6 +32,14 @@ public class OmeZarrBlockResolution implements BlockTileResolution {
 
     public int getDepth() {
         return depth;
+    }
+
+    public OmeZarrDataset getDataset() {
+        return dataset;
+    }
+
+    public double[] getVoxelSize() {
+        return voxelSize;
     }
 
     @Override

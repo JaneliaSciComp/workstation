@@ -17,7 +17,9 @@ import java.awt.image.ComponentColorModel;
 import java.awt.image.DataBuffer;
 import java.awt.image.WritableRaster;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class OmeZarrBlockTileKey implements BlockTileKey {
     private static final Logger log = LoggerFactory.getLogger(OmeZarrBlockTileKey.class);
@@ -57,22 +59,39 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
 
         this.voxelSize = voxelSize;
 
-        // TODO include any translate from multiscale/dataset coordinate transforms.
+        if (shape.length == 3) {
+            // switch to [z, y, x] for jomezarr
+            this.readShape = new int[]{1, 1, shape[2], shape[1], shape[0]};
+        } else {
+            this.readShape = shape;
+        }
+
+        if (shape.length == 3) {
+            // switch to [z, y, x] for jomezarr
+            // Assumes tczyx dataset.  Default to time 0, channel 0.
+            this.readOffset = new int[]{0, 0, offset[2], offset[1], offset[0]};
+        } else {
+            this.readOffset = offset;
+        }
+
         double[] originMicrometers = new double[3];
+
         shapeMicrometers = new double[3];
+
         pixelDims = new int[4];
 
-        pixelDims[0] = shape[0];
-        pixelDims[1] = shape[1];
-        pixelDims[2] = shape[2];
+        pixelDims[0] = this.readShape[4];
+        pixelDims[1] = this.readShape[3];
+        pixelDims[2] = this.readShape[2];
+        pixelDims[3] = channelCount;
 
-        originMicrometers[0] = this.voxelSize[0] * offset[0];
-        originMicrometers[1] = this.voxelSize[1] * offset[1];
-        originMicrometers[2] = this.voxelSize[2] * offset[2];
+        originMicrometers[0] = this.voxelSize[0] * this.readOffset[4];
+        originMicrometers[1] = this.voxelSize[1] * this.readOffset[3];
+        originMicrometers[2] = this.voxelSize[2] * this.readOffset[2];
 
-        shapeMicrometers[0] = this.voxelSize[0] * pixelDims[0];
-        shapeMicrometers[1] = this.voxelSize[1] * pixelDims[1];
-        shapeMicrometers[2] = this.voxelSize[2] * pixelDims[2];
+        shapeMicrometers[0] = this.voxelSize[0] * this.readShape[4];
+        shapeMicrometers[1] = this.voxelSize[1] * this.readShape[3];
+        shapeMicrometers[2] = this.voxelSize[2] * this.readShape[2];
 
         transform = new Matrix(
                 new double[][]{
@@ -82,15 +101,6 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
                         {0, 0, 0, 1}
                 }
         );
-
-        pixelDims[3] = channelCount;
-
-        // switch to [z, y, x] for jomezarr
-        this.readShape = new int[]{1, 1, shape[2], shape[1], shape[0]};
-
-        // switch to [z, y, x] for jomezarr
-        // Assumes tczyx dataset.  Default to time 0, channel 0.
-        this.readOffset = new int[]{0, 0, offset[2], offset[1], offset[0]};
 
         blockOrigin = new Vector3(originMicrometers[0], originMicrometers[1], originMicrometers[2]);
 
@@ -188,7 +198,11 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
         return pixelDims;
     }
 
-    public double[] getVoxelSize(){
+    public OmeZarrDataset getDataset() {
+        return dataset;
+    }
+
+    public double[] getVoxelSize() {
         return voxelSize;
     }
 
@@ -201,5 +215,36 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
             relativePath = String.format("[%s] [%.0f, %.0f, %.0f] [%.0f, %.0f, %.0f]", dataset.getPath(), blockOrigin.getX(), blockOrigin.getY(), blockOrigin.getY(), shapeMicrometers[0], shapeMicrometers[1], shapeMicrometers[2]);
         }
         return relativePath;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 53 * hash + Arrays.hashCode(this.readShape);
+        hash = 53 * hash + Arrays.hashCode(this.readOffset);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        final OmeZarrBlockTileKey other = (OmeZarrBlockTileKey) obj;
+
+        if (dataset != other.dataset) {
+            return false;
+        }
+
+        if (!Arrays.equals(this.readShape, other.readShape)) {
+            return false;
+        }
+
+        return Arrays.equals(this.readOffset, other.readOffset);
     }
 }
