@@ -52,7 +52,7 @@ public class NeuronCreateAction extends EditAction {
         }
 
         // prompt the user for a name, but suggest a standard name
-        final String neuronName = promptForNeuronName(NeuronManager.getNextNeuronName());
+        final String neuronName = NeuronNamePrompter.promptForNeuronName(NeuronManager.getNextNeuronName());
         if (neuronName != null) {
             // create it:
             SimpleWorker creator = new SimpleWorker() {
@@ -82,39 +82,6 @@ public class NeuronCreateAction extends EditAction {
                 }
             };
             creator.execute();
-        }
-    }
-
-    /**
-     * pop a dialog that asks for a name for a neuron;
-     * returns null if the user didn't make a choice
-     */
-    String promptForNeuronName(String suggestedName) {
-        if (suggestedName == null) {
-            suggestedName = "";
-        }
-        String neuronName = (String) JOptionPane.showInputDialog(
-                null,
-                "Neuron name:",
-                "Name neuron",
-                JOptionPane.PLAIN_MESSAGE,
-                null, // icon
-                null, // choice list; absent = freeform
-                suggestedName);
-        if (neuronName == null || neuronName.length() == 0) {
-            return null;
-        } else {
-            // turns out ? or * will mess with Java's file dialogs
-            //  (something about how file filters works)
-            if (neuronName.contains("?") || neuronName.contains("*")) {
-                JOptionPane.showMessageDialog(
-                        null,
-                        "Neuron names can't contain the ? or * characters!",
-                        "Could not create neuron",
-                        JOptionPane.ERROR_MESSAGE);
-                return null;
-            }
-            return neuronName;
         }
     }
 }

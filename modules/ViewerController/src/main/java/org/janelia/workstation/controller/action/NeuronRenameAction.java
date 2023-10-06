@@ -49,7 +49,7 @@ public class NeuronRenameAction extends EditAction {
             }
         }
 
-        final String neuronName = promptForNeuronName(targetNeuron.getName());
+        final String neuronName = NeuronNamePrompter.promptForNeuronName(targetNeuron.getName());
         if (neuronName == null) {
             return;
         }
@@ -72,34 +72,5 @@ public class NeuronRenameAction extends EditAction {
             }
         };
         renamer.execute();
-    }
-
-    String promptForNeuronName(String suggestedName) {
-        if (suggestedName == null) {
-            suggestedName = "";
-        }
-        String neuronName = (String) JOptionPane.showInputDialog(
-                null,
-                "Neuron name:",
-                "Name neuron",
-                JOptionPane.PLAIN_MESSAGE,
-                null, // icon
-                null, // choice list; absent = freeform
-                suggestedName);
-        if (neuronName == null || neuronName.length() == 0) {
-            return null;
-        } else {
-            // turns out ? or * will mess with Java's file dialogs
-            //  (something about how file filters works)
-            if (neuronName.contains("?") || neuronName.contains("*")) {
-                JOptionPane.showMessageDialog(
-                        null,
-                        "Neuron names can't contain the ? or * characters!",
-                        "Could not rename neuron",
-                        JOptionPane.ERROR_MESSAGE);
-                return null;
-            }
-            return neuronName;
-        }
     }
 }
