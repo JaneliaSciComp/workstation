@@ -99,8 +99,7 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
         }
 
 
-        OmeZarrBlockResolution resolution = resolutions.get(zoomIndex);
-        return resolution;
+        return resolutions.get(zoomIndex);
     }
 
     @Override
@@ -152,7 +151,7 @@ public class OmeZarrBlockChooser implements BlockChooser<OmeZarrBlockTileKey, Om
 
             for (OmeZarrBlockResolution resolution : resolutions) {
                 ConstVector3 blockSize = source.getBlockSize(resolution);
-                LOG.info("block size [{}, {}, {}] for resolution {}", blockSize.getX(), blockSize.getY(), blockSize.getZ(), resolution);
+                LOG.info("block size [{}, {}, {}] um for {}", blockSize.getX(), blockSize.getY(), blockSize.getZ(), resolution);
                 float blockHeight = blockSize.getY();
                 zoomLevels.add((float) (blockHeight * BLOCK_WIDTH_ACROSS_VIEWPORT));
             }

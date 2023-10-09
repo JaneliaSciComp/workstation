@@ -11,8 +11,6 @@ public class OmeZarrBlockResolution implements BlockTileResolution {
 
     private final double[] voxelSize;
 
-    private final OmeZarrBlockInfoSet blockInfoSet;
-
     private final OmeZarrDataset dataset;
 
     public OmeZarrBlockResolution(OmeZarrDataset dataset, int depth, int[] chunkSizeXYZ, double[] voxelSize, double resolutionMicrometers) {
@@ -21,8 +19,6 @@ public class OmeZarrBlockResolution implements BlockTileResolution {
         this.chunkSizeXYZ = chunkSizeXYZ;
         this.resolutionMicrometers = resolutionMicrometers;
         this.voxelSize = voxelSize;
-
-        blockInfoSet = new OmeZarrBlockInfoSet(voxelSize, chunkSizeXYZ);
     }
 
     @Override
@@ -52,14 +48,14 @@ public class OmeZarrBlockResolution implements BlockTileResolution {
         if (obj == null) {
             return false;
         }
+
         if (getClass() != obj.getClass()) {
             return false;
         }
+
         final OmeZarrBlockResolution other = (OmeZarrBlockResolution) obj;
-        if (this.depth != other.depth) {
-            return false;
-        }
-        return true;
+
+        return this.depth == other.depth;
     }
 
     @Override
@@ -70,15 +66,11 @@ public class OmeZarrBlockResolution implements BlockTileResolution {
 
     @Override
     public String toString() {
-        return String.format("depth: %d; um/voxel: %.1f", depth, resolutionMicrometers);
+        return String.format("ome-zarr resolution %d (um/voxel: %.1f)", depth, resolutionMicrometers);
     }
 
     public double getResolutionMicrometers() {
         return resolutionMicrometers;
-    }
-
-    public OmeZarrBlockInfoSet getBlockInfoSet() {
-        return blockInfoSet;
     }
 
     public int[] getChunkSize() {

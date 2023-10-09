@@ -16,9 +16,9 @@ import java.util.*;
 public class OctreeDisplayBlockChooser implements BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> {
 
     private static final Logger LOG = LoggerFactory.getLogger(OctreeDisplayBlockChooser.class);
-    private List<Float> zoomLevels = new ArrayList<>();
-    private double BLOCK_WIDTH_ACROSS_VIEWPORT = 2.35;
-    private int MAX_SIMULTANEOUS_BLOCKS = 14;
+    private final List<Float> zoomLevels = new ArrayList<>();
+    private final double BLOCK_WIDTH_ACROSS_VIEWPORT = 2.35;
+    private final int MAX_SIMULTANEOUS_BLOCKS = 14;
 
     private void initBlockSizes(KtxOctreeBlockTileSource source, Vantage vantage) {
         int numLevels = (int)source.getZoomLevels();
