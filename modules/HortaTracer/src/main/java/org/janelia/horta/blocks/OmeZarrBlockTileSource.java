@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -49,8 +48,6 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     private Vec3 voxelCenter = new Vec3(0, 0, 0);
 
     private static final ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
-
-    private static final double MAX_BLOCKING_RESOLUTION = 30.0;
 
     public OmeZarrBlockTileSource(URL originatingSampleURL, ImageColorModel imageColorModel) {
         this(originatingSampleURL, imageColorModel, false);
@@ -133,7 +130,25 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
 
                     OmeZarrBlockResolution resolution = new OmeZarrBlockResolution(dataset, idx, chunkSizeXYZ, voxelSize, resolutionMicrometers);
 
-                    createTileKeysForDataset(resolution, dataset, progressObserver);
+                    if (progressObserver != null) {
+                        progressObserver.update(this, "Loading dataset " + dataset.getPath());
+                    }
+
+                    if (useAutoContrast && autoContrastParameters == null) {
+                        int[] autoContrastShape = {1, 1, 256, 256, 128};
+
+                        AutoContrastParameters parameters = TCZYXRasterZStack.computeAutoContrast(dataset, autoContrastShape);
+
+                        double existingMax = parameters.min + (65535.0 / parameters.slope);
+
+                        double min = Math.max(100, parameters.min * 0.1);
+                        double max = Math.min(65535.0, Math.max(min + 100, existingMax * 4));
+                        double slope = 65535.0 / (max - min);
+
+                        autoContrastParameters = new AutoContrastParameters(min, slope);
+                    }
+
+                    log.info("finished loading path " + dataset.getPath());
 
                     resolutions.add(resolution);
 
@@ -170,8 +185,6 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
         if (resolution == null) {
             return null;
         }
-
-        OmeZarrBlockTileKey key1 =  ((OmeZarrBlockResolution) resolution).getBlockInfoSet().getBestContainingBrick(focus, 1);
 
         OmeZarrBlockResolution res = (OmeZarrBlockResolution) resolution;
 
@@ -231,38 +244,12 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     public Texture3d loadBrick(OmeZarrBlockTileKey tile) {
         return tile.loadBrick(useAutoContrast ? autoContrastParameters : null);
     }
-
-    /**
-     * Only valid for tczyx OmeZarr datasets.
-     */
-    private void createTileKeysForDataset(OmeZarrBlockResolution resolution, OmeZarrDataset dataset, OmeZarrReaderProgressObserver progressReceiver) {
+/*
+    private void createTileKeysForDataset(OmeZarrDataset dataset, OmeZarrReaderProgressObserver progressReceiver) {
         try {
-            OmeZarrBlockInfoSet blockInfoSet = resolution.getBlockInfoSet();
-
-            // [x, y, z]
-            int[] chunkSize = resolution.getChunkSize();
-
-            int xChunkSegment = chunkSize[0];
-            int yChunkSegment = chunkSize[1];
-            int zChunkSegment = chunkSize[2];
-
-            // [t, c, z, y, x]
-            int[] shape = dataset.getRawShape();
-
-            OmeZarrValue spatialShape = dataset.getSpatialResolution(OmeZarrAxisUnit.MICROMETER);
-
-            // [x, y, z]
-            double[] voxelSize = {spatialShape.getX(), spatialShape.getY(), spatialShape.getZ()};
-
-            int chunkCount = (int) (Math.ceil(1.0 * shape[4] / xChunkSegment) * Math.ceil(1.0 * shape[3] / yChunkSegment) * Math.ceil(1.0 * shape[2] / zChunkSegment));
-
-            List<OmeZarrBlockTileKey> brickInfoList = new ArrayList<>(chunkCount);
-
             if (progressReceiver != null) {
-                progressReceiver.update(this, "Loading dataset " + dataset.getPath() + " (" + chunkCount + " tiles remaining)");
+                progressReceiver.update(this, "Loading dataset " + dataset.getPath());
             }
-
-            log.info(String.format("preparing " + chunkCount + " tile keys for resolution: %.1fum/voxel (path " + dataset.getPath() + ", tile size: [" + xChunkSegment + "," + yChunkSegment + "," + zChunkSegment + "])", resolution.getResolutionMicrometers()));
 
             if (useAutoContrast && autoContrastParameters == null) {
                 int[] autoContrastShape = {1, 1, 256, 256, 128};
@@ -278,53 +265,10 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
                 autoContrastParameters = new AutoContrastParameters(min, slope);
             }
 
-            int keyDepth = resolution.getDepth();
-
-            // [x, y, z]
-            int[] actualChunkSize = new int[3];
-            int[] offset = new int[3];
-/*
-            for (int xIdx = 0; xIdx < shape[4]; xIdx += xChunkSegment) {
-                for (int yIdx = 0; yIdx < shape[3]; yIdx += yChunkSegment) {
-                    for (int zIdx = 0; zIdx < shape[2]; zIdx += zChunkSegment) {
-                        // [x, y, z]
-                        offset[0] = xIdx;
-                        offset[1] = yIdx;
-                        offset[2] = zIdx;
-
-                        actualChunkSize[0] = Math.min(shape[4] - xIdx, xChunkSegment);
-                        actualChunkSize[1] = Math.min(shape[3] - yIdx, yChunkSegment);
-                        actualChunkSize[2] = Math.min(shape[2] - zIdx, zChunkSegment);
-
-                        // All args [x, y, z]
-                        brickInfoList.add(new OmeZarrBlockTileKey(dataset, keyDepth, actualChunkSize, offset, voxelSize, shape[1]));
-
-                        chunkCount--;
-
-                        if (chunkCount % 250000 == 0) {
-                            if (progressReceiver != null) {
-                                progressReceiver.update(this, "Parsing dataset " + dataset.getPath() + " (" + chunkCount + " tiles remaining)");
-                            }
-                        }
-                    }
-                }
-            }*/
-
-            if (progressReceiver != null) {
-                progressReceiver.update(this, "Loading dataset " + dataset.getPath() + " (building index)");
-            }
-
-            long startTime = System.currentTimeMillis();
-
-            blockInfoSet.addAll(brickInfoList);
-
-            long endTime = System.currentTimeMillis();
-            log.info("Spatial index build for path {} took {} ms", dataset.getPath(), endTime - startTime);
-
-            log.error("finished loading path " + dataset.getPath());
+            log.info("finished loading path " + dataset.getPath());
         } catch (Exception ex) {
             log.error("failed to load path " + dataset.getPath());
             log.error(ex.getMessage());
         }
-    }
+    }*/
 }
