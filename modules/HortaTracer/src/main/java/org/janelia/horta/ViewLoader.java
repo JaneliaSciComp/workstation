@@ -15,6 +15,8 @@ import com.google.common.base.Objects;
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
+import org.janelia.geometry3d.Viewport;
+import org.janelia.horta.actors.OmeZarrVolumeActor;
 import org.janelia.horta.blocks.OmeZarrBlockTileSource;
 import org.janelia.horta.omezarr.OmeZarrReaderCompletionObserver;
 import org.janelia.horta.omezarr.OmeZarrReaderProgressObserver;
@@ -197,6 +199,8 @@ public class ViewLoader {
                     if (!haveFirstDataset[0] && !source.getResolutions().isEmpty()) {
                         haveFirstDataset[0] = true;
                         try {
+                            OmeZarrVolumeActor.getInstance().setRelativeSlabThickness(0.5f, 150.0f);
+
                             if (nttc.doesUpdateVolumeCache()) {
                                 loader.loadTransientOmeZarrTileAtCurrentFocus(nttc.getOmeZarrSource());
                             } else {
