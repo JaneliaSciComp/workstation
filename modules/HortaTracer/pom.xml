@@ -85,6 +85,11 @@
             <artifactId>jzarr</artifactId>
             <version>0.3.8</version>
         </dependency>
+        <dependency>
+            <groupId>edu.ucar</groupId>
+            <artifactId>cdm-core</artifactId>
+            <version>5.3.3</version>
+        </dependency>
         
         <!-- NetBeans Modules --> 
         <dependency>
