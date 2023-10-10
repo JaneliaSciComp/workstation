@@ -1,6 +1,5 @@
-// 9.14.5
+// 9.16
 
 Horta
-* Added RTree Bounding Box Search for Fragment
-* Sped up loading of large zarr samples (full brain size) with small chunks (128x128x128 or smaller).
-* Fixed importing notes when SWC files are imported
+* Fixed memory issues for large zarr samples (full brain size) with small chunks (128x128x128 or smaller).
+* Fixed Zarr fragment importing
