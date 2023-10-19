@@ -78,7 +78,14 @@
         <dependency>
             <groupId>org.aind</groupId>
             <artifactId>jomezarr</artifactId>
-            <version>1.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bc.zarr</groupId>
+            <artifactId>jzarr</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>edu.ucar</groupId>
+            <artifactId>cdm-core</artifactId>
         </dependency>
 
         <!-- NetBeans Modules --> 

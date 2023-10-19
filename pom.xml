@@ -363,6 +363,21 @@
                 <artifactId>sitehortacloud</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.aind</groupId>
+                <artifactId>jomezarr</artifactId>
+                <version>1.3.2</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bc.zarr</groupId>
+                <artifactId>jzarr</artifactId>
+                <version>0.3.8</version>
+            </dependency>
+            <dependency>
+                <groupId>edu.ucar</groupId>
+                <artifactId>cdm-core</artifactId>
+                <version>5.3.3</version>
+            </dependency>
 
             <!-- Jars from Workstation Maven Repo -->
             <dependency>
