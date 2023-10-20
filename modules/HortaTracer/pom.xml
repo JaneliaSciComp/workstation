@@ -87,6 +87,12 @@
             <groupId>edu.ucar</groupId>
             <artifactId>cdm-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.lasersonlab</groupId>
+            <artifactId>jblosc</artifactId>
+            <version>1.0.1</version>
+            <scope>runtime</scope>
+        </dependency>
 
         <!-- NetBeans Modules --> 
         <dependency>
