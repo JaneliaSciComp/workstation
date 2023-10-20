@@ -181,6 +181,10 @@
                     <publicPackages>
                         <publicPackage>com.sun.jna</publicPackage>
                         <publicPackage>com.sun.jna.ptr</publicPackage>
+                        <publicPackage>org.aind.omezarr</publicPackage>
+                        <publicPackage>org.aind.omezarr.image</publicPackage>
+                        <publicPackage>org.aind.omezarr.util</publicPackage>
+                        <publicPackage>org.aind.omezarr.zarr</publicPackage>
                         <publicPackage>org.blosc</publicPackage>
                     </publicPackages>
                 </configuration>
