@@ -224,13 +224,6 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!--  N5 Viewer -->
-            <dependency>
-                <groupId>org.janelia.workstation</groupId>
-                <artifactId>n5viewer</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            
             <!-- IntegrationAPIs --> 
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
