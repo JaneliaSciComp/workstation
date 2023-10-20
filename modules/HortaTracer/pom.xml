@@ -82,12 +82,6 @@
         <dependency>
             <groupId>com.bc.zarr</groupId>
             <artifactId>jzarr</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.lasersonlab</groupId>
-                    <artifactId>jblosc</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
@@ -186,13 +180,11 @@
                 <configuration>
                     <publicPackages>
                         <publicPackage>com.bc.zarr</publicPackage>
-                        <publicPackage>com.bc.zarr.chunk</publicPackage>
+                        <publicPackage>com.bc.zarr.*</publicPackage>
                         <publicPackage>com.sun.jna</publicPackage>
-                        <publicPackage>com.sun.jna.ptr</publicPackage>
+                        <publicPackage>com.sun.jna.*</publicPackage>
                         <publicPackage>org.aind.omezarr</publicPackage>
-                        <publicPackage>org.aind.omezarr.image</publicPackage>
-                        <publicPackage>org.aind.omezarr.util</publicPackage>
-                        <publicPackage>org.aind.omezarr.zarr</publicPackage>
+                        <publicPackage>org.aind.omezarr.*</publicPackage>
                         <publicPackage>org.blosc</publicPackage>
                     </publicPackages>
                 </configuration>
