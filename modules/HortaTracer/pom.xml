@@ -82,6 +82,12 @@
         <dependency>
             <groupId>com.bc.zarr</groupId>
             <artifactId>jzarr</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.lasersonlab</groupId>
+                    <artifactId>jblosc</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>edu.ucar</groupId>
