@@ -177,6 +177,13 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
+                <configuration>
+                    <publicPackages>
+                        <publicPackage>com.sun.jna</publicPackage>
+                        <publicPackage>com.sun.jna.ptr</publicPackage>
+                        <publicPackage>org.blosc</publicPackage>
+                    </publicPackages>
+                </configuration>
             </plugin>
         </plugins>
     </build>
