@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>9.16</version>
+        <version>9.16.1</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>ColorDepthSearch</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>colordepth</artifactId>
-    <version>9.16</version>
+    <version>9.16.1</version>
     <packaging>nbm</packaging>
 
     <dependencies>
