@@ -92,12 +92,12 @@
             <artifactId>jblosc</artifactId>
             <version>1.0.1</version>
             <scope>runtime</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>net.java.dev.jna</groupId>
-                    <artifactId>jna</artifactId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>net.java.dev.jna</groupId>
+            <artifactId>jna</artifactId>
+            <version>4.2.2</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- NetBeans Modules --> 
