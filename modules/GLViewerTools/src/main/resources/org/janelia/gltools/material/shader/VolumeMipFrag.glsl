@@ -38,6 +38,8 @@ uniform int pickIndex = 3; // default value for pick buffer
 uniform COLOR_VEC opacityFunctionMin = COLOR_VEC(0);
 uniform COLOR_VEC opacityFunctionMax = COLOR_VEC(1);
 
+uniform vec3 colorChannel1 = vec3(0, 1, 0);
+
 uniform vec3 camPosInTc; // camera position, in texture coordinate frame
 uniform sampler3D volumeTexture; // the confocal image stack
 uniform int levelOfDetail = 0; // volume texture LOD
@@ -673,9 +675,9 @@ void save_color(in IntegratedIntensity i, in ViewSlab slab)
     const float knot = 0.5; // where to kink linear ramp between three colors
     float intensity = rescaled.r; // First channel only at the moment
     if (intensity <= knot)
-        hotColor = mix(vec3(0), vec3(0,1,0), intensity / knot);
+        hotColor = mix(vec3(0), colorChannel1, intensity / knot);
     else
-        hotColor = mix(vec3(0,1,0), vec3(0.95,1,0.9), (intensity - knot)/(1.0 - knot));
+        hotColor = mix(colorChannel1, vec3(0.95,1,0.9), (intensity - knot)/(1.0 - knot));
     colorOut = vec4(hotColor, i.opacity);
     // colorOut = vec4(i.intensity.g, i.intensity.r, i.intensity.g, i.opacity);
 
