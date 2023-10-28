@@ -281,6 +281,10 @@ public class OmeZarrVolumeActor extends BasicGL3Actor implements DepthSlabClippe
         this.brightnessModel = brightnessModel;
     }
 
+    public void refreshBlocks(ConstVector3 location) {
+        blockDisplayUpdater.refreshBlocks(location);
+    }
+
     public void clearAllBlocks() {
         dynamicTiles.clearAllTiles();
         getChildren().clear();
