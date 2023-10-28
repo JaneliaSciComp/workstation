@@ -35,14 +35,10 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     private OmeZarrJadeReader reader;
     private OmeZarrGroup omeZarrGroup;
 
-    private AutoContrastParameters autoContrastParameters = null;
-
     private final ArrayList<OmeZarrBlockResolution> resolutions = new ArrayList<>();
     private OmeZarrBlockResolution maximumResolution = null;
 
     private final ImageColorModel imageColorModel;
-
-    private final boolean useAutoContrast;
 
     private BoundingBox3d boundingBox3d = new BoundingBox3d();
     private Vec3 voxelCenter = new Vec3(0, 0, 0);
@@ -50,13 +46,8 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     private static final ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
     public OmeZarrBlockTileSource(URL originatingSampleURL, ImageColorModel imageColorModel) {
-        this(originatingSampleURL, imageColorModel, false);
-    }
-
-    public OmeZarrBlockTileSource(URL originatingSampleURL, ImageColorModel imageColorModel, boolean useAutoContrast) {
         this.originatingSampleURL = originatingSampleURL;
         this.imageColorModel = imageColorModel;
-        this.useAutoContrast = useAutoContrast;
     }
 
     public OmeZarrBlockTileSource init(String localPath) throws IOException {
@@ -132,20 +123,6 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
 
                     if (progressObserver != null) {
                         progressObserver.update(this, "Loading dataset " + dataset.getPath());
-                    }
-
-                    if (useAutoContrast && autoContrastParameters == null) {
-                        int[] autoContrastShape = {1, 1, 256, 256, 128};
-
-                        AutoContrastParameters parameters = TCZYXRasterZStack.computeAutoContrast(dataset, autoContrastShape);
-
-                        double existingMax = parameters.min + (65535.0 / parameters.slope);
-
-                        double min = Math.max(100, parameters.min * 0.1);
-                        double max = Math.min(65535.0, Math.max(min + 100, existingMax * 4));
-                        double slope = 65535.0 / (max - min);
-
-                        autoContrastParameters = new AutoContrastParameters(min, slope);
                     }
 
                     log.info("finished loading path " + dataset.getPath());
@@ -242,33 +219,6 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     }
 
     public Texture3d loadBrick(OmeZarrBlockTileKey tile) {
-        return tile.loadBrick(useAutoContrast ? autoContrastParameters : null);
+        return tile.loadBrick();
     }
-/*
-    private void createTileKeysForDataset(OmeZarrDataset dataset, OmeZarrReaderProgressObserver progressReceiver) {
-        try {
-            if (progressReceiver != null) {
-                progressReceiver.update(this, "Loading dataset " + dataset.getPath());
-            }
-
-            if (useAutoContrast && autoContrastParameters == null) {
-                int[] autoContrastShape = {1, 1, 256, 256, 128};
-
-                AutoContrastParameters parameters = TCZYXRasterZStack.computeAutoContrast(dataset, autoContrastShape);
-
-                double existingMax = parameters.min + (65535.0 / parameters.slope);
-
-                double min = Math.max(100, parameters.min * 0.1);
-                double max = Math.min(65535.0, Math.max(min + 100, existingMax * 4));
-                double slope = 65535.0 / (max - min);
-
-                autoContrastParameters = new AutoContrastParameters(min, slope);
-            }
-
-            log.info("finished loading path " + dataset.getPath());
-        } catch (Exception ex) {
-            log.error("failed to load path " + dataset.getPath());
-            log.error(ex.getMessage());
-        }
-    }*/
 }
