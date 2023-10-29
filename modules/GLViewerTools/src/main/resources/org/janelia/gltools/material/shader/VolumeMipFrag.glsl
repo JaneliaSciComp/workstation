@@ -15,7 +15,7 @@
 
 // output 1) maximum intensity along ray in red channel
 //        2) relative depth of brightest voxel in green channel
-layout(location = 0) out vec4 colorOut; 
+layout(location = 0) out vec4 colorOut;
 
 // put surface normals in eye space for isosurface projection
 uniform mat4 tcToCamera = mat4(1);
@@ -170,7 +170,7 @@ vec3 hsv2rgb(vec3 c)
 vec2 clipRayToUnitVolume(vec3 x0, vec3 x1) {
     // Compute extreme texture coordinates
     // Texture coordinates are restricted to [0,1]
-    // The texMax/texMin variables represent texture coordinates corresponding to 
+    // The texMax/texMin variables represent texture coordinates corresponding to
     // large/small values of ray parameter "t".
     vec3 texMax = clamp(ceil(x1 * 100), vec3(0,0,0), vec3(1,1,1)); // each component is now 0 or 1
     vec3 texMin = vec3(1,1,1) - texMax; // complement texMax
@@ -178,7 +178,7 @@ vec2 clipRayToUnitVolume(vec3 x0, vec3 x1) {
     // colorOut = vec4(texMin, 1); return; // for debugging
     // colorOut = vec4(texMax, 1); return; // for debugging
 
-    // Compute parameter t limits in all three directions at once, 
+    // Compute parameter t limits in all three directions at once,
     // using plane ray tracing equation.
     vec3 vtMin = -(x0 - texMin)/x1;
     float tMin = max(max(vtMin.x, vtMin.y), vtMin.z); // looks OK
@@ -232,7 +232,7 @@ float minElement(vec4 v) {
     return min( min(v.r, v.g), min(v.b, v.a) );
 }
 
-float sampleScaledIntensity(sampler3D volume, vec3 uvw, vec3 textureScale) 
+float sampleScaledIntensity(sampler3D volume, vec3 uvw, vec3 textureScale)
 {
     COLOR_VEC unscaled;
     if (filteringOrder == 3)
@@ -242,7 +242,7 @@ float sampleScaledIntensity(sampler3D volume, vec3 uvw, vec3 textureScale)
     return maxElement( unscaled );
 }
 
-vec3 calculateNormalInScreenSpace(sampler3D volume, vec3 uvw, vec3 voxelMicrometers, vec3 textureScale) 
+vec3 calculateNormalInScreenSpace(sampler3D volume, vec3 uvw, vec3 voxelMicrometers, vec3 textureScale)
 {
     vec3 v[2];
     const float delta = 0.75; // sample 1/2 pixel away
@@ -340,7 +340,7 @@ struct VoxelIntensity
 
 // Delegated Methods for compartmentalized volume rendering algorithm
 
-float advance_to_voxel_edge(in float previousEdge, in RayParameters rayParameters) 
+float advance_to_voxel_edge(in float previousEdge, in RayParameters rayParameters)
 {
     // Units of ray parameter, t, are roughly texels
     const float minStep = 0.01;
@@ -348,13 +348,13 @@ float advance_to_voxel_edge(in float previousEdge, in RayParameters rayParameter
     // Advance ray by at least minStep, to avoid getting stuck in tiny corners
     float t = previousEdge + minStep;
     vec3 x0 = rayParameters.rayOriginInTexels;
-    vec3 x1 = rayParameters.rayDirectionInTexels; 
+    vec3 x1 = rayParameters.rayDirectionInTexels;
     vec3 currentTexelPos = (x0 + t*x1); // apply ray equation to find new voxel
 
     // Advance ray to next voxel edge.
     // For NEAREST filter, advance to midplanes between voxel centers.
     // For TRILINEAR and TRICUBIC filters, advance to planes connecing voxel centers.
-    vec3 currentTexel = floor(currentTexelPos + rayParameters.rayBoxCorner) 
+    vec3 currentTexel = floor(currentTexelPos + rayParameters.rayBoxCorner)
             - rayParameters.rayBoxCorner;
 
     // Three out of six total voxel edges represent forward progress
@@ -378,7 +378,7 @@ VoxelRayState find_first_voxel(in RayBounds rayBounds, in RayParameters rayParam
 }
 
 // Compute begin and end points of ray, once and for all
-RayBounds initialize_ray_bounds(in RayParameters rayParameters, in ViewSlab viewSlab) 
+RayBounds initialize_ray_bounds(in RayParameters rayParameters, in ViewSlab viewSlab)
 {
     // bound ray within view slab thickness
     float slabTMin = viewSlab.minRayParam;
@@ -394,7 +394,7 @@ RayBounds initialize_ray_bounds(in RayParameters rayParameters, in ViewSlab view
     vec3 texelMin = reverseMask / rayParameters.textureScale;
     vec3 x0 = rayParameters.rayOriginInTexels;
     vec3 x1 = rayParameters.rayDirectionInTexels;
-    // Compute parameter t limits in all three directions at once, 
+    // Compute parameter t limits in all three directions at once,
     // using plane ray tracing equation.
     vec3 vtMin = -(x0 - texelMin)/x1;
     float texCoordTMin = max(max(vtMin.x, vtMin.y), vtMin.z); // looks OK
@@ -436,10 +436,10 @@ RayParameters initialize_ray_parameters() {
     if (filteringOrder == 0)  // nearest neighbor
     {
         rayBoxCorner = vec3(0, 0, 0); // intersect ray at voxel edge planes, optimal for nearest-neighbor
-    } 
+    }
     else  // trilinear and tricubic
     {
-        rayBoxCorner = 
+        rayBoxCorner =
                 vec3(0.5, 0.5, 0.5); // intersect ray at voxel center planes
     }
 
@@ -450,7 +450,7 @@ RayParameters initialize_ray_parameters() {
     return RayParameters(originInTexels, directionInTexels, rayBoxCorner, forwardMask, textureScale);
 }
 
-ViewSlab initialize_view_slab(RayParameters rayParams) 
+ViewSlab initialize_view_slab(RayParameters rayParams)
 {
     vec3 x0 = rayParams.rayOriginInTexels;
     vec3 x1 = rayParams.rayDirectionInTexels;
@@ -465,7 +465,7 @@ ViewSlab initialize_view_slab(RayParameters rayParams)
 
 // Integrate the latest sample into the accumulated color
 void integrate_intensity(
-        in VoxelIntensity localIntensity, 
+        in VoxelIntensity localIntensity,
         inout IntegratedIntensity integratedIntensity,
         inout CoreStatus core,
         in ViewSlab viewSlab,
@@ -561,8 +561,8 @@ void integrate_intensity(
     //  * it also uses the OpacityFunction, which is otherwise not strictly
     //    needed in this shader at all. So, for example, without the fade
     //    effect, this entire render pass could be cached and skipped, as
-    //    the user drags the opacity parameters. 
-    float rd = (rayParameter - viewSlab.minRayParam) 
+    //    the user drags the opacity parameters.
+    float rd = (rayParameter - viewSlab.minRayParam)
             / (viewSlab.maxRayParam - viewSlab.minRayParam); // relative depth
     float fadeInterval = fadeThicknessInTexels / (viewSlab.maxRayParam - viewSlab.minRayParam);
     // But don't fade much in extremely thin slabs
@@ -614,14 +614,14 @@ void integrate_intensity(
 
 // Are we done casting the current view ray?
 bool ray_complete(
-        in VoxelRayState state, 
-        in RayBounds bounds, 
+        in VoxelRayState state,
+        in RayBounds bounds,
         in IntegratedIntensity intensity,
         in CoreStatus core)
 {
-    if (state.exitRayParameter >= bounds.maxRayParameter) 
+    if (state.exitRayParameter >= bounds.maxRayParameter)
         return true; // exited back of block
-    if ((intensity.opacity >= 0.99) && (! core.inLocalBody)) 
+    if ((intensity.opacity >= 0.99) && (! core.inLocalBody))
         return true; // stop at full occlusion
     return false;
 }
@@ -629,9 +629,9 @@ bool ray_complete(
 // Fetch the color of the current voxel
 // AND track brightest point in tracing channel
 void sample_intensity(
-        in VoxelRayState rayState, 
-        in RayParameters rayParams, 
-        inout VoxelIntensity intensity) 
+        in VoxelRayState rayState,
+        in RayParameters rayParams,
+        inout VoxelIntensity intensity)
 {
     // Cache previous intensity value, for later lookbehind.
     intensity.previousVoxelMiddleIntensity = intensity.voxelMiddleIntensity;
@@ -668,7 +668,7 @@ void sample_intensity(
 }
 
 // Write out the final color/data after volume ray casting
-void save_color(in IntegratedIntensity i, in ViewSlab slab) 
+void save_color(in IntegratedIntensity i, in ViewSlab slab)
 {
     // primary render target contains final color RGBA as of September 2016
     // hot color map, green only
@@ -677,9 +677,9 @@ void save_color(in IntegratedIntensity i, in ViewSlab slab)
     const float knot = 0.5; // where to kink linear ramp between three colors
     float intensity = rescaled.r; // First channel only at the moment
     if (intensity <= knot)
-        hotColor = mix(vec3(0), colorChannel * channelVisibilityMask, intensity / knot);
+        hotColor = mix(vec3(0) * channelVisibilityMask, colorChannel * channelVisibilityMask, (intensity / knot) * channelVisibilityMask);
     else
-        hotColor = mix(colorChannel * channelVisibilityMask, vec3(0.95,1,0.9), (intensity - knot)/(1.0 - knot));
+        hotColor = mix(colorChannel * channelVisibilityMask, vec3(0.95,1,0.9) * channelVisibilityMask, (intensity - knot)/(1.0 - knot) * channelVisibilityMask);
     colorOut = vec4(hotColor, i.opacity);
     // colorOut = vec4(i.intensity.g, i.intensity.r, i.intensity.g, i.opacity);
 
@@ -718,8 +718,8 @@ IntegratedIntensity cast_volume_ray(in RayParameters rayParameters, in ViewSlab 
             return integratedIntensity; // DONE, we made it to the far side of the volume
         sample_intensity(voxelRayState, rayParameters, voxelIntensity); // this is an expensive step, due to texture fetch(es)
         integrate_intensity(
-                voxelIntensity, 
-                integratedIntensity, 
+                voxelIntensity,
+                integratedIntensity,
                 coreStatus, viewSlab, voxelRayState, rayParameters);
         step_ray(rayParameters, voxelRayState);
         stepCount += 1;
@@ -733,7 +733,7 @@ void main() {
     RayParameters rayParams = initialize_ray_parameters();
     ViewSlab viewSlab = initialize_view_slab(rayParams);
     IntegratedIntensity integratedIntensity = cast_volume_ray(rayParams, viewSlab);
-    if (integratedIntensity.opacity <= 0.005) 
+    if (integratedIntensity.opacity <= 0.005)
         discard; // This ray is invisible, so try to save resources by not painting it.
     save_color(integratedIntensity, viewSlab);
 }

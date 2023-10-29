@@ -43,6 +43,8 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     private BoundingBox3d boundingBox3d = new BoundingBox3d();
     private Vec3 voxelCenter = new Vec3(0, 0, 0);
 
+    private int numColorChannels = 1;
+
     private static final ExecutorService cachedThreadPool = Executors.newCachedThreadPool();
 
     public OmeZarrBlockTileSource(URL originatingSampleURL, ImageColorModel imageColorModel) {
@@ -79,7 +81,7 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     }
 
     private OmeZarrBlockTileSource init(OmeZarrReaderProgressObserver progressObserver, OmeZarrReaderCompletionObserver completionObserver) {
-        cachedThreadPool.submit(() -> {
+        // cachedThreadPool.submit(() -> {
             int datasetCount = omeZarrGroup.getAttributes().getMultiscales()[0].getDatasets().size();
 
             boolean haveExtents = false;
@@ -117,6 +119,8 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
                         voxelCenter = boundingBox3d.getCenter();
 
                         haveExtents = true;
+
+                        numColorChannels = shapeIndex.getC();
                     }
 
                     OmeZarrBlockResolution resolution = new OmeZarrBlockResolution(dataset, idx, chunkSizeXYZ, voxelSize, resolutionMicrometers);
@@ -139,9 +143,13 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
             }
 
             completionObserver.complete(this);
-        });
+        // });
 
         return this;
+    }
+
+    public int getNumColorChannels() {
+        return numColorChannels;
     }
 
     public BoundingBox3d getBoundingBox3d() {
@@ -214,11 +222,6 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     }
 
     public Texture3d loadBrick(OmeZarrBlockTileKey tile, int colorChannel) {
-        // setColorChannelIndex(colorChannel);
-        return loadBrick(tile);
-    }
-
-    public Texture3d loadBrick(OmeZarrBlockTileKey tile) {
-        return tile.loadBrick();
+        return tile.loadBrick(colorChannel);
     }
 }
