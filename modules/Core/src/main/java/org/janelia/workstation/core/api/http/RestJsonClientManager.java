@@ -52,8 +52,7 @@ public class RestJsonClientManager {
         this.failureCache = CacheBuilder.newBuilder()
                 .maximumSize(1000)
                 .expireAfterWrite(10, TimeUnit.MINUTES)
-                .build(
-                        new CacheLoader<String, Boolean>() {
+                .build(new CacheLoader<String, Boolean>() {
                     public Boolean load(String key) throws Exception {
                         return false;
                     }
@@ -90,19 +89,20 @@ public class RestJsonClientManager {
             }
         };
 
+        // Custom redirection filter which forwards headers
         ClientResponseFilter followRedirectFilter = (clientRequestContext, clientResponseContext) -> {
             if (clientResponseContext.getStatusInfo().getFamily() != Response.Status.Family.REDIRECTION) {
                 return;
             }
 
-            Response resp = clientRequestContext.getClient()
+            try (Response resp = clientRequestContext.getClient()
                     .target(clientResponseContext.getLocation())
                     .request()
-                    .method(clientRequestContext.getMethod());
-
-            clientResponseContext.setEntityStream((InputStream) resp.getEntity());
-            clientResponseContext.setStatusInfo(resp.getStatusInfo());
-            clientResponseContext.setStatus(resp.getStatus());
+                    .method(clientRequestContext.getMethod())) {
+                clientResponseContext.setEntityStream((InputStream) resp.getEntity());
+                clientResponseContext.setStatusInfo(resp.getStatusInfo());
+                clientResponseContext.setStatus(resp.getStatus());
+            }
         };
 
         return ClientBuilder.newBuilder()
