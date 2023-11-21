@@ -130,12 +130,7 @@ public class ServiceMgr {
     
     private void notifyUser(final String msg) {
         if (userWasNotified.compareAndSet(false, true)) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), msg);
-                }
-            });
+            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), msg));
         }
     }
     

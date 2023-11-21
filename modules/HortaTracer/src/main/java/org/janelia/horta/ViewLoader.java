@@ -1,39 +1,24 @@
 package org.janelia.horta;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Paths;
-
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
-
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.lang.StringUtils;
-import org.janelia.horta.blocks.OmeZarrBlockTileSource;
-import org.janelia.horta.omezarr.OmeZarrReaderCompletionObserver;
-import org.janelia.horta.omezarr.OmeZarrReaderProgressObserver;
-import org.janelia.workstation.controller.tileimagery.OsFilePathRemapper;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
+import org.janelia.horta.blocks.OmeZarrBlockTileSource;
 import org.janelia.horta.util.HttpClientHelper;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.security.AppAuthorization;
-import org.janelia.rendering.FileBasedRenderedVolumeLocation;
-import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolume;
-import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolumeMetadata;
+import org.janelia.rendering.*;
 import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.tileimagery.OsFilePathRemapper;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.geom.Vec3;
@@ -42,6 +27,12 @@ import org.netbeans.api.progress.ProgressHandleFactory;
 import org.openide.util.RequestProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Paths;
 
 public class ViewLoader {
     private static final Logger LOG = LoggerFactory.getLogger(ViewLoader.class);
