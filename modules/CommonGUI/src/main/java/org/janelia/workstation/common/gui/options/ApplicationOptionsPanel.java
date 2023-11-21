@@ -37,6 +37,8 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
     private JCheckBox showReleaseNotesOnStartup;
     private JCheckBox showStartPageOnStartup;
     private JCheckBox useRunAsUserPreferences;
+    private JCheckBox enableAxisServer;
+    private JCheckBox enableHttpServer;
     private JRadioButton fileCacheEnabledRadioButton;
     private JRadioButton fileCacheDisabledRadioButton;
     private JSpinner fileCacheSpinner;
@@ -70,6 +72,18 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         useRunAsUserPreferences.addActionListener((e) -> controller.changed());
         if (AccessManager.getAccessManager().isAdmin()) {
             mainPanel.addItem(useRunAsUserPreferences);
+        }
+
+        enableAxisServer = new JCheckBox("Enable Axis integration endpoints");
+        enableAxisServer.addActionListener((e) -> controller.changed());
+        if (AccessManager.getAccessManager().isAdmin()) {
+            mainPanel.addItem(enableAxisServer);
+        }
+
+        enableHttpServer = new JCheckBox("Enable Http integration endpoints");
+        enableHttpServer.addActionListener((e) -> controller.changed());
+        if (AccessManager.getAccessManager().isAdmin()) {
+            mainPanel.addItem(enableHttpServer);
         }
 
         // Memory
@@ -194,12 +208,9 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
 
         // ---------------------
         fileCacheClearButton = new JButton("Clear Cache");
-        fileCacheClearButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                LocalCacheMgr.getInstance().clearFileCache();
-                updateFileCacheComponents(false);
-            }
+        fileCacheClearButton.addActionListener(e -> {
+            LocalCacheMgr.getInstance().clearFileCache();
+            updateFileCacheComponents(false);
         });
 
         c.fill = GridBagConstraints.NONE;
@@ -280,6 +291,8 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         showReleaseNotesOnStartup.setSelected(options.isShowReleaseNotes());
         showStartPageOnStartup.setSelected(options.isShowStartPageOnStartup());
         useRunAsUserPreferences.setSelected(options.isUseRunAsUserPreferences());
+        enableAxisServer.setSelected(options.isEnableAxisServer());
+        enableHttpServer.setSelected(options.isEnableHttpServer());
         memoryPanel.setMemorySetting(Utils.getMemoryAllocation());
         
         updateFileCacheComponents(false);
@@ -295,6 +308,8 @@ final class ApplicationOptionsPanel extends javax.swing.JPanel {
         options.setShowReleaseNotes(showReleaseNotesOnStartup.isSelected());
         options.setShowStartPageOnStartup(showStartPageOnStartup.isSelected());
         options.setUseRunAsUserPreferences(useRunAsUserPreferences.isSelected());
+        options.setEnableAxisServer(enableAxisServer.isSelected());
+        options.setEnableHttpServer(enableHttpServer.isSelected());
 
         // Memory
         String error = memoryPanel.getError();

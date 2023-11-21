@@ -21,6 +21,8 @@ public class OptionConstants {
     public static final String LAST_SHOWN_RELEASE_NOTES = "SessionMgr.LastShownReleaseNotes";
     public static final String SANITIZE_FILENAMES_PROPERTY = "SessionMgr.SanitizeFilenames1";
     public static final String USE_RUN_AS_USER_PREFERENCES = "useRunAsUserPreferences";
+    public static final String ENABLE_AXIS_SERVER = "enableAxisServer";
+    public static final String ENABLE_HTTP_SERVER = "enableHttpServer";
     public static final String USE_HTTP_FOR_TILE_ACCESS = "useHTTPForTileAccess";
     public static final String SHOW_HORTA_CONTROL_CENTER_STARTUP = "showHortaControlCenterStartup";
     public static final String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
