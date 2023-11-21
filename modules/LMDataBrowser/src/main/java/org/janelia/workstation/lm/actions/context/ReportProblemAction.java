@@ -1,25 +1,12 @@
 package org.janelia.workstation.lm.actions.context;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import javax.swing.JComponent;
-import javax.swing.JMenuItem;
-
 import org.janelia.model.domain.DomainObject;
-import org.janelia.model.domain.Reference;
-import org.janelia.model.domain.ontology.Annotation;
-import org.janelia.model.domain.ontology.OntologyTerm;
 import org.janelia.model.domain.sample.Sample;
-import org.janelia.workstation.browser.actions.context.ApplyAnnotationActionListener;
-import org.janelia.workstation.common.actions.BaseContextualPopupAction;
+import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.StateMgr;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.MailHelper;
-import org.janelia.workstation.core.workers.SimpleListenableFuture;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -28,6 +15,8 @@ import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.*;
 
 
 /**
@@ -45,7 +34,7 @@ import org.slf4j.LoggerFactory;
         @ActionReference(path = "Menu/Actions/Sample", position = 500, separatorBefore = 499)
 })
 @NbBundle.Messages("CTL_ReportProblemAction=Report A Problem With This Data")
-public class ReportProblemAction extends BaseContextualPopupAction {
+public class ReportProblemAction extends BaseContextualNodeAction {
 
     private static final Logger log = LoggerFactory.getLogger(ReportProblemAction.class);
 
@@ -63,48 +52,24 @@ public class ReportProblemAction extends BaseContextualPopupAction {
     }
 
     @Override
-    protected List<JComponent> getItems() {
-        List<JComponent> items = new ArrayList<>();
+    public void performAction() {
 
         DomainObject domainObject = selectedObject;
+        ActivityLogHelper.logUserAction("DomainObjectContentMenu.reportAProblemWithThisData", domainObject);
 
-        // TODO: this can cause a chain of exceptions if the user is not logged in
-        // These items should be lazy loaded after login, not on startup
-        OntologyTerm errorOntology = StateMgr.getStateMgr().getErrorOntology();
-        if (errorOntology==null) return items;
+        try {
+            reportData(domainObject);
 
-        for (final OntologyTerm term : errorOntology.getTerms()) {
-            JMenuItem item = new JMenuItem(term.getName());
-            item.addActionListener(e -> {
-
-                ActivityLogHelper.logUserAction("DomainObjectContentMenu.reportAProblemWithThisData", domainObject);
-
-                final ApplyAnnotationActionListener action = new ApplyAnnotationActionListener();
-                SimpleListenableFuture<List<Annotation>> future =
-                        action.annotateReferences(term, Collections.singletonList(Reference.createFor(domainObject)));
-
-                if (future!=null) {
-                    future.addListener(() -> {
-                        try {
-                            List<Annotation> annotations = future.get();
-                            if (annotations!=null && !annotations.isEmpty()) {
-                                reportData(domainObject, annotations.get(0));
-                            }
-                        }
-                        catch (Exception ex) {
-                            FrameworkAccess.handleException(ex);
-                        }
-                    });
-                }
-            });
-            items.add(item);
-
+            JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
+                    "Successfully reported problem with "+domainObject.getName(),
+                    "Data Problem Reported", JOptionPane.PLAIN_MESSAGE);
         }
-
-        return items;
+        catch (Exception ex) {
+            FrameworkAccess.handleException(ex);
+        }
     }
 
-    private void reportData(DomainObject domainObject, Annotation annotation) {
+    private void reportData(DomainObject domainObject) {
 
         String fromEmail = ConsoleProperties.getString("console.FromEmail", null);
         if (fromEmail==null) {
@@ -119,13 +84,13 @@ public class ReportProblemAction extends BaseContextualPopupAction {
         }
 
         DataReporter reporter = new DataReporter(fromEmail, toEmail);
-        reporter.reportData(domainObject, annotation.getName());
+        reporter.reportData(domainObject, null);
     }
 
-    public class DataReporter {
+    public static class DataReporter {
 
-        private String fromEmail;
-        private String toEmail;
+        private final String fromEmail;
+        private final String toEmail;
 
         public DataReporter(String fromEmail, String toEmail) {
             this.fromEmail = fromEmail;
