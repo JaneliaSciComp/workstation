@@ -1,5 +1,5 @@
-// 9.16
+// 9.17
 
-Horta
-* Fixed memory issues for large zarr samples (full brain size) with small chunks (128x128x128 or smaller).
-* Fixed Zarr fragment importing
+FlyLight
+* Alphabetical ordering for Fly Line Releases in the Data Explorer and the dialog in the Services menu
+* Allow sorting of Fly Line Releases in the dialog, by owner, name, or target website

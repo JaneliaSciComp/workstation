@@ -1,3 +1,9 @@
+// 9.16
+
+Horta
+* Fixed memory issues for large zarr samples (full brain size) with small chunks (128x128x128 or smaller).
+* Fixed Zarr fragment importing
+
 // 9.14.5
 
 Horta

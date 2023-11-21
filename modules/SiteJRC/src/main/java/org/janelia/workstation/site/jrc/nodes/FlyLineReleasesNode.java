@@ -20,6 +20,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -134,8 +135,10 @@ public class FlyLineReleasesNode extends IdentifiableNode {
         protected boolean createKeys(List<LineRelease> list) {
             try {
                 log.debug("Creating children keys for FlyLineReleasesNode");
-                list.addAll(DomainMgr.getDomainMgr().getModel().getLineReleases());
-            } 
+                List<LineRelease> sortedLineReleases = DomainMgr.getDomainMgr().getModel().getLineReleases();
+                sortedLineReleases.sort(Comparator.comparing(LineRelease::getName, String.CASE_INSENSITIVE_ORDER));
+                list.addAll(sortedLineReleases);
+            }
             catch (Exception ex) {
                 FrameworkAccess.handleException(ex);
             }

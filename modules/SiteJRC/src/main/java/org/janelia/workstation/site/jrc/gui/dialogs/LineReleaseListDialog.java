@@ -18,6 +18,7 @@ import java.awt.event.MouseEvent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -29,6 +30,7 @@ public class LineReleaseListDialog extends ModalDialog {
 
     private static final DateFormat df = new SimpleDateFormat("yyyy/MM/dd");
 
+    private static final String COLUMN_OWNER = "Owner";
     private static final String COLUMN_NAME = "Name";
     private static final String COLUMN_WEBSITE = "Target Website";
     private static final String COLUMN_SAGE_SYNC = "SAGE Sync";
@@ -56,12 +58,15 @@ public class LineReleaseListDialog extends ModalDialog {
 
         add(mainPanel, BorderLayout.CENTER);
 
-        dynamicTable = new DynamicTable(true, false) {
+        dynamicTable = new DynamicTable(true, true) {
             @Override
             public Object getValue(Object userObject, DynamicColumn column) {
                 LineRelease release = (LineRelease) userObject;
                 if (release != null) {
-                    if (COLUMN_NAME.equals(column.getName())) {
+                    if (COLUMN_OWNER.equals(column.getName())) {
+                        return release.getOwnerName();
+                    }
+                    else if (COLUMN_NAME.equals(column.getName())) {
                         return release.getName();
                     }
                     else if (COLUMN_WEBSITE.equals(column.getName())) {
@@ -177,8 +182,9 @@ public class LineReleaseListDialog extends ModalDialog {
             }
         };
 
-        dynamicTable.addColumn(COLUMN_NAME);
-        dynamicTable.addColumn(COLUMN_WEBSITE);
+        dynamicTable.addColumn(COLUMN_OWNER).setSortable(true);
+        dynamicTable.addColumn(COLUMN_NAME).setSortable(true);
+        dynamicTable.addColumn(COLUMN_WEBSITE).setSortable(true);
         dynamicTable.addColumn(COLUMN_SAGE_SYNC).setEditable(true);
 
         JButton addButton = new JButton("Add new");
@@ -204,7 +210,9 @@ public class LineReleaseListDialog extends ModalDialog {
         loadReleases();
 
         Component mainFrame = FrameworkAccess.getMainFrame();
-        setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.4)));
+        if (mainFrame != null) {
+            setPreferredSize(new Dimension((int) (mainFrame.getWidth() * 0.4), (int) (mainFrame.getHeight() * 0.4)));
+        }
 
         ActivityLogHelper.logUserAction("LineReleaseListDialog.showDialog");
 
@@ -223,9 +231,9 @@ public class LineReleaseListDialog extends ModalDialog {
 
             @Override
             protected void doStuff() throws Exception {
-                for (LineRelease releaseEntity : DomainMgr.getDomainMgr().getModel().getLineReleases()) {
-                    releases.add(releaseEntity);
-                }
+                List<LineRelease> sortedLineReleases = DomainMgr.getDomainMgr().getModel().getLineReleases();
+                sortedLineReleases.sort(Comparator.comparing(LineRelease::getName, String.CASE_INSENSITIVE_ORDER));
+                releases.addAll(sortedLineReleases);
             }
 
             @Override
@@ -258,12 +266,7 @@ public class LineReleaseListDialog extends ModalDialog {
         loadReleases();
     }
 
-    public void totalRefresh() {
-        throw new UnsupportedOperationException();
-    }
-
     List<LineRelease> getReleases() {
         return releases;
     }
-
 }
