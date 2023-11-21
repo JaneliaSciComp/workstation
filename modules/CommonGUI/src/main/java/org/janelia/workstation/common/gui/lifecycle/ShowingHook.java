@@ -29,6 +29,7 @@ import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.core.util.BrandingConfig;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.SystemInfo;
+import org.janelia.workstation.core.workers.IndeterminateProgressMonitor;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.StatusDisplayer;
@@ -179,16 +180,6 @@ public class ShowingHook implements Runnable {
             FrameworkAccess.handleException(e);
         }
 
-        // Auto-login if credentials were saved from a previous session
-        AccessManager.getAccessManager().loginUsingSavedCredentials();
-
-        // If there were any issues with auto-login before, resolve them now by showing the login dialog
-        if (AccessManager.getAccessManager().hadLoginIssue()) {
-            SwingUtilities.invokeLater(() -> {
-                LoginDialog.getInstance().showDialog(AccessManager.getAccessManager().getLoginIssue());
-            });
-        }
-
         if (ApplicationOptions.getInstance().isAutoDownloadUpdates()) {
             if (SystemInfo.isDev || SystemInfo.isTest) {
                 log.info("Skipping updates on non-production build");
@@ -212,16 +203,48 @@ public class ShowingHook implements Runnable {
             restartIfBrandingChanged();
         }
 
-        // Things that can be done lazily
-        SwingUtilities.invokeLater(() -> getReleaseNotesDialog().showIfFirstRunSinceUpdate());
+        SimpleWorker worker = new SimpleWorker() {
 
-        if (ApplicationOptions.getInstance().isShowHortaOnStartup()) {
-            TopComponent tc = WindowManager.getDefault().findTopComponent("InfoPanelTopComponent");
-            if (tc != null) {
-                tc.open();
-                tc.requestActive();
+            @Override
+            protected void doStuff() throws Exception {
+                // Auto-login if credentials were saved from a previous session
+                AccessManager.getAccessManager().loginUsingSavedCredentials();
             }
-        }
+
+            @Override
+            protected void hadSuccess() {
+                if (isCancelled()) {
+                    AccessManager.getAccessManager().logout();
+                }
+
+                // If there were any issues with auto-login before, resolve them now by showing the login dialog
+                if (AccessManager.getAccessManager().hadLoginIssue()) {
+                    SwingUtilities.invokeLater(() -> {
+                        LoginDialog.getInstance().showDialog(AccessManager.getAccessManager().getLoginIssue());
+                    });
+                }
+
+                // Things that can be done lazily
+                SwingUtilities.invokeLater(() -> getReleaseNotesDialog().showIfFirstRunSinceUpdate());
+
+                // TODO: this shouldn't be in here, it should be in a separate ShowingHook for the Horta module
+                if (ApplicationOptions.getInstance().isShowHortaOnStartup()) {
+                    TopComponent tc = WindowManager.getDefault().findTopComponent("InfoPanelTopComponent");
+                    if (tc != null) {
+                        tc.open();
+                        tc.requestActive();
+                    }
+                }
+            }
+
+            @Override
+            protected void hadError(Throwable e) {
+                FrameworkAccess.handleException(e);
+            }
+        };
+
+        worker.setProgressMonitor(new IndeterminateProgressMonitor(FrameworkAccess.getMainFrame(), "Logging in...", ""));
+        worker.execute();
     }
 
     public static synchronized ReleaseNotesDialog getReleaseNotesDialog() {

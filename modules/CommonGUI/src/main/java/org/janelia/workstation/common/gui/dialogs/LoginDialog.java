@@ -158,6 +158,7 @@ public class LoginDialog extends ModalDialog {
         case AuthError: return "<html>There is a problem with your username or password. Please try again.</html>"; 
         case TokenExpiredError: return "<html>There was a problem refreshing your authentication token. Please try logging in again.</html>";
         case OtherError: return "<html>There was a problem logging in. Please try again.</html>";
+        case UserLogout: return "";
         }
         throw new IllegalArgumentException("Unsupported error type: "+errorType);
     }

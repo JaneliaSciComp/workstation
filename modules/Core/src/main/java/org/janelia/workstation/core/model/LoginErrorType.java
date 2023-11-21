@@ -4,5 +4,6 @@ public enum LoginErrorType {
     NetworkError,
     AuthError,
     TokenExpiredError,
-    OtherError
+    OtherError,
+    UserLogout
 }
