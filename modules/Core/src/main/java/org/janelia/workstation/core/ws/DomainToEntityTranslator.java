@@ -205,7 +205,7 @@ public class DomainToEntityTranslator {
     }
 
     private Entity translatePaths(Entity entity) {
-        if (ConsoleProperties.getBoolean("console.WebServer.proxyFiles")) {
+        if (ConsoleProperties.getBoolean("console.HttpServer.proxyFiles")) {
             return PathTranslator.translatePathsToProxy(entity);
         } else {
             return PathTranslator.translatePathsToCurrentPlatform(entity);

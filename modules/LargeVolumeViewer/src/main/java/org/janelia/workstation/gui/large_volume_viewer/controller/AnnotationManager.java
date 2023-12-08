@@ -565,7 +565,7 @@ public class AnnotationManager implements UpdateAnchorListener, PathTraceListene
                 // unlike most operations in the annmgr, we want to adjust the UI in
                 //  ways other than via the updates the model triggers; in this case,
                 //  we advance the next parent to the appropriate annotation
-               // lvvTranslator.fireNextParentEvent(nextParentID);
+                fireNextParentEvent(nextParentID);
             }
 
             @Override

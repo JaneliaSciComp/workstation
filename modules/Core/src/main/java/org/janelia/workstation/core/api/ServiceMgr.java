@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
+import org.janelia.workstation.core.options.ApplicationOptions;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.web.EmbeddedWebServer;
@@ -130,19 +131,18 @@ public class ServiceMgr {
     
     private void notifyUser(final String msg) {
         if (userWasNotified.compareAndSet(false, true)) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), msg);
-                }
-            });
+            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), msg));
         }
     }
     
     public void initServices() {
         log.info("Initializing Services");
-        startAxisServer(ConsoleProperties.getInt("console.WebService.startingPort"));
-        startWebServer(ConsoleProperties.getInt("console.WebServer.startingPort"));
+        if (ApplicationOptions.getInstance().isEnableAxisServer()) {
+            startAxisServer(ConsoleProperties.getInt("console.AxisServer.startingPort"));
+        }
+        if (ApplicationOptions.getInstance().isEnableHttpServer()) {
+            startWebServer(ConsoleProperties.getInt("console.HttpServer.startingPort"));
+        }
     }
 
     public int getAxisServerPort() {

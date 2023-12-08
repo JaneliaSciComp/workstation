@@ -109,6 +109,38 @@ public class ApplicationOptions {
             propSupport.firePropertyChange(OptionConstants.USE_RUN_AS_USER_PREFERENCES, oldVal, value); 
     }
 
+    public boolean isEnableAxisServer() {
+        Boolean value = (Boolean) FrameworkAccess.getModelProperty(OptionConstants.ENABLE_AXIS_SERVER);
+        return value!=null && value;
+    }
+
+    public void setEnableAxisServer(boolean value) {
+        boolean oldVal = isEnableAxisServer();
+        if (oldVal == value) return;
+
+        FrameworkAccess.setModelProperty(OptionConstants.ENABLE_AXIS_SERVER, value);
+        log.info("Set Enable Axis Server = {}", value);
+
+        if (null != propSupport)
+            propSupport.firePropertyChange(OptionConstants.ENABLE_AXIS_SERVER, oldVal, value);
+    }
+
+    public boolean isEnableHttpServer() {
+        Boolean value = (Boolean) FrameworkAccess.getModelProperty(OptionConstants.ENABLE_HTTP_SERVER);
+        return value!=null && value;
+    }
+
+    public void setEnableHttpServer(boolean value) {
+        boolean oldVal = isEnableHttpServer();
+        if (oldVal == value) return;
+
+        FrameworkAccess.setModelProperty(OptionConstants.ENABLE_HTTP_SERVER, value);
+        log.info("Set Enable Http Server = {}", value);
+
+        if (null != propSupport)
+            propSupport.firePropertyChange(OptionConstants.ENABLE_HTTP_SERVER, oldVal, value);
+    }
+
     // TODO: move Horta properties to Horta module
     public boolean isUseHTTPForTileAccess() {
         Boolean value = FrameworkAccess.getModelProperty(OptionConstants.USE_HTTP_FOR_TILE_ACCESS, true);

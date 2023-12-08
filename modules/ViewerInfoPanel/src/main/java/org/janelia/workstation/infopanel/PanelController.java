@@ -65,8 +65,11 @@ public class PanelController {
         filteredAnnotationList.loadWorkspace(workspace);
         wsNeuronList.loadWorkspace(workspace);
         wsInfoPanel.loadWorkspace(workspace);
-        wsNeuronList.updateNeuronSpatialFilter(TmModelManager.getInstance().getCurrentWorkspace().isContainsFragments(),
-                TmModelManager.getInstance().getCurrentWorkspace().isContainsFragments()?"Enabled": "Disabled");
+        TmWorkspace currentWorkspace = TmModelManager.getInstance().getCurrentWorkspace();
+        if (currentWorkspace != null) {
+            wsNeuronList.updateNeuronSpatialFilter(currentWorkspace.isContainsFragments(),
+                    currentWorkspace.isContainsFragments() ? "Enabled" : "Disabled");
+        }
     }
 
     @Subscribe

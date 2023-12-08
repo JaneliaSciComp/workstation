@@ -183,6 +183,12 @@ public final class AccessManager {
         }
     }
 
+    public void logout() {
+        moveToLoggedOutState();
+        hadLoginIssue = true;
+        loginIssue = LoginErrorType.UserLogout;
+    }
+
     public boolean hadLoginIssue() {
         return hadLoginIssue;
     }
