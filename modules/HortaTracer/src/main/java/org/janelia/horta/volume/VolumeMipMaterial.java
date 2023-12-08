@@ -42,6 +42,7 @@ implements DepthSlabClipper
     private int tcToCameraIndex = -1;
     private int opaqueZNearFarIndex = -1;
     private int colorChannelIndex1 = -1;
+    private int channelVisibilityMaskIndex = -1;
     
     private float[] opaqueZNearFar = {1e-2f, 1e4f}; // absolute clip in camera space
     
@@ -199,6 +200,11 @@ implements DepthSlabClipper
                 Vector3 color = new Vector3(m.getColor().getRed()/255.0f, m.getColor().getGreen()/255.0f, m.getColor().getBlue()/255.0f);
                 gl.glUniform3fv(colorChannelIndex1, 1, color.toArray(), 0);
 
+                Vector3 channelVisibilityMask = new Vector3(colorMap.getChannel(0).isVisible() ? 1 : 0,
+                        colorMap.getChannel(1).isVisible() ? 1 : 0,
+                        1);
+                gl.glUniform3fv(channelVisibilityMaskIndex, 1, channelVisibilityMask.toArray(), 0);
+
                 for (int c = 0; c < 2; ++c) {
                     ChannelColorModel chan = colorMap.getChannel(c);
                     opMin[c] = chan.getNormalizedMinimum();
@@ -336,8 +342,8 @@ implements DepthSlabClipper
         projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
         tcToCameraIndex = gl.glGetUniformLocation(s, "tcToCamera");
         opaqueZNearFarIndex = gl.glGetUniformLocation(s, "opaqueZNearFar");
-
         colorChannelIndex1 = gl.glGetUniformLocation(s, "colorChannel1");
+        channelVisibilityMaskIndex = gl.glGetUniformLocation(s, "channelVisibilityMask");
 
         uniformIndicesAreDirty = false;
     }

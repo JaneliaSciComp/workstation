@@ -378,10 +378,10 @@ public final class NeuronTracerTopComponent extends TopComponent
 
         //metaWorksopace.notifyObservers();
         playback = new PlayReviewManager(sceneWindow, this, neuronTraceLoader);
+        initColorModel();
         if (TmModelManager.getInstance().getCurrentSample()==null)
             return;
         initSampleLocation();
-        initColorModel();
         if (TmModelManager.getInstance().getCurrentWorkspace()!=null) {
             initMeshes();
         }
@@ -1049,7 +1049,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                 final boolean[] haveSetBoundingBox = {false};
 
-                setOmeZarrSource(new OmeZarrBlockTileSource(null, getImageColorModel(), true).init(sourceName,
+                setOmeZarrSource(new OmeZarrBlockTileSource(null, getImageColorModel(), false).init(sourceName,
                         (source, update) -> SwingUtilities.invokeLater(() -> {
                             progress.setDisplayName(update);
 
