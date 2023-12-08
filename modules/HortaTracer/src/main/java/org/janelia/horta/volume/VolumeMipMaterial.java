@@ -5,15 +5,10 @@ import java.io.IOException;
 import javax.media.opengl.GL2ES2;
 import javax.media.opengl.GL3;
 import org.apache.commons.io.IOUtils;
+import org.janelia.geometry3d.*;
 import org.janelia.workstation.controller.model.color.ChannelColorModel;
 import org.janelia.workstation.controller.model.color.ImageColorModel;
-import org.janelia.geometry3d.AbstractCamera;
 // import org.janelia.geometry3d.ChannelBrightnessModel;
-import org.janelia.geometry3d.Matrix4;
-import org.janelia.geometry3d.PerspectiveCamera;
-import org.janelia.geometry3d.Vector4;
-import org.janelia.geometry3d.Viewport;
-import org.janelia.geometry3d.VolumeTextureMesh;
 import org.janelia.geometry3d.camera.BasicViewSlab;
 import org.janelia.geometry3d.camera.ConstViewSlab;
 import org.janelia.gltools.BasicShaderProgram;
@@ -46,6 +41,7 @@ implements DepthSlabClipper
     private int volumeMicrometersIndex = -1;
     private int tcToCameraIndex = -1;
     private int opaqueZNearFarIndex = -1;
+    private int colorChannelIndex1 = -1;
     
     private float[] opaqueZNearFar = {1e-2f, 1e4f}; // absolute clip in camera space
     
@@ -192,13 +188,17 @@ implements DepthSlabClipper
             // System.out.println("plane equation texCoord = "+nearSlabPlane_tc);
             gl.glUniform4fv(nearSlabPlaneIndex, 1, nearSlabPlane_tc.toArray(), 0);
             gl.glUniform4fv(farSlabPlaneIndex, 1, farSlabPlane_tc.toArray(), 0);
-            
+
             // Brightness/Contrast
             // float [] oc = new float[] {0, 0, 1};
             // TODO - make use of alpha channel, which gets set to "1.0" for images with less than 4 channels
             float [] opMin = new float[] {0, 0};
             float [] opMax = new float[] {1, 1};
             if (colorMap != null) {
+                ChannelColorModel m = colorMap.getChannel(0);
+                Vector3 color = new Vector3(m.getColor().getRed()/255.0f, m.getColor().getGreen()/255.0f, m.getColor().getBlue()/255.0f);
+                gl.glUniform3fv(colorChannelIndex1, 1, color.toArray(), 0);
+
                 for (int c = 0; c < 2; ++c) {
                     ChannelColorModel chan = colorMap.getChannel(c);
                     opMin[c] = chan.getNormalizedMinimum();
@@ -336,7 +336,9 @@ implements DepthSlabClipper
         projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
         tcToCameraIndex = gl.glGetUniformLocation(s, "tcToCamera");
         opaqueZNearFarIndex = gl.glGetUniformLocation(s, "opaqueZNearFar");
-        
+
+        colorChannelIndex1 = gl.glGetUniformLocation(s, "colorChannel1");
+
         uniformIndicesAreDirty = false;
     }
 
