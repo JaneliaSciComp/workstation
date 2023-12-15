@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Use this with a known sample, to create a tiled microscope workspace, and load it with SWC input.
- * 
+ *
  * @author fosterl
  */
 @ActionID(
@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
 })
 @NbBundle.Messages("CTL_LoadedWorkspaceCreator=Load Linux SWC Folder into New Workspace on Sample")
 public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
-    
+
     private static final Logger LOG = LoggerFactory.getLogger(LoadedWorkspaceCreator.class);
 
     private TmSample sample;
@@ -76,15 +76,17 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
 
         TmSample sample = this.sample;
 
-        JFrame mainFrame = FrameworkAccess.getMainFrame();
-
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
         String workspaceName = dialog.showForSample(sample);
-        if (workspaceName==null) {
+        if (workspaceName == null) {
             LOG.info("Aborting workspace creation: no valid name was provided by the user");
             return;
         }
+        loadSWCsIntoWorkspace(sample, workspaceName, false);
+    }
 
+    static public void loadSWCsIntoWorkspace(TmSample sample, String workspaceName, Boolean appendToExisting) {
+        JFrame mainFrame = FrameworkAccess.getMainFrame();
         final JDialog inputDialog = new JDialog(mainFrame, true);
         final JTextField pathTextField = new JTextField();
         final JCheckBox systemOwnerCheckbox = new JCheckBox();
@@ -163,7 +165,7 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
                     }
 
                     importSWC(sample.getId(), workspaceNameTextField.getText().trim(), swcFolder, neuronsOwnerKey,
-                            markAsFragments);
+                            markAsFragments, appendToExisting);
                 }
             }
         });
@@ -175,7 +177,8 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         inputDialog.setVisible(true);
     }
 
-    private void importSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner, Boolean markAsFragments) {
+    static private void importSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner,
+                                  Boolean markAsFragments, Boolean appendToExisting) {
         BackgroundWorker worker = new AsyncServiceMonitoringWorker() {
 
             private String taskDisplayName;
@@ -192,7 +195,7 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
 
                 setStatus("Submitting task " + taskDisplayName);
 
-                Long taskId = startImportSWC(sampleId, workspace, swcFolder, neuronsOwner, markAsFragments);
+                Long taskId = startImportSWC(sampleId, workspace, swcFolder, neuronsOwner, markAsFragments, appendToExisting);
 
                 setServiceId(taskId);
 
@@ -207,14 +210,15 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         worker.executeWithEvents();
     }
 
-    private Long startImportSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner,
-                                Boolean markAsFragments) {
+    static private Long startImportSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner,
+                                       Boolean markAsFragments, Boolean appendToExisting) {
         AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
         ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
                 .add("-sampleId", sampleId.toString());
         serviceArgsBuilder.add("-workspace", workspace);
         serviceArgsBuilder.add("-swcDirName", swcFolder);
         serviceArgsBuilder.add("-markAsFragments", markAsFragments.toString());
+        serviceArgsBuilder.add("-appendToExisting", appendToExisting.toString());
         if (StringUtils.isNotBlank(neuronsOwner)) {
             serviceArgsBuilder.add("-neuronsOwner", neuronsOwner);
         }

@@ -62,7 +62,7 @@ public class ImportSWCAction extends AbstractAction {
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(), "No workspace is open", "Cannot Import", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        
+
         // note: when it's time to add toggle and/or options, you can look into
         //  adding an accesory view to dialog; however, not clear that it will
         //  give enough flexibility compared to doing a custom dialog from the start
@@ -124,10 +124,10 @@ public class ImportSWCAction extends AbstractAction {
             // recursively walk the directory, collecting files from all subdirs
             Stream<Path> walker = Files.walk(selectedFile.toPath());
             List<File> swcFiles = walker.filter(Files::isRegularFile)
-                .filter(p -> p.toString().endsWith(NeuronManager.STD_SWC_EXTENSION))
-                .map(p -> p.toFile())
-                .distinct()
-                .collect(Collectors.toList());
+                    .filter(p -> p.toString().endsWith(NeuronManager.STD_SWC_EXTENSION))
+                    .map(p -> p.toFile())
+                    .distinct()
+                    .collect(Collectors.toList());
             rawFileList.addAll(swcFiles);
         } else {
             rawFileList.add(selectedFile);
@@ -140,7 +140,7 @@ public class ImportSWCAction extends AbstractAction {
 
                 rtnVal.addAll(neuronManager.breakOutByRoots(infile));
             }
-        } 
+        }
         else {
             rtnVal.addAll(rawFileList);
         }

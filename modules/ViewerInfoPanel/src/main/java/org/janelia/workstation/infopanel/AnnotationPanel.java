@@ -69,7 +69,7 @@ public class AnnotationPanel extends JPanel
             //viewStateListener.centerNextParent();
         }
     };
-    
+
     private JButton createWorkspaceButtonPlus;
     private WorkspaceSaveAsAction saveAsAction;
     private JCheckBoxMenuItem automaticTracingMenuItem;
@@ -79,6 +79,7 @@ public class AnnotationPanel extends JPanel
     private NeuronFilterAction neuronFilterAction;
     private ImportSWCAction importSWCAction;
     private ImportSWCAction importSWCActionMulti;
+    private ImportSWCFolderAction importSWCActionFolder;
 
     private AbstractAction showAllNeuronsAction;
     private AbstractAction hideAllNeuronsAction;
@@ -93,7 +94,7 @@ public class AnnotationPanel extends JPanel
     private JCheckBox openLVV;
     private JCheckBox openNeuronCam;
     PanelController panelController;
-    
+
 
     private JMenu sortSubmenu;
 
@@ -104,7 +105,7 @@ public class AnnotationPanel extends JPanel
 
         setupUI();
         panelController = new PanelController(this,
-                      filteredList, workspaceNeuronList, workspaceInfoPanel);
+                filteredList, workspaceNeuronList, workspaceInfoPanel);
 
     }
 
@@ -118,13 +119,13 @@ public class AnnotationPanel extends JPanel
         return annotationModel;
     }
 
-    
+
     public void loadWorkspace(TmWorkspace workspace) {
         if (workspace != null) {
             automaticRefinementMenuItem.setSelected(workspace.isAutoPointRefinement());
             automaticTracingMenuItem.setSelected(workspace.isAutoTracing());
         }
-    
+
         // Disable all change functionality if the user has no write access to the workspace
         boolean enabled = TmViewerManager.getInstance().editsAllowed() && workspace!=null;
 
@@ -256,7 +257,7 @@ public class AnnotationPanel extends JPanel
 
         // workspace tool pop-up menu (triggered by button, below)
         final JPopupMenu workspaceToolMenu = new JPopupMenu();
-        
+
         automaticRefinementMenuItem = new JCheckBoxMenuItem("Automatic point refinement");
         automaticRefinementMenuItem.setSelected(defaultAutomaticRefinement);
         automaticRefinementMenuItem.addItemListener(new ItemListener() {
@@ -307,6 +308,12 @@ public class AnnotationPanel extends JPanel
         importSWCActionMulti.putValue(Action.SHORT_DESCRIPTION,
                 "Import one or more SWC files into the workspace");
         workspaceToolMenu.add(new JMenuItem(importSWCActionMulti));
+
+        importSWCActionFolder = new ImportSWCFolderAction(true);
+        importSWCActionFolder.putValue(Action.NAME, "Import SWC Folder");
+        importSWCActionFolder.putValue(Action.SHORT_DESCRIPTION,
+                "Import SWC folder into the workspace asynchronously");
+        workspaceToolMenu.add(new JMenuItem(importSWCActionFolder));
 
         saveAsAction = new WorkspaceSaveAsAction();
         workspaceToolMenu.add(new JMenuItem(saveAsAction));
@@ -381,7 +388,7 @@ public class AnnotationPanel extends JPanel
 
         };
         neuronToolMenu.add(showAllNeuronsAction);
-        
+
         hideAllNeuronsAction = new AbstractAction("Hide neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -394,7 +401,7 @@ public class AnnotationPanel extends JPanel
             }
         };
         neuronToolMenu.add(hideAllNeuronsAction);
-        
+
         showOtherNeuronsAction = new AbstractAction("Show other neurons") {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -427,7 +434,7 @@ public class AnnotationPanel extends JPanel
 
         bulkChangeNeuronStyleAction = new BulkChangeNeuronColorAction(neuronManager, workspaceNeuronList);
         neuronToolMenu.add(bulkChangeNeuronStyleAction);
-        
+
         bulkNeuronTagAction = new BulkNeuronTagAction(neuronManager, workspaceNeuronList);
         neuronToolMenu.add(bulkNeuronTagAction);
 
@@ -457,14 +464,14 @@ public class AnnotationPanel extends JPanel
             public void actionPerformed(ActionEvent actionEvent) {
                 workspaceNeuronList.sortOrderChanged(WorkspaceNeuronList.NeuronSortOrder.ALPHABETICAL);
             }
-            });
+        });
         sortSubmenu.add(alphaSortButton);
         JRadioButtonMenuItem ownerSortButton = new JRadioButtonMenuItem(new AbstractAction("Alphabetical by owner") {
             @Override
             public void actionPerformed(ActionEvent actionEvent) {
                 workspaceNeuronList.sortOrderChanged(WorkspaceNeuronList.NeuronSortOrder.OWNER);
             }
-            });
+        });
         sortSubmenu.add(ownerSortButton);
         JRadioButtonMenuItem creationSortButton = new JRadioButtonMenuItem(new AbstractAction("Creation date") {
             @Override
