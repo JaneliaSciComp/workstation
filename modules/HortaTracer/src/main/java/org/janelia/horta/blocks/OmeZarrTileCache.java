@@ -8,9 +8,11 @@ import java.util.Map;
 
 public class OmeZarrTileCache  extends BasicTileCache<OmeZarrBlockTileKey, SortableBlockActor> {
     private OmeZarrBlockTileSource source;
+    private int colorChannel;
 
-    public OmeZarrTileCache(OmeZarrBlockTileSource source) {
+    public OmeZarrTileCache(OmeZarrBlockTileSource source, int colorChannel) {
         this.source = source;
+        this.colorChannel = colorChannel;
     }
 
     public void setSource(OmeZarrBlockTileSource source) {
@@ -20,7 +22,7 @@ public class OmeZarrTileCache  extends BasicTileCache<OmeZarrBlockTileKey, Sorta
     @Override
     LoadRunner<OmeZarrBlockTileKey, SortableBlockActor> getLoadRunner() {
         return key -> {
-            final OmeZarrBlockLoadRunner loader = new OmeZarrBlockLoadRunner(source, key);
+            final OmeZarrBlockLoadRunner loader = new OmeZarrBlockLoadRunner(source, key, colorChannel);
             loader.run();
             return loader.blockActor;
         };

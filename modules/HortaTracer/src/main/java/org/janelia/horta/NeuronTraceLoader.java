@@ -204,39 +204,27 @@ public class NeuronTraceLoader {
         if (omeZarrSource == null) {
             return;
         }
-        OmeZarrBlockTileKey centerKey = omeZarrSource.getBlockKeyAt(location, omeZarrSource.getMaximumResolution());
-        if (centerKey == null) {
-            return;
+
+        OmeZarrVolumeActor parentActor = OmeZarrVolumeActor.getInstance();
+
+        if (!neuronMPRenderer.containsVolumeActor(parentActor)) { // just add singleton actor once...
+            parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
+            neuronMPRenderer.addVolumeActor(parentActor);
         }
 
         if (loadPersistent) {
-            final OmeZarrBlockLoadRunner loader = new OmeZarrBlockLoadRunner(omeZarrSource, centerKey);
-            loader.addObserver(new Observer() {
-                @Override
-                public void update(Observable o, Object arg) {
-                    if (loader.state != OmeZarrBlockLoadRunner.State.LOADED) {
-                        return;
-                    }
-                    OmeZarrVolumeActor parentActor = OmeZarrVolumeActor.getInstance();
-                    parentActor.addPersistentBlock(loader.blockActor);
-                    parentActor.addPersistentBlock(loader.blockActor);
-                    if (!neuronMPRenderer.containsVolumeActor(parentActor)) { // just add singleton actor once...
-                        parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
-                        neuronMPRenderer.addVolumeActor(parentActor);
-                    }
-                    neuronMPRenderer.setIntensityBufferDirty();
-                    nttc.redrawNow();
-                }
-            });
-            loader.run();
+            parentActor.refreshBlocks(location);
         } else {
-            OmeZarrVolumeActor parentActor = OmeZarrVolumeActor.getInstance();
-            if (!neuronMPRenderer.containsVolumeActor(parentActor)) { // just add singleton actor once...
-                parentActor.setBrightnessModel(neuronMPRenderer.getBrightnessModel());
-                neuronMPRenderer.addVolumeActor(parentActor);
+            OmeZarrBlockTileKey centerKey = omeZarrSource.getBlockKeyAt(location, omeZarrSource.getMaximumResolution());
+            if (centerKey == null) {
+                return;
             }
+
             parentActor.addTransientBlock(centerKey);
         }
+
+        neuronMPRenderer.setIntensityBufferDirty();
+        nttc.redrawNow();
     }
 
     void loadPersistentKtxTileAtCurrentFocus(KtxOctreeBlockTileSource ktxSource)

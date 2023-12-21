@@ -101,7 +101,7 @@ public class OmeZarrVolumeMeshActor extends MeshActor implements SortableBlockAc
 
     private static class MeshMaterial extends VolumeMipMaterial {
         private MeshMaterial(OmeZarrBlockTileSource source, OmeZarrBlockTileKey tile, ImageColorModel imageColorModel, VolumeState volumeState, int colorChannel) throws IOException {
-            super(safeLoadData(source, tile, colorChannel), imageColorModel);
+            super(safeLoadData(source, tile, colorChannel), imageColorModel, colorChannel);
             setVolumeState(volumeState);
         }
 

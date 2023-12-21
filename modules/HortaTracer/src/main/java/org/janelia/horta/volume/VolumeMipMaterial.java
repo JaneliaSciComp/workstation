@@ -41,16 +41,16 @@ implements DepthSlabClipper
     private int volumeMicrometersIndex = -1;
     private int tcToCameraIndex = -1;
     private int opaqueZNearFarIndex = -1;
+
+    private int filteringOrderIndex = -1;
     private int colorChannelIndex1 = -1;
     private int channelVisibilityMaskIndex = -1;
+
+    private int colorChannelId;
     
     private float[] opaqueZNearFar = {1e-2f, 1e4f}; // absolute clip in camera space
     
     private final ImageColorModel colorMap;
-    
-    private int filteringOrderIndex = -1;
-    
-    // private int projectionModeIndex = -1;
     
     protected final ShaderProgram mipShader = new VolumeMipShader(0);
     protected final ShaderProgram occShader = new VolumeMipShader(1);
@@ -67,8 +67,12 @@ implements DepthSlabClipper
     // Relative clip in camera space
     private float relativeZNear = 0.92f;
     private float relativeZFar = 1.08f;
-    
-    public VolumeMipMaterial(Texture3d volumeTexture, ImageColorModel colorMap) 
+
+    public VolumeMipMaterial(Texture3d volumeTexture, ImageColorModel colorMap) {
+        this(volumeTexture, colorMap, 0);
+    }
+
+    public VolumeMipMaterial(Texture3d volumeTexture, ImageColorModel colorMap, int colorChannelId)
     {
         this.colorMap = colorMap;
         this.volumeTexture = volumeTexture;
@@ -76,6 +80,7 @@ implements DepthSlabClipper
         // this.volumeTexture.setMinFilter(GL3.GL_NEAREST_MIPMAP_NEAREST);
         this.volumeTexture.setMinFilter(GL3.GL_LINEAR_MIPMAP_NEAREST);
         this.volumeTexture.setMagFilter(GL3.GL_LINEAR);
+        this.colorChannelId = colorChannelId;
 
         shaderProgram = mipShader;
         
@@ -196,19 +201,18 @@ implements DepthSlabClipper
             float [] opMin = new float[] {0, 0};
             float [] opMax = new float[] {1, 1};
             if (colorMap != null) {
-                ChannelColorModel m = colorMap.getChannel(0);
-                Vector3 color = new Vector3(m.getColor().getRed()/255.0f, m.getColor().getGreen()/255.0f, m.getColor().getBlue()/255.0f);
-                gl.glUniform3fv(colorChannelIndex1, 1, color.toArray(), 0);
+                int channelIdx = Math.min(colorChannelId, colorMap.getChannelCount() - 1);
 
-                Vector3 channelVisibilityMask = new Vector3(colorMap.getChannel(0).isVisible() ? 1 : 0,
-                        colorMap.getChannel(1).isVisible() ? 1 : 0,
-                        1);
-                gl.glUniform3fv(channelVisibilityMaskIndex, 1, channelVisibilityMask.toArray(), 0);
+                ChannelColorModel m = colorMap.getChannel(channelIdx);
+
+                Vector3 color = new Vector3(m.getColor().getRed()/255.0f, m.getColor().getGreen()/255.0f, m.getColor().getBlue()/255.0f);
+
+                gl.glUniform3fv(colorChannelIndex1, 1, color.toArray(), 0);
+                gl.glUniform1i(channelVisibilityMaskIndex, m.isVisible() ? 1 : 0);
 
                 for (int c = 0; c < 2; ++c) {
-                    ChannelColorModel chan = colorMap.getChannel(c);
-                    opMin[c] = chan.getNormalizedMinimum();
-                    opMax[c] = chan.getNormalizedMaximum();
+                    opMin[c] = m.getNormalizedMinimum();
+                    opMax[c] = m.getNormalizedMaximum();
                 }
             }
             gl.glUniform2fv(opacityFunctionMinIndex, 1, opMin, 0);
@@ -342,7 +346,7 @@ implements DepthSlabClipper
         projectionIndex = gl.glGetUniformLocation(s, "projectionMatrix");
         tcToCameraIndex = gl.glGetUniformLocation(s, "tcToCamera");
         opaqueZNearFarIndex = gl.glGetUniformLocation(s, "opaqueZNearFar");
-        colorChannelIndex1 = gl.glGetUniformLocation(s, "colorChannel1");
+        colorChannelIndex1 = gl.glGetUniformLocation(s, "colorChannel");
         channelVisibilityMaskIndex = gl.glGetUniformLocation(s, "channelVisibilityMask");
 
         uniformIndicesAreDirty = false;

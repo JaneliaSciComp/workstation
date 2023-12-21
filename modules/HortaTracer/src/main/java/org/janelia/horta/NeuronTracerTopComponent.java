@@ -335,12 +335,9 @@ public final class NeuronTracerTopComponent extends TopComponent
         });
 
         OmeZarrVolumeActor.getInstance().setVolumeState(volumeState);
-        OmeZarrVolumeActor.getInstance().getDynamicTileUpdateObservable().addObserver(new Observer() {
-            @Override
-            public void update(Observable o, Object arg) {
-                getNeuronMPRenderer().setIntensityBufferDirty();
-                redrawNow();
-            }
+        OmeZarrVolumeActor.getInstance().addDynamicTileUpdateObservable((o, arg) -> {
+            getNeuronMPRenderer().setIntensityBufferDirty();
+            redrawNow();
         });
 
         neuronMPRenderer = setUpActors();
@@ -1049,7 +1046,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                 final boolean[] haveSetBoundingBox = {false};
 
-                setOmeZarrSource(new OmeZarrBlockTileSource(null, getImageColorModel(), false).init(sourceName,
+                setOmeZarrSource(new OmeZarrBlockTileSource(null, getImageColorModel()).init(sourceName,
                         (source, update) -> SwingUtilities.invokeLater(() -> {
                             progress.setDisplayName(update);
 

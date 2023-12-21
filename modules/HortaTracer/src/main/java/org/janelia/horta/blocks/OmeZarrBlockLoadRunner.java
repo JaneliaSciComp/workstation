@@ -21,14 +21,16 @@ public class OmeZarrBlockLoadRunner extends ComposableObservable implements Runn
 
     private final OmeZarrBlockTileSource omeZarrBlockTileSource;
     private final OmeZarrBlockTileKey omeZarrOctreeBlockTileKey;
+    private final int colorChannel;
 
     public OmeZarrBlockLoadRunner.State state = OmeZarrBlockLoadRunner.State.INITIAL;
 
     public OmeZarrVolumeMeshActor blockActor;
 
-    public OmeZarrBlockLoadRunner(OmeZarrBlockTileSource source, OmeZarrBlockTileKey key) {
+    public OmeZarrBlockLoadRunner(OmeZarrBlockTileSource source, OmeZarrBlockTileKey key, int colorChannel) {
         this.omeZarrBlockTileSource = source;
         this.omeZarrOctreeBlockTileKey = key;
+        this.colorChannel = colorChannel;
     }
 
     @Override
@@ -42,7 +44,7 @@ public class OmeZarrBlockLoadRunner extends ComposableObservable implements Runn
         try {
             state = OmeZarrBlockLoadRunner.State.LOADING;
             OmeZarrVolumeActor parentActor = OmeZarrVolumeActor.getInstance();
-            blockActor = new OmeZarrVolumeMeshActor(omeZarrBlockTileSource, omeZarrOctreeBlockTileKey, parentActor.getVolumeState(), 0);
+            blockActor = new OmeZarrVolumeMeshActor(omeZarrBlockTileSource, omeZarrOctreeBlockTileKey, parentActor.getVolumeState(), colorChannel);
             state = OmeZarrBlockLoadRunner.State.LOADED;
             setChanged();
             long endTime = System.currentTimeMillis();
