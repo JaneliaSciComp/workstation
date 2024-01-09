@@ -33,8 +33,8 @@ public class OmeZarrVolumeActor extends BasicGL3Actor implements DepthSlabClippe
     }
 
     private Texture2d opaqueDepthTexture = null;
-    private float zNearRelative = 0.50f;
-    private float zFarRelative = 150.0f; // relative z clip planes
+    private float zNearRelative = 0.10f;
+    private float zFarRelative = 100.0f; // relative z clip planes
     private ImageColorModel brightnessModel;
 
     private VolumeMipMaterial.VolumeState volumeState = new VolumeMipMaterial.VolumeState();
@@ -313,10 +313,6 @@ public class OmeZarrVolumeActor extends BasicGL3Actor implements DepthSlabClippe
 
     @Override
     public void setRelativeSlabThickness(float zNear, float zFar) {
-        if (zNear > 0.5 || zFar < 150) {
-            return;
-        }
-
         zNearRelative = zNear;
         zFarRelative = zFar;
 
