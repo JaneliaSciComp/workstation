@@ -199,8 +199,6 @@ public class ViewLoader {
                     if (!haveFirstDataset[0] && !source.getResolutions().isEmpty()) {
                         haveFirstDataset[0] = true;
                         try {
-                            OmeZarrVolumeActor.getInstance().setRelativeSlabThickness(0.5f, 150.0f);
-
                             if (nttc.doesUpdateVolumeCache()) {
                                 loader.loadTransientOmeZarrTileAtCurrentFocus(nttc.getOmeZarrSource());
                             } else {

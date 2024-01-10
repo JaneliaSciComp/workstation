@@ -1072,8 +1072,6 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 v.setSceneUnitsPerViewportHeight((float) 15000);
                                 v.setDefaultSceneUnitsPerViewportHeight((float) 15000);
 
-                                OmeZarrVolumeActor.getInstance().setRelativeSlabThickness(0.5f, 150.0f);
-
                                 neuronTraceLoader.animateToFocusXyz(focusVector3, pCam.getVantage(), 150);
 
                                 Vector3 focus = sceneWindow.getCamera().getVantage().getFocusPosition();
