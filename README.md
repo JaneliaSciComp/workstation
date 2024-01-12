@@ -1,6 +1,6 @@
 # Janelia Workstation
 
-[![CircleCI](https://circleci.com/gh/JaneliaSciComp/workstation.svg?style=svg)](https://circleci.com/gh/JaneliaSciComp/workstation)
+[![Java CI with Maven](https://github.com/JaneliaSciComp/workstation/actions/workflows/maven.yml/badge.svg)](https://github.com/JaneliaSciComp/workstation/actions/workflows/maven.yml)
 
 The Janelia Workstation is a neuroscience discovery platform for processing, analysis, annotation, and sharing of large-scale 3D microscopy data. 
 
