@@ -43,12 +43,28 @@ public class BoundingBoxSpatialFilter implements NeuronSpatialFilter {
         }
 
         boxes = new HashMap<>();
+        int badfrags = 0;
         for (BoundingBox3d boundingBox: boundingBoxes) {
             count++;
-            index.addToIndex(boundingBox);
+            if (checkBoundingBox(boundingBox)) {
+                index.addToIndex(boundingBox);
+            } else {
+                badfrags++;
+            }
             boxes.put(boundingBox.getDomainId(), boundingBox);
         }
-        log.info("Finished building spatial filter");
+        log.info("Finished building spatial filter with bad frags count {0}",badfrags);
+    }
+
+    private boolean checkBoundingBox (BoundingBox3d box) {
+        double[] mins = new double[]{box.getMinX(), box.getMinY(), box.getMinZ()};
+        double[] maxs = new double[]{box.getMaxX(), box.getMaxY(), box.getMaxZ()};
+        if (mins.length!=maxs.length)
+            return false;
+        if (mins[0]>maxs[0] || mins[1]>maxs[1] || mins[2]>maxs[2]) {
+            return false;
+        }
+        return true;
     }
 
     @Override
