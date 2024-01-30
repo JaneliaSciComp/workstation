@@ -84,6 +84,11 @@ public class NoteExporter {
                 ArrayNode notesNode = mapper.createArrayNode();
                 for (Long annID: neuron.getStructuredTextAnnotationMap().keySet()) {
                     TmGeoAnnotation ann = neuron.getGeoAnnotationMap().get(annID);
+                    if (ann == null) {
+                        // occasionally an annotation doesn't get deleted when its annotation does;
+                        //  ignore them
+                        continue;
+                    }
                     TmStructuredTextAnnotation textAnnotation = neuron.getStructuredTextAnnotationMap().get(annID);
                     JsonNode jsonNode = textAnnotation.getData().path("note");
                     if (!jsonNode.isMissingNode()) {
