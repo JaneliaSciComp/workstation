@@ -1,5 +1,7 @@
-// 9.17
+// 9.18.3
 
-FlyLight
-* Alphabetical ordering for Fly Line Releases in the Data Explorer and the dialog in the Services menu
-* Allow sorting of Fly Line Releases in the dialog, by owner, name, or target website
+Horta
+* Added support for SWC import folder for existing fragment workspaces
+* Fixed issue with Merge->Undo
+* Fixed issue with bad SWC fragments causing bulk SWC imports to fail
+* Fixed issue with clipping planes

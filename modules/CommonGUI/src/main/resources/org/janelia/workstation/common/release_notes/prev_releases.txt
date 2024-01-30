@@ -1,3 +1,9 @@
+// 9.17
+
+FlyLight
+* Alphabetical ordering for Fly Line Releases in the Data Explorer and the dialog in the Services menu
+* Allow sorting of Fly Line Releases in the dialog, by owner, name, or target website
+
 // 9.16
 
 Horta
