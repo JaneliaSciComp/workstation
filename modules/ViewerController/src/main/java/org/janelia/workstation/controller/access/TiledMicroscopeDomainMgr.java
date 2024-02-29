@@ -9,6 +9,7 @@ import org.janelia.model.domain.Reference;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.model.domain.workspace.TreeNode;
+import org.janelia.model.security.Subject;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.DomainModel;
@@ -151,6 +152,12 @@ public class TiledMicroscopeDomainMgr {
     public Collection<BoundingBox3d> getWorkspaceBoundingBoxes(Long workspaceId) throws Exception {
         LOG.debug("getWorkspaceBoundingBoxes(workspaceId={})",workspaceId);
         return client.getWorkspaceBoundingBoxes(workspaceId);
+    }
+
+    public void createOperationLog (Long sampleId, Long workspaceId,  Long neuronId, TmOperation.Activity activity,
+                                    String timestamp, Long elapsedTime, String subjectKey) {
+        LOG.debug("createOperationLog(activity={}, timestamp={}, elapsedTime={})",activity, timestamp, elapsedTime);
+        client.createOperationLog(sampleId, workspaceId, neuronId, activity, timestamp, elapsedTime, subjectKey);
     }
 
     public TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {

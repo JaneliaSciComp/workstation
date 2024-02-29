@@ -17,9 +17,11 @@ import org.janelia.workstation.controller.access.TiledMicroscopeDomainMgr;
 import org.janelia.workstation.controller.model.TmReviewState;
 import org.janelia.workstation.controller.model.TmViewState;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
+import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.ClientDomainUtils;
+import org.janelia.workstation.core.options.OptionConstants;
 import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -30,7 +32,7 @@ public class TmViewerManager implements GlobalViewerController {
     private final Logger log = LoggerFactory.getLogger(TmViewerManager.class);
     private static final TmViewerManager instance = new TmViewerManager();
     private TmModelManager modelManager = TmModelManager.getInstance();
-    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+    private String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     private TiledMicroscopeDomainMgr tmDomainMgr;
     private NeuronManager neuronManager;
@@ -38,6 +40,8 @@ public class TmViewerManager implements GlobalViewerController {
     private DomainObject currProject;
     private int NUMBER_FRAGMENTS_THRESHOLD = 100;
     private boolean isTempOwnershipAdmin = false;
+    private boolean areOperationsLogged = false;
+
 
     public enum ToolSet {
         NEURON
@@ -51,6 +55,22 @@ public class TmViewerManager implements GlobalViewerController {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
         setNeuronManager(NeuronManager.getInstance());
         ViewerEventBus.registerForEvents(this);
+    }
+
+    public void logOperation (TmOperation.Activity activity, Date timestamp, Long elapsedTime) {
+        if (!ApplicationPanel.isOperationsLogged()) {
+            return;
+        }
+        String timestampDate = null;
+        if (timestamp!=null) {
+            timestampDate = timestamp.toString();
+        }
+        Long workspaceId = null, sampleId = null;
+        if (modelManager.getCurrentWorkspace()!=null)
+            workspaceId = modelManager.getCurrentWorkspace().getId();
+        tmDomainMgr.createOperationLog(modelManager.getCurrentSample().getId(),
+                workspaceId, null,
+                activity, timestampDate, elapsedTime, AccessManager.getSubjectKey());
     }
 
     @Subscribe
@@ -125,6 +145,10 @@ public class TmViewerManager implements GlobalViewerController {
         if (currProject instanceof TmWorkspace) {
             log.info("loading workspace {} (ID {})", currProject.getName(), currProject.getId());
             TmModelManager.getInstance().setCurrentWorkspace((TmWorkspace)currProject);
+            if (((TmWorkspace)currProject).getTracingGroup()!=null) {
+                TRACERS_GROUP = ((TmWorkspace)currProject).getTracingGroup();
+            }
+
             projectInit.loadAnnotationData((TmWorkspace)currProject);
         } else {
             log.info("loading sample {} (ID {})", currProject.getName(), currProject.getId());
@@ -245,6 +269,8 @@ public class TmViewerManager implements GlobalViewerController {
 
         TmModelManager.getInstance().setCurrentReviews(new TmReviewState());
         String systemNeuron = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+        if (workspace.getTracingGroup()!=null)
+            systemNeuron = workspace.getTracingGroup();
         TmModelManager.getInstance().getSpatialIndexManager().initialize();
         int nFragments = 0;
         for (TmNeuronMetadata neuron : modelManager.getNeuronModel().getNeurons()) {

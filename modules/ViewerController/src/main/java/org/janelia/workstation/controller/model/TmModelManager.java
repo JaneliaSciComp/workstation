@@ -4,6 +4,7 @@ import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.security.Subject;
 import org.janelia.model.util.MatrixUtilities;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.SpatialIndexManager;
@@ -61,7 +62,6 @@ public class TmModelManager {
     public static TmModelManager getInstance() {
         return instance;
     }
-    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     private TmModelManager() {
         this.tmDomainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
@@ -264,7 +264,13 @@ public class TmModelManager {
     public static boolean checkOwnership(TmNeuronMetadata neuron)  {
         if (neuron.getOwnerKey().equals(AccessManager.getSubjectKey()))
             return true;
-        if (neuron.getOwnerKey().equals(ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim())) {
+
+        String systemSubjectKey = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+        if (TmModelManager.getInstance().getCurrentWorkspace()!=null) {
+            TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
+            systemSubjectKey = workspace.getTracingGroup();
+        }
+        if (neuron.getOwnerKey().equals(systemSubjectKey)) {
             try {
                 NeuronManager.getInstance().changeNeuronOwner(Arrays.asList(new TmNeuronMetadata[]{neuron}),
                         AccessManager.getAccessManager().getActualSubject());

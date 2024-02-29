@@ -1,7 +1,5 @@
-// 9.18.3
+// 9.18.5
 
 Horta
-* Added support for SWC import folder for existing fragment workspaces
-* Fixed issue with Merge->Undo
-* Fixed issue with bad SWC fragments causing bulk SWC imports to fail
-* Fixed issue with clipping planes
+* Added tile loading logging code
+* Added customizable System group by workspace for fragments

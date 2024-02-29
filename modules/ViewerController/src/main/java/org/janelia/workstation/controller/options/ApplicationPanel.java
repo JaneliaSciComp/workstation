@@ -25,6 +25,8 @@ public class ApplicationPanel extends JPanel {
     public static final String PREFERENCE_USE_NEURON_QUEUE_DEFAULT = "true";
     public static final String PREFERENCE_ANCHORS_IN_VIEWPORT = "AnchorsInViewport";
     public static final String PREFERENCE_ANCHORS_IN_VIEWPORT_DEFAULT = "true";
+    public static final String PREFERENCE_LOG_OPERATIONS = "LogOperations";
+    public static final String PREFERENCE_LOG_OPERATIONS_DEFAULT = "false";
     public static final String PREFERENCE_Z_THICKNESS = "ZThickness";
     public static final String PREFERENCE_Z_THICKNESS_DEFAULT = "80";
     public static final String PREFERENCE_ANNOTATIONS_CLICK_MODE = "AnnotationClickMode";
@@ -37,6 +39,7 @@ public class ApplicationPanel extends JPanel {
     private final ApplicationOptionsPanelController controller;
     private JCheckBox showHortaControlCenterOnStartup;
     private JCheckBox useHTTPForTileAccess;
+    private JCheckBox logOperations;
     private JCheckBox loadLastCheckbox;
     private JCheckBox showColorSlidersOnOpen;
     private JCheckBox disableSharedWorkspace;
@@ -67,6 +70,13 @@ public class ApplicationPanel extends JPanel {
         titleLabel0.setLabelFor(useHTTPForTileAccess);
         attrPanel.add(titleLabel0,"gap para");
         attrPanel.add(useHTTPForTileAccess,"gap para");
+
+        logOperations = new JCheckBox();
+        logOperations.addActionListener(e -> controller.changed());
+        JLabel operationLabel1 = new JLabel("Log activity in the database");
+        operationLabel1.setLabelFor(logOperations);
+        attrPanel.add(operationLabel1,"gap para");
+        attrPanel.add(logOperations,"gap para");
 
         this.loadLastCheckbox = new JCheckBox();
         loadLastCheckbox.addChangeListener(e -> controller.changed());
@@ -168,6 +178,7 @@ public class ApplicationPanel extends JPanel {
         ApplicationOptions options = ApplicationOptions.getInstance();
         showHortaControlCenterOnStartup.setSelected(options.isShowHortaOnStartup());
         useHTTPForTileAccess.setSelected(options.isUseHTTPForTileAccess());
+        logOperations.setSelected(options.isOperationsLogged());
         loadLastCheckbox.setSelected(isLoadLastObject());
         disableSharedWorkspace.setSelected(isDisableSharedWorkspace());
         showColorSlidersOnOpen.setSelected(isLoadColorSliders());
@@ -184,6 +195,7 @@ public class ApplicationPanel extends JPanel {
         ApplicationOptions options = ApplicationOptions.getInstance();
         options.setShowHortaControlCenterOnStartup(showHortaControlCenterOnStartup.isSelected());
         options.setUseHTTPForTileAccess(useHTTPForTileAccess.isSelected());
+        options.setOperationsLogged(logOperations.isSelected());
 
         FrameworkAccess.setLocalPreferenceValue(
                 ApplicationPanel.class,
@@ -194,6 +206,11 @@ public class ApplicationPanel extends JPanel {
                 ApplicationPanel.class,
                 PREFERENCE_LOAD_COLOR_SLIDERS,
                 showColorSlidersOnOpen.isSelected()+"");
+
+        FrameworkAccess.setLocalPreferenceValue(
+                ApplicationPanel.class,
+                PREFERENCE_LOG_OPERATIONS,
+                logOperations.isSelected()+"");
 
         FrameworkAccess.setLocalPreferenceValue(
                 ApplicationPanel.class,
@@ -318,6 +335,14 @@ public class ApplicationPanel extends JPanel {
                 ApplicationPanel.PREFERENCE_DRAG_TO_MERGE_2D,
                 ApplicationPanel.PREFERENCE_DRAG_TO_MERGE_2D_DEFAULT);
         return Boolean.parseBoolean(dragStr);
+    }
+
+    public static boolean isOperationsLogged() {
+        String opLogs = FrameworkAccess.getLocalPreferenceValue(
+                ApplicationPanel.class,
+                ApplicationPanel.PREFERENCE_LOG_OPERATIONS,
+                ApplicationPanel.PREFERENCE_LOG_OPERATIONS_DEFAULT);
+        return Boolean.parseBoolean(opLogs);
     }
 
     public static int getZThickness() {

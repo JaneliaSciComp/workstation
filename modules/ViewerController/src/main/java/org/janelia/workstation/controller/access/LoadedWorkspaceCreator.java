@@ -78,14 +78,15 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
 
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
         String workspaceName = dialog.showForSample(sample);
+        String assignOwner = dialog.getAssignOwner();
         if (workspaceName == null) {
             LOG.info("Aborting workspace creation: no valid name was provided by the user");
             return;
         }
-        loadSWCsIntoWorkspace(sample, workspaceName, false);
+        loadSWCsIntoWorkspace(sample, workspaceName, assignOwner, false);
     }
 
-    static public void loadSWCsIntoWorkspace(TmSample sample, String workspaceName, Boolean appendToExisting) {
+    static public void loadSWCsIntoWorkspace(TmSample sample, String workspaceName, String systemOwnerKey, Boolean appendToExisting) {
         JFrame mainFrame = FrameworkAccess.getMainFrame();
         final JDialog inputDialog = new JDialog(mainFrame, true);
         final JTextField pathTextField = new JTextField();
@@ -107,8 +108,6 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         inputDialog.add(workspaceNameTextField);
         inputDialog.add(new JLabel("Enter full path to input folder"));
         inputDialog.add(pathTextField);
-        inputDialog.add(new JLabel("Assign all neurons to mouselight"));
-        inputDialog.add(systemOwnerCheckbox);
         inputDialog.add(new JLabel("Mark all neurons as fragments"));
         inputDialog.add(markAsFragmentsCheckbox);
         JPanel buttonPanel = new JPanel();
@@ -153,8 +152,8 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
                     Boolean markAsFragments;
                     inputDialog.setVisible(false);
                     String neuronsOwnerKey;
-                    if (systemOwnerCheckbox.isSelected()) {
-                        neuronsOwnerKey = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+                    if (systemOwnerKey!=null) {
+                        neuronsOwnerKey = systemOwnerKey;
                     } else {
                         neuronsOwnerKey = null;
                     }

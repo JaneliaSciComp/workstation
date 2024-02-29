@@ -10,6 +10,8 @@ import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.actors.TetVolumeMeshActor;
 import org.janelia.horta.ktx.KtxData;
 import org.janelia.horta.loader.DataSource;
+import org.janelia.model.domain.tiledMicroscope.TmOperation;
+import org.janelia.workstation.controller.TmViewerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +56,8 @@ public class KtxBlockLoadRunner
         try (InputStream blockStream = ktxBlockTileSource.streamKeyBlock(ktxOctreeBlockTileKey).get()) {
             loadStream(blockStream, ktxData -> {
                 long endTime = System.currentTimeMillis();
+                TmViewerManager.getInstance().logOperation(TmOperation.Activity.LOAD_KTX_TILE,
+                        null, endTime-startTime);
                 LOG.info("Loading ktx tile {} from {} took {} ms", ktxOctreeBlockTileKey, sourceURI, endTime-startTime);
             });
         } catch (IllegalStateException ex) {

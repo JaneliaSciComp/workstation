@@ -3,6 +3,8 @@ package org.janelia.horta.blocks;
 import org.janelia.geometry3d.ComposableObservable;
 import org.janelia.horta.actors.OmeZarrVolumeActor;
 import org.janelia.horta.actors.OmeZarrVolumeMeshActor;
+import org.janelia.model.domain.tiledMicroscope.TmOperation;
+import org.janelia.workstation.controller.TmViewerManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,6 +49,8 @@ public class OmeZarrBlockLoadRunner extends ComposableObservable implements Runn
             setChanged();
             long endTime = System.currentTimeMillis();
             LOG.info("Loading Ome-Zarr tile {} took {} ms", omeZarrOctreeBlockTileKey.getRelativePath(), endTime - startTime);
+            TmViewerManager.getInstance().logOperation(TmOperation.Activity.LOAD_ZARR_TILE,
+                    null, endTime-startTime);
             // notify listeners
             notifyObservers();
         } catch (IllegalStateException ex) {

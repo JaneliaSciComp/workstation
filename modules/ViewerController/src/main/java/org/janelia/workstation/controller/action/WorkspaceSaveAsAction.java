@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.security.Subject;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.dialog.EditWorkspaceNameDialog;
@@ -39,7 +40,7 @@ public class WorkspaceSaveAsAction extends AbstractAction {
         TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
         EditWorkspaceNameDialog dialog = new EditWorkspaceNameDialog();
         final String workspaceName = dialog.showForSample(TmModelManager.getInstance().getCurrentSample());
-        final String assignOwner = dialog.getAssignOwner();
+        String assignOwner = dialog.getAssignOwner();
 
         if (workspaceName==null) {
             log.info("Aborting workspace creation: no valid name was provided by the user");

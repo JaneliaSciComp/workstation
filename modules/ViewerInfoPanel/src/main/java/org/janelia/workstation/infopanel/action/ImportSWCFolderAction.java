@@ -58,7 +58,12 @@ public class ImportSWCFolderAction extends AbstractAction {
         TmWorkspace workspace = TmModelManager.getInstance().getCurrentWorkspace();
         TmSample sample = TmModelManager.getInstance().getCurrentSample();
 
-        LoadedWorkspaceCreator.loadSWCsIntoWorkspace(sample, workspace.getName(), true);
+        String tracingGroup = null;
+        if (workspace.getTracingGroup()!=null)
+            tracingGroup = workspace.getTracingGroup();
+        LoadedWorkspaceCreator.loadSWCsIntoWorkspace(sample, workspace.getName(),
+                tracingGroup,
+                true);
 
     }
 }

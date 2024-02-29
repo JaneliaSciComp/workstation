@@ -24,6 +24,7 @@ public class OptionConstants {
     public static final String ENABLE_AXIS_SERVER = "enableAxisServer";
     public static final String ENABLE_HTTP_SERVER = "enableHttpServer";
     public static final String USE_HTTP_FOR_TILE_ACCESS = "useHTTPForTileAccess";
+    public static final String OPERATIONS_LOGGED = "logOperations";
     public static final String SHOW_HORTA_CONTROL_CENTER_STARTUP = "showHortaControlCenterStartup";
     public static final String FILE_CACHE_DISABLED_PROPERTY = "console.localCache.disabled";
     public static final String FILE_CACHE_GIGABYTE_CAPACITY_PROPERTY = "console.localCache.gigabyteCapacity";

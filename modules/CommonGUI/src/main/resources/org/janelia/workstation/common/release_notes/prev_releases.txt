@@ -1,3 +1,11 @@
+// 9.18.3
+
+Horta
+* Added support for SWC import folder for existing fragment workspaces
+* Fixed issue with Merge->Undo
+* Fixed issue with bad SWC fragments causing bulk SWC imports to fail
+* Fixed issue with clipping planes
+
 // 9.17
 
 FlyLight

@@ -147,10 +147,28 @@ public class ApplicationOptions {
         return value!=null && value;
     }
 
+    public boolean isOperationsLogged() {
+        Boolean value = FrameworkAccess.getModelProperty(OptionConstants.OPERATIONS_LOGGED, false);
+        return value!=null && value;
+    }
+
     // TODO: move Horta properties to Horta module
     public boolean isShowHortaOnStartup() {
         Boolean value = FrameworkAccess.getModelProperty(OptionConstants.SHOW_HORTA_CONTROL_CENTER_STARTUP, false);
         return value!=null && value;
+    }
+
+    // TODO: move Horta properties to Horta module
+    public void setOperationsLogged(boolean value) {
+        boolean oldVal = isOperationsLogged();
+        if (oldVal == value) {
+            return;
+        }
+
+        FrameworkAccess.setModelProperty(OptionConstants.OPERATIONS_LOGGED, value);
+
+        if (null != propSupport)
+            propSupport.firePropertyChange(OptionConstants.OPERATIONS_LOGGED, oldVal, value);
     }
 
     // TODO: move Horta properties to Horta module

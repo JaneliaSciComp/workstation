@@ -114,7 +114,7 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         nameField.setEnabled(false);
         attrPanel.add(nameField,"span 4, grow");
         
-        assignNeuronOwnerCheckbox = new JCheckBox("Assign Neurons");
+        assignNeuronOwnerCheckbox = new JCheckBox("Assign Neurons/Set System Group");
         assignNeuronOwnerCheckbox.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -126,7 +126,8 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         subjectComboBox = new SubjectComboBox();
         attrPanel.add(subjectComboBox, "span 4");
         
-        CommonDialogItems.updateOwnerList((DefaultComboBoxModel)subjectComboBox.getModel(), ChangeNeuronOwnerDialog.UserFilter.ACTIVE_TRACERS);
+        CommonDialogItems.updateOwnerList((DefaultComboBoxModel)subjectComboBox.getModel(),
+                ChangeNeuronOwnerDialog.UserFilter.NONE);
         
         ActivityLogHelper.logUserAction("EditWorkspaceNameDialog.showForSample");
         
@@ -149,7 +150,7 @@ public class EditWorkspaceNameDialog extends ModalDialog {
         }
         return null;
     }
-    
+
     public static String guessSampleDate(String sampleName) {
 
         Pattern p = Pattern.compile("(\\d{4}-\\d{2}-\\d{2}).*");

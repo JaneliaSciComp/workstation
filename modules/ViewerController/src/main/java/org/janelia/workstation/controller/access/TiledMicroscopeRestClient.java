@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.*;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
@@ -20,18 +21,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.model.domain.dto.DomainQuery;
 import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.tiledMicroscope.BulkNeuronStyleUpdate;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmReviewTask;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.exceptions.RemoteServiceException;
 import org.janelia.workstation.core.api.http.RESTClientBase;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.model.domain.tiledMicroscope.BoundingBox3d;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,6 +106,23 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
                 .put(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(TmSample.class);
+    }
+
+    public void createOperationLog(Long sampleId, Long workspaceId, Long neuronId,
+                                   TmOperation.Activity activity, String timestamp, Long elapsedTime,
+                                   String subjectKey ) {
+        WebTarget target =  getMouselightDataEndpoint("/operation/log")
+                .queryParam("username", subjectKey)
+                .queryParam("sampleId", sampleId)
+                .queryParam("workspaceId", workspaceId)
+                .queryParam("neuronId", neuronId)
+                .queryParam("activity", activity)
+                .queryParam("elapsedTime", elapsedTime)
+                .queryParam("timestamp", timestamp);
+        Response response = target
+                .request("application/json")
+                .get();
+        checkBadResponse(target, response);
     }
 
     public TmSample update(TmSample tmSample) {

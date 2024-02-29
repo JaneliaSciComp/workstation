@@ -85,7 +85,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     private static final String NEURON_TAG_VISIBILITY = "hidden";
 
     private static final int NUMBER_FRAGMENTS_THRESHOLD = 1000;
-    private static final String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
+    private String TRACERS_GROUP = ConsoleProperties.getInstance().getProperty("console.LVVHorta.tracersgroup").trim();
 
     private static final Color[] neuronColors = {
             Color.red,
@@ -2514,6 +2514,8 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     void fireWorkspaceLoaded(TmWorkspace workspace) {
+        if (workspace.getTracingGroup()!=null)
+            TRACERS_GROUP = workspace.getTracingGroup();
         LoadProjectEvent workspaceEvent = new LoadProjectEvent(this,
                 workspace, null,false);
         ViewerEventBus.postEvent(workspaceEvent);
