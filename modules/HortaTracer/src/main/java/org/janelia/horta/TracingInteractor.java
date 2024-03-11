@@ -698,7 +698,7 @@ public class TracingInteractor extends MouseAdapter
                     if (bSearchMultipleAnchors) {
                         // Skip hidden neurons
 
-                        List<TmGeoAnnotation> nearestVertexes = spatialManager.getAnchorClosestToMicronLocation(loc, 3);
+                        List<TmGeoAnnotation> nearestVertexes = spatialManager.getAnchorClosestToMicronLocation(loc, 20);
                         float minDistSquared = Float.MAX_VALUE;
                         for (TmGeoAnnotation v : nearestVertexes) {
                             if (v == null)
@@ -706,8 +706,12 @@ public class TracingInteractor extends MouseAdapter
                             TmNeuronMetadata neuron = NeuronManager.getInstance().getNeuronFromNeuronID(v.getNeuronId());
                             if (neuron == null) 
                                 continue;
-                            if (!neuron.isVisible() || TmModelManager.getInstance().getCurrentView().isNonInteractable(neuron.getId())) {
-                                // log.info("skipping invisible neuron");
+                            if (TmModelManager.getInstance().getCurrentView().isHidden(neuron.getId())) {
+                                // log.info("skipping hidden neuron");
+                                continue;
+                            }
+                            if (TmModelManager.getInstance().getCurrentView().isNonInteractable(neuron.getId())) {
+                                // log.info("skipping non-interactable neuron");
                                 continue;
                             }
                             float[] location = TmModelManager.getInstance().getLocationInMicrometers(v.getX(),
@@ -729,12 +733,6 @@ public class TracingInteractor extends MouseAdapter
                     FrameworkAccess.handleException(e);
                     log.warn("Workspace does not support spatial queries. Falling back on old Horta spatial index.");
                 }
-                if (nearestVertex != null) {
-                    neuronModel = NeuronManager.getInstance().getNeuronFromNeuronID(nearestVertex.getNeuronId());
-                    if (TmModelManager.getInstance().getCurrentView().isHidden(neuronModel.getId())) {
-                        nearestVertex = null;
-                    }
-                }
             }
             else {
                 log.error("No default workspace found");
@@ -743,6 +741,7 @@ public class TracingInteractor extends MouseAdapter
             if (nearestVertex == null) // no vertices to be found?
                 foundGoodHighlightVertex = false;
             else {
+                neuronModel = NeuronManager.getInstance().getNeuronFromNeuronID(nearestVertex.getNeuronId());
                 if (neuronModel == null) {
                     // TODO: Should not happen
                     log.warn("Unexpected null neuron");
