@@ -5,12 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 
-import javax.swing.AbstractAction;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JColorChooser;
-import javax.swing.JDialog;
-import javax.swing.JPanel;
+import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -31,6 +26,8 @@ public class ColorChannelWidget extends JPanel
 	private ImageColorModel imageColorModel;
 	private ColorButton colorButton;
 	private UglyColorSlider slider;
+	private TextColorSlider textSlider;
+	private JButton sliderToggle;
 	
 	ColorChannelWidget(int channelIndex, ImageColorModel imageColorModel) {
 		this.channelIndex = channelIndex;
@@ -45,6 +42,17 @@ public class ColorChannelWidget extends JPanel
 		add(visibilityButton);
 		slider = new UglyColorSlider(channelIndex, imageColorModel);
 		add(slider);
+
+		// testing only on channel 1
+		if (channelIndex == 1) {
+			textSlider = new TextColorSlider(channelIndex, imageColorModel);
+			add(textSlider);
+			sliderToggle = new JButton("#");
+			sliderToggle.addActionListener(e -> textSlider.setVisible(!textSlider.isVisible()));
+			add(sliderToggle);
+			textSlider.setVisible(false);
+		}
+
 		add(colorButton);
 		updateColor();
         updateVisibility();
