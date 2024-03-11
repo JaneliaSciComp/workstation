@@ -1,3 +1,9 @@
+// 9.18.5
+
+Horta
+* Added tile loading logging code
+* Added customizable System group by workspace for fragments
+
 // 9.18.3
 
 Horta

@@ -1,5 +1,4 @@
-// 9.18.5
+// 9.19
 
-Horta
-* Added tile loading logging code
-* Added customizable System group by workspace for fragments
+Horta:
+* Fixed node selection issue with multiple close hidden and not hidden neurons
