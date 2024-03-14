@@ -1,4 +1,6 @@
-// 9.19
+// 9.18.6
 
 Horta:
 * Fixed node selection issue with multiple close hidden and not hidden neurons
+* Fixed issue with large fragments not being imported for bulk SWC import
+* Fixed issue with merge undo of fragments causing fragments to disappear
