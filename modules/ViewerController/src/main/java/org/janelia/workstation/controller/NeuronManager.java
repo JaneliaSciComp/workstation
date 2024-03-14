@@ -737,6 +737,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             restoredNeuron = tmDomainMgr.createWithId(restoredNeuron);
             restoredNeuron.initNeuronData();
             neuronModel.addNeuron(restoredNeuron);
+            restoredNeuron.setFragment(false);
             if (applyFilter) {
                 NeuronUpdates updates = neuronFilter.addNeuron(restoredNeuron);
                 updateFrags(updates);
