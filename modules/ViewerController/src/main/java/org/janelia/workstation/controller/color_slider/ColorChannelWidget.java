@@ -1,6 +1,6 @@
 package org.janelia.workstation.controller.color_slider;
 
-import java.awt.Color;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -43,16 +43,20 @@ public class ColorChannelWidget extends JPanel
 		slider = new UglyColorSlider(channelIndex, imageColorModel);
 		add(slider);
 
-		// testing only on channel 1
-		if (channelIndex == 1) {
-			textSlider = new TextColorSlider(channelIndex, imageColorModel);
-			add(textSlider);
-			sliderToggle = new JButton("#");
-			sliderToggle.addActionListener(e -> textSlider.setVisible(!textSlider.isVisible()));
-			add(sliderToggle);
-			textSlider.setVisible(false);
-		}
+		// text input for colors; it's hidden behind a little # button
+		// not sure where the asymmetry is, but there is enough space here already,
+		//	don't need another spacer
+		// add(Box.createRigidArea(new Dimension(10, 0)));
+		textSlider = new TextColorSlider(channelIndex, imageColorModel);
+		add(textSlider);
 
+		sliderToggle = new JButton("#");
+		sliderToggle.addActionListener(e -> textSlider.setVisible(!textSlider.isVisible()));
+		add(Box.createRigidArea(new Dimension(10, 0)));
+		add(sliderToggle);
+		textSlider.setVisible(false);
+
+		add(Box.createRigidArea(new Dimension(10, 0)));
 		add(colorButton);
 		updateColor();
         updateVisibility();
