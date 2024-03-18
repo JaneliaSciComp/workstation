@@ -5,9 +5,7 @@ import org.janelia.workstation.controller.model.color.ChannelColorModel;
 import org.janelia.workstation.controller.model.color.ImageColorModel;
 
 import javax.swing.*;
-import javax.swing.text.NumberFormatter;
 import java.awt.*;
-import java.text.NumberFormat;
 
 /**
  * this UI element is a drop-in replacement for UglyColorSlider, but it uses three
@@ -26,6 +24,8 @@ public class TextColorSlider extends JPanel {
     // UI elements
     SpinnerModel blackSpinnerModel;
     JSpinner blackSpinner;
+
+    JLabel gammaLabel;
 
     SpinnerModel graySpinnerModel;
     JSpinner graySpinner;
@@ -67,9 +67,14 @@ public class TextColorSlider extends JPanel {
             maxData = 255;
         }
 
-        Dimension size;
+        // note on labels: all the internal code refers to black/gray/white levels,
+        //  and I'm not going to change that; when it came time to put text labels
+        //  on it, it was pointed out min/mid/max makes more sense incase eg
+        //  we enable an inverted lookup table; so the text labels will be the
+        //  only place that language appears
 
-        add(new JLabel("Black:"));
+        add(Box.createRigidArea(new Dimension(10, 0)));
+        add(new JLabel("Min:"));
         blackSpinnerModel = new SpinnerNumberModel(
                 0,
                 0,
@@ -77,14 +82,15 @@ public class TextColorSlider extends JPanel {
                 1
         );
         blackSpinner = new JSpinner(blackSpinnerModel);
-        size = blackSpinner.getPreferredSize();
+        Dimension size = blackSpinner.getPreferredSize();
         size.setSize(90, size.getHeight());
         blackSpinner.setPreferredSize(size);
         blackSpinner.setMaximumSize(blackSpinner.getPreferredSize());
         blackSpinner.setEditor(new JSpinner.NumberEditor(blackSpinner,"#" ));
         add(blackSpinner);
 
-        add(new JLabel("Gray:"));
+        add(Box.createRigidArea(new Dimension(10, 0)));
+        add(new JLabel("Mid:"));
         graySpinnerModel = new SpinnerNumberModel(
                 0,
                 0,
@@ -99,7 +105,18 @@ public class TextColorSlider extends JPanel {
         graySpinner.setEditor(new JSpinner.NumberEditor(graySpinner,"#" ));
         add(graySpinner);
 
-        add(new JLabel("White:"));
+        // we display gamma but do not allow direct setting of it
+        add(Box.createRigidArea(new Dimension(10, 0)));
+        gammaLabel = new JLabel("ɣ=");
+        size = gammaLabel.getPreferredSize();
+        size.setSize(50, size.getHeight());
+        gammaLabel.setMinimumSize(size);
+        gammaLabel.setMaximumSize(size);
+        gammaLabel.setPreferredSize(size);
+        add(gammaLabel);
+
+        add(Box.createRigidArea(new Dimension(10, 0)));
+        add(new JLabel("Max:"));
         whiteSpinnerModel = new SpinnerNumberModel(
                 0,
                 0,
@@ -114,6 +131,7 @@ public class TextColorSlider extends JPanel {
         whiteSpinner.setEditor(new JSpinner.NumberEditor(whiteSpinner,"#" ));
         add(whiteSpinner);
 
+        add(Box.createRigidArea(new Dimension(15, 0)));
         setButton = new JButton("Set");
         setButton.addActionListener(e -> updateColorModelFromSliderValues());
         add(setButton);
@@ -133,6 +151,20 @@ public class TextColorSlider extends JPanel {
 
     public void setGrayLevel(int grayLevel) {
         graySpinnerModel.setValue(grayLevel);
+    }
+
+    private void setGammaLabel(double gamma) {
+        String gammaString;
+        if (gamma < 10.0) {
+            gammaString = String.format("%.2f", gamma);
+        } else if (gamma < 100.0) {
+            gammaString = String.format("%.1f", gamma);
+        } else if (gamma <= 1000.0) {
+            gammaString = String.format("%d", Math.round(gamma));
+        } else {
+            gammaString = ">1k";
+        }
+        gammaLabel.setText("ɣ=" + gammaString);
     }
 
     public int getWhiteLevel() {
@@ -160,6 +192,7 @@ public class TextColorSlider extends JPanel {
         ChannelColorModel ccm = imageColorModel.getChannel(channelIndex);
         setBlackLevel(ccm.getBlackLevel());
         setWhiteLevel(ccm.getWhiteLevel());
+        setGammaLabel(ccm.getGamma());
         // convert gamma to gray level
         float grayLevel = (float)Math.pow(0.5, 1.0/ccm.getGamma());
         grayLevel = getBlackLevel() + grayLevel*(getWhiteLevel() - getBlackLevel());
