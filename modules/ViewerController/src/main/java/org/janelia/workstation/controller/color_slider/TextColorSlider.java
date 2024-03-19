@@ -8,8 +8,13 @@ import javax.swing.*;
 import java.awt.*;
 
 /**
- * this UI element is a drop-in replacement for UglyColorSlider, but it uses three
- * textual spin boxes instead of a slider with three thumbs
+ * this UI element is a drop-in replacement for UglyColorSlider (it has the same
+ * public API); it uses three textual spin boxes instead of a slider with three thumbs
+ *
+ * much code in this class was adapted from UglyColorSlider
+ *
+ * if one were ambitious, I suppose one could define an interface common
+ * to these two classes
  */
 public class TextColorSlider extends JPanel {
 
@@ -18,7 +23,7 @@ public class TextColorSlider extends JPanel {
 
     private boolean updatingFromModel = false; // flag to prevent recursion
 
-    // probably not going to use but keep around in case:
+    // not currently using; see setWhiteColor() for more info:
     // private Color whiteColor = Color.white;
 
     // UI elements
@@ -69,9 +74,9 @@ public class TextColorSlider extends JPanel {
 
         // note on labels: all the internal code refers to black/gray/white levels,
         //  and I'm not going to change that; when it came time to put text labels
-        //  on it, it was pointed out min/mid/max makes more sense incase eg
-        //  we enable an inverted lookup table; so the text labels will be the
-        //  only place that language appears
+        //  on it, it was pointed out min/mid/max makes more sense in case eg
+        //  we enable an inverted lookup table, so the text labels (and only the
+        //  text labels) will use those terms
 
         add(Box.createRigidArea(new Dimension(10, 0)));
         add(new JLabel("Min:"));
@@ -176,12 +181,12 @@ public class TextColorSlider extends JPanel {
     }
 
     public void setWhiteColor(Color color) {
-        // we don't currently plan to indicate the color visually, but if we
-        //  do, this is where we'd do the update if it changes
+        // UglyColorSlider visually indicates the channel's display color, even
+        //  though it's set elsewhere; we don't currently show the display
+        //  color in this widget, but if we ever do, this is where we'd do the update
     }
 
     private void updateSliderValuesFromColorModel() {
-        // adapted code from UglyColorSlider
         if (imageColorModel == null)
             return;
         if (imageColorModel.getChannelCount() <= channelIndex)
