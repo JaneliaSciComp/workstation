@@ -1,6 +1,4 @@
-// 9.18.6
+// 9.19
 
 Horta:
-* Fixed node selection issue with multiple close hidden and not hidden neurons
-* Fixed issue with large fragments not being imported for bulk SWC import
-* Fixed issue with merge undo of fragments causing fragments to disappear
+* Added text boxes for adjusting color sliders; click the '#' button
