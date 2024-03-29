@@ -2,3 +2,4 @@
 
 Horta:
 * Added text boxes for adjusting color sliders; click the '#' button
+* Fixed bug: if importing/exporting SWCs from multiple samples, later files now use correct transform

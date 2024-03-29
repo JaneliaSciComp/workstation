@@ -105,7 +105,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     };
 
     private final TiledMicroscopeDomainMgr tmDomainMgr;
-    private SWCDataConverter swcDataConverter;
 
     private TmNeuronMetadata currentNeuron;
     private List<TmNeuronMetadata> currentFilteredNeuronList;
@@ -183,12 +182,10 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public SWCDataConverter getSwcDataConverter() {
-        if (swcDataConverter == null) {
-            swcDataConverter = new SWCDataConverter();
-            swcDataConverter.setSWCExchanger(new MatrixDrivenSWCExchanger(
-                    TmModelManager.getInstance().getMicronToVoxMatrix(),
-                    TmModelManager.getInstance().getVoxToMicronMatrix()));
-        }
+        SWCDataConverter swcDataConverter = new SWCDataConverter();
+        swcDataConverter.setSWCExchanger(new MatrixDrivenSWCExchanger(
+                TmModelManager.getInstance().getMicronToVoxMatrix(),
+                TmModelManager.getInstance().getVoxToMicronMatrix()));
         return swcDataConverter;
     }
 
