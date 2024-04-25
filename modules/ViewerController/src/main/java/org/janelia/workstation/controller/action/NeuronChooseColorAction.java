@@ -50,7 +50,7 @@ public class NeuronChooseColorAction extends EditAction {
         if (TmSelectionState.getInstance().getCurrentNeuron() == null) {
             JOptionPane.showMessageDialog(
                     null,
-                    "You must select a neuron to set it's color.",
+                    "You must select a neuron to set its color.",
                     "No neuron selected",
                     JOptionPane.ERROR_MESSAGE);
         } else {
