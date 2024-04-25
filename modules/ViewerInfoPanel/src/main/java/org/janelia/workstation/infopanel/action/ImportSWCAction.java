@@ -22,6 +22,8 @@ import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.core.workers.BackgroundWorker;
 import org.janelia.workstation.swc.SWCDirectorySource;
+import org.openide.awt.ActionID;
+import org.openide.awt.ActionRegistration;
 
 
 /**
@@ -29,6 +31,14 @@ import org.janelia.workstation.swc.SWCDirectorySource;
  *
  * @author fosterl
  */
+@ActionID(
+        category = "Horta",
+        id = "ImportSWCAction"
+)
+@ActionRegistration(
+        displayName = "Import SWC file",
+        lazy = true
+)
 public class ImportSWCAction extends AbstractAction {
 
     private static Dimension dialogSize = new Dimension(1200, 800);
@@ -69,7 +79,7 @@ public class ImportSWCAction extends AbstractAction {
         // could specify a dir to open in, but not sure what to choose
         try {
             JFileChooser chooser = new JFileChooser(SWCDirectorySource.getSwcDirectory());
-            chooser.setDialogTitle("Choose swc file or dialog");
+            chooser.setDialogTitle("Choose swc file or directory");
             chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             final FileFilter swcAndDirFilter = new SwcDirAndFileFilter();
             chooser.setFileFilter(swcAndDirFilter);
