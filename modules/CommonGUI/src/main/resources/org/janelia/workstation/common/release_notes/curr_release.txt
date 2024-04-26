@@ -1,4 +1,4 @@
-// 9.19
+// 9.18.7
 
 Horta:
 * Added text boxes for adjusting color sliders; click the '#' button
