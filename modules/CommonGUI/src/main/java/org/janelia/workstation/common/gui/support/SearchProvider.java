@@ -13,6 +13,7 @@ public interface SearchProvider {
 	 */
 	default String getSortFieldName() {
 		String sortCriteria = getSortField();
+		if (sortCriteria==null) return "";
 		return (sortCriteria.startsWith("-") || sortCriteria.startsWith("+")) ? sortCriteria.substring(1) : sortCriteria;
 	}
 

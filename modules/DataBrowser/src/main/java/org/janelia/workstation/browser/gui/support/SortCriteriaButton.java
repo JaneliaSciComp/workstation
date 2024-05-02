@@ -71,8 +71,14 @@ public class SortCriteriaButton extends DropDownButton {
 
             boolean selected = displayAttr.getName().equals(searchProvider.getSortFieldName());
             if (selected) {
-                String dir = searchProvider.getSortField().startsWith("-") ? DESC : ASC;
-                setText("Sort by: "+displayAttr.getLabel()+" ("+dir+")");
+                String sortField = searchProvider.getSortField();
+                if (sortField != null) {
+                    String dir = searchProvider.getSortField().startsWith("-") ? DESC : ASC;
+                    setText("Sort by: " + displayAttr.getLabel() + " (" + dir + ")");
+                }
+                else {
+                    setText("Sort by: " + displayAttr.getLabel());
+                }
             }
             JMenuItem menuItem = new JRadioButtonMenuItem(displayAttr.getLabel(), selected);
             menuItem.addActionListener(e -> {

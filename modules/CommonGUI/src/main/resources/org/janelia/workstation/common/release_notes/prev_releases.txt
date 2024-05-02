@@ -1,6 +1,12 @@
+// 9.18.7
+
+Horta
+* Added text boxes for adjusting color sliders; click the '#' button
+* Fixed bug: if importing/exporting SWCs from multiple samples, later files now use correct transform
+
 // 9.18.6
 
-Horta:
+Horta
 * Fixed node selection issue with multiple close hidden and not hidden neurons
 * Fixed issue with large fragments not being imported for bulk SWC import
 * Fixed issue with merge undo of fragments causing fragments to disappear
