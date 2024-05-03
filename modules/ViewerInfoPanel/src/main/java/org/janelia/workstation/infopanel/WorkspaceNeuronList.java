@@ -66,6 +66,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
     private JTable neuronTable;
     private NeuronTableModel neuronTableModel;
     private DefaultRowSorter<TableModel, String> sorter;
+    private JPanel buttonPanel;
     private JTextField filterField;
     private JTextField ignoreField;
     private JComboBox<String> tagModeMenu;
@@ -119,7 +120,9 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         c.anchor = GridBagConstraints.PAGE_START;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.insets = new Insets(10, 0, 0, 0);
-        neuronLabel =new JLabel("Neurons", JLabel.LEADING);
+        neuronLabel =new JLabel("NEURON THINGS", JLabel.LEADING);
+        Font font = neuronLabel.getFont();
+        neuronLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize()));
         add(neuronLabel, c);
 
 
@@ -338,6 +341,23 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         c2.fill = GridBagConstraints.BOTH;
         add(scrollPane, c2);
 
+        GridBagConstraints c3 = new GridBagConstraints();
+        c3.gridx = 0;
+        c3.gridy = GridBagConstraints.RELATIVE;
+        c3.weighty = 0.0;
+        c3.anchor = GridBagConstraints.PAGE_START;
+        c3.fill = GridBagConstraints.HORIZONTAL;
+
+        // this is a hack: I want to put some buttons in here between the neuron table
+        //  above and the filter UI below; the buttons come from AnnotationPanel;
+        //  in a perfect world, I'd refactor this all and maybe make the filter stuff their
+        //  own UI element but I don't have the time; also, I don't want to fix all
+        //  the code from AnnotationPanel so it makes sense here; so I'll cheat and
+        //  put in a little panel that can be requested outside and poke the buttons
+        //  in here from AnnotationPanel
+        buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
+        add(buttonPanel, c3);
 
         // text field for filter
         JPanel filterPanel = new JPanel();
@@ -368,12 +388,6 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         clearFilter.addActionListener(event -> filterField.setText(""));
         filterPanel.add(clearFilter);
 
-        GridBagConstraints c3 = new GridBagConstraints();
-        c3.gridx = 0;
-        c3.gridy = GridBagConstraints.RELATIVE;
-        c3.weighty = 0.0;
-        c3.anchor = GridBagConstraints.PAGE_START;
-        c3.fill = GridBagConstraints.HORIZONTAL;
         add(filterPanel, c3);
 
         // text field for ignore prefix
@@ -446,6 +460,10 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         add(spatialFilterPanel, c3);
 
         loadWorkspace(null);
+    }
+
+    public JPanel getButtonPanel() {
+        return buttonPanel;
     }
 
     protected JPopupMenu createPopupMenu(TmNeuronMetadata neuron) {
@@ -587,7 +605,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
                     : " - "+ops+" pending operations")
                 : "";
 
-        neuronLabel.setText(String.format("Neurons (%s/%s/%s)%s", showing, loaded, total, pendingOps));
+        neuronLabel.setText(String.format("NEURONS (%s/%s/%s)%s", showing, loaded, total, pendingOps));
         neuronLabel.setToolTipText(String.format("%s in table/%s in memory/%s total", showing, loaded, total));
     }
 

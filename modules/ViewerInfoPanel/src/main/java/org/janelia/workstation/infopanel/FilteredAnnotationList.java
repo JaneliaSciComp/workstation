@@ -20,7 +20,6 @@ import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNot
 
 import javax.swing.AbstractAction;
 import javax.swing.BoxLayout;
-import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -71,6 +70,7 @@ public class FilteredAnnotationList extends JPanel {
     private JTable filteredTable;
     private JTextField filterField;
     private TableRowSorter<FilteredAnnotationModel> sorter;
+    private JLabel mainLabel;
 
     // data stuff
     private NeuronManager neuronManager;
@@ -349,7 +349,11 @@ public class FilteredAnnotationList extends JPanel {
         c.insets = new Insets(10, 0, 0, 0);
         c.weightx = 1.0;
         c.weighty = 0.0;
-        add(new JLabel("Annotations", JLabel.LEADING), c);
+        //mainLabel = new JLabel("Annotations", JLabel.LEADING);
+        mainLabel = new JLabel("ANNOTATIONS", JLabel.LEADING);
+        Font font = mainLabel.getFont();
+        mainLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize()));
+        add(mainLabel, c);
 
         // table
         // implement tool tip while we're here
@@ -452,29 +456,15 @@ public class FilteredAnnotationList extends JPanel {
         defaultButton.setSelected(true);
 
         JButton endsButton = new JButton();
-        filterButtons.add(endsButton);
-
         JButton branchButton = new JButton();
-        filterButtons.add(branchButton);
-
-        ButtonGroup buttonGroup = new ButtonGroup();
-        buttonGroup.add(defaultButton);
-        buttonGroup.add(endsButton);
-        buttonGroup.add(branchButton);
-
-        // need a second row of these:
-        JPanel filterButtons2 = new JPanel();
-        filterButtons2.setLayout(new BoxLayout(filterButtons2, BoxLayout.LINE_AXIS));
-
         JButton reviewButton = new JButton();
         JButton unique1Button = new JButton();
         JButton unique2Button = new JButton();
-        filterButtons2.add(reviewButton);
-        filterButtons2.add(unique1Button);
-        filterButtons2.add(unique2Button);
-
-        // same button group:
-        buttonGroup.add(reviewButton);
+        filterButtons.add(endsButton);
+        filterButtons.add(branchButton);
+        filterButtons.add(reviewButton);
+        filterButtons.add(unique1Button);
+        filterButtons.add(unique2Button);
 
         GridBagConstraints c4 = new GridBagConstraints();
         c4.gridx = 0;
@@ -483,8 +473,6 @@ public class FilteredAnnotationList extends JPanel {
         c4.anchor = GridBagConstraints.PAGE_START;
         c4.fill = GridBagConstraints.HORIZONTAL;
         add(filterButtons, c4);
-        add(filterButtons2, c4);
-
 
         // hook buttons to filter menu
         defaultButton.setAction(new AbstractAction("Default") {

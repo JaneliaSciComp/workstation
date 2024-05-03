@@ -23,6 +23,7 @@ import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -155,6 +156,7 @@ public class AnnotationPanel extends JPanel
         //  some people with small screens not seeing all the controls, especially the
         //  "new workspace" button
         mainPanel = new JPanel();
+        mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         scrollPane = new JScrollPane(mainPanel);
         setLayout(new BorderLayout());
         add(scrollPane);
@@ -180,78 +182,17 @@ public class AnnotationPanel extends JPanel
         cVert.gridy = GridBagConstraints.RELATIVE;
         cVert.anchor = GridBagConstraints.PAGE_START;
         cVert.fill = GridBagConstraints.HORIZONTAL;
-        cTop.weightx = 1.0;
+        cVert.weightx = 1.0;
         cVert.weighty = 0.0;
 
         // buttons for doing workspace things
         JPanel workspaceButtonsPanel = new JPanel();
         workspaceButtonsPanel.setLayout(new BoxLayout(workspaceButtonsPanel, BoxLayout.LINE_AXIS));
         mainPanel.add(workspaceButtonsPanel, cVert);
-        JPanel workspaceButtonsPanel2 = new JPanel();
-        workspaceButtonsPanel2.setLayout(new BoxLayout(workspaceButtonsPanel2, BoxLayout.LINE_AXIS));
-        mainPanel.add(workspaceButtonsPanel2, cVert);
 
-        JPanel locationPanel = new JPanel();
-        locationPanel.setLayout(new BoxLayout(locationPanel, BoxLayout.LINE_AXIS));
-        mainPanel.add(locationPanel, cVert);
-
-        // testingFil
-        // showOutline(workspaceButtonsPanel, Color.green);
-
-        openLVV = new JCheckBox("Open 2D");
-        workspaceButtonsPanel.add(openLVV);
-        openLVV.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                TopComponent tc = WindowManager.getDefault().findTopComponent("LargeVolumeViewerTopComponent");
-                if (tc != null) {
-                    if (!tc.isOpened()) {
-                        tc.open();
-                    } else {
-                        tc.close();
-                    }
-                    tc.requestActive();
-                }
-            }
-        });
-
-        openHorta = new JCheckBox("Open 3D");
-        workspaceButtonsPanel.add(openHorta);
-        openHorta.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                TopComponent tc = WindowManager.getDefault().findTopComponent("NeuronTracerTopComponent");
-                if (tc != null) {
-                    if (!tc.isOpened()) {
-                        tc.open();
-                    } else {
-                        tc.close();
-                    }
-                    tc.requestActive();
-                }
-            }
-        });
-
-        openNeuronCam = new JCheckBox("Open Proofreader");
-        workspaceButtonsPanel.add(openNeuronCam);
-        openNeuronCam.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                TopComponent tc = WindowManager.getDefault().findTopComponent("TaskWorkflowViewTopComponent");
-                if (tc != null) {
-                    if (!tc.isOpened()) {
-                        tc.open();
-                    } else {
-                        tc.close();
-                    }
-                    tc.requestActive();
-                }
-            }
-        });
-
-        createWorkspaceButtonPlus = new JButton("+");
-        workspaceButtonsPanel2.add(createWorkspaceButtonPlus);
-        createWorkspaceAction.putValue(Action.NAME, "+");
+        createWorkspaceButtonPlus = new JButton("New workspace...");
+        workspaceButtonsPanel.add(createWorkspaceButtonPlus);
+        createWorkspaceAction.putValue(Action.NAME, "New workspace...");
         createWorkspaceAction.putValue(Action.SHORT_DESCRIPTION, "Create a new workspace");
         createWorkspaceButtonPlus.setAction(createWorkspaceAction);
 
@@ -350,7 +291,7 @@ public class AnnotationPanel extends JPanel
         workspaceToolButton.setIcon(gearIcon);
         workspaceToolButton.setHideActionText(true);
         workspaceToolButton.setMinimumSize(workspaceButtonsPanel.getPreferredSize());
-        workspaceButtonsPanel2.add(workspaceToolButton);
+        workspaceButtonsPanel.add(workspaceToolButton);
         workspaceToolButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ev) {
                 workspaceToolMenu.show(workspaceToolButton,
@@ -359,7 +300,70 @@ public class AnnotationPanel extends JPanel
             }
         });
 
-        JButton gotoLocationButton = new JButton("Go To..");
+        // VIEWS area
+        JLabel viewLabel = new JLabel("VIEWS", JLabel.LEADING);
+        Font font = viewLabel.getFont();
+        viewLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize()));
+        mainPanel.add(viewLabel, cVert);
+        JPanel viewButtonsPanel = new JPanel();
+        viewButtonsPanel.setLayout(new BoxLayout(viewButtonsPanel, BoxLayout.LINE_AXIS));
+        mainPanel.add(viewButtonsPanel, cVert);
+        JPanel locationPanel = new JPanel();
+        locationPanel.setLayout(new BoxLayout(locationPanel, BoxLayout.LINE_AXIS));
+        mainPanel.add(locationPanel, cVert);
+
+        openLVV = new JCheckBox("Open 2D");
+        viewButtonsPanel.add(openLVV);
+        openLVV.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TopComponent tc = WindowManager.getDefault().findTopComponent("LargeVolumeViewerTopComponent");
+                if (tc != null) {
+                    if (!tc.isOpened()) {
+                        tc.open();
+                    } else {
+                        tc.close();
+                    }
+                    tc.requestActive();
+                }
+            }
+        });
+
+        openHorta = new JCheckBox("Open 3D");
+        viewButtonsPanel.add(openHorta);
+        openHorta.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TopComponent tc = WindowManager.getDefault().findTopComponent("NeuronTracerTopComponent");
+                if (tc != null) {
+                    if (!tc.isOpened()) {
+                        tc.open();
+                    } else {
+                        tc.close();
+                    }
+                    tc.requestActive();
+                }
+            }
+        });
+
+        openNeuronCam = new JCheckBox("Open Proofreader");
+        viewButtonsPanel.add(openNeuronCam);
+        openNeuronCam.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                TopComponent tc = WindowManager.getDefault().findTopComponent("TaskWorkflowViewTopComponent");
+                if (tc != null) {
+                    if (!tc.isOpened()) {
+                        tc.open();
+                    } else {
+                        tc.close();
+                    }
+                    tc.requestActive();
+                }
+            }
+        });
+
+        JButton gotoLocationButton = new JButton("Go to location..");
         gotoLocationButton.setAction(new GoToLocationAction());
         locationPanel.add(gotoLocationButton);
 
@@ -492,18 +496,20 @@ public class AnnotationPanel extends JPanel
         // buttons for acting on neurons (which are in the list immediately above):
         JPanel neuronButtonsPanel = new JPanel();
         neuronButtonsPanel.setLayout(new BoxLayout(neuronButtonsPanel, BoxLayout.LINE_AXIS));
-        mainPanel.add(neuronButtonsPanel, cVert);
+        // this is a little sketchy; I'm requesting a panel in the middle of the neuron list widget
+        //  because that's where I want them; doing it right would require a lot of refactoring
+        workspaceNeuronList.getButtonPanel().add(neuronButtonsPanel);
 
-        JButton createNeuronButtonPlus = new JButton("+");
+        JButton createNeuronButtonPlus = new JButton("Add...");
         neuronButtonsPanel.add(createNeuronButtonPlus);
-        createNeuronAction.putValue(Action.NAME, "+");
+        createNeuronAction.putValue(Action.NAME, "Add...");
         createNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Create a new neuron");
         createNeuronButtonPlus.setAction(createNeuronAction);
 
-        JButton deleteNeuronButton = new JButton("-");
+        JButton deleteNeuronButton = new JButton("Remove");
         neuronButtonsPanel.add(deleteNeuronButton);
-        deleteNeuronAction.putValue(Action.NAME, "-");
-        deleteNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Delete current neuron");
+        deleteNeuronAction.putValue(Action.NAME, "Remove");
+        deleteNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Remove current neuron");
         deleteNeuronButton.setAction(deleteNeuronAction);
 
         // this button pops up the tool menu
@@ -547,13 +553,6 @@ public class AnnotationPanel extends JPanel
         centerAnnotationButton.setIcon(anchorIcon);
         centerAnnotationButton.setHideActionText(true);
         neuriteButtonsPanel.add(centerAnnotationButton);
-
-
-        // developer panel, only shown to me; used for various testing things
-        /*if (AccessManager.getAccessManager().getActualSubject().getName().equals("olbrisd")) {
-            //lvvDevPanel = new LVVDevPanel(annotationMgr, annotationModel, largeVolumeViewerTranslator);
-            //mainPanel.add(lvvDevPanel, cVert);
-        }*/
 
 
         // the bilge...

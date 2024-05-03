@@ -25,7 +25,7 @@ import java.awt.event.ActionEvent;
 public class GoToLocationAction extends AbstractAction {
 
     public GoToLocationAction() {
-        super("Go to...");
+        super("Go to location...");
     }
 
     @Override

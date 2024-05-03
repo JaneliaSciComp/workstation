@@ -26,8 +26,11 @@ public class WorkspaceInfoPanel extends JPanel {
     private void setupUI() {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
     
-        titleLabel = new JLabel("Workspace", JLabel.LEADING);
-        
+        titleLabel = new JLabel("WORKSPACE", JLabel.LEADING);
+        Font font = titleLabel.getFont();
+        titleLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize()));
+
+
         // workspace information; show name, whatever attributes
         add(titleLabel);
         add(Box.createRigidArea(new Dimension(0, 10)));
@@ -41,7 +44,7 @@ public class WorkspaceInfoPanel extends JPanel {
 
     @Override
     public Dimension getPreferredSize() {
-        return new Dimension(250,100);
+        return new Dimension(250,60);
     }
 
     /**
@@ -57,22 +60,16 @@ public class WorkspaceInfoPanel extends JPanel {
     private void updateMetaData(final TmWorkspace workspace) {
         if (TmModelManager.getInstance().getCurrentSample() == null) {
             setSampleName("(no sample");
-            setWorkspaceName("(no workspace)");
+            setWorkspaceName("(no workspace)", false);
             return;
         } else {
             setSampleName(TmModelManager.getInstance().getCurrentSample().getName());
         }
         if (workspace == null) {
-            setWorkspaceName("(no workspace)");
+            setWorkspaceName("(no workspace)", false);
         }
         else {
-            setWorkspaceName(workspace.getName());
-            if (ClientDomainUtils.hasWriteAccess(workspace)) {
-                setTitle("Workspace");
-            }
-            else {
-                setTitle("Workspace (read-only)");
-            }
+            setWorkspaceName(workspace.getName(), !ClientDomainUtils.hasWriteAccess(workspace));
         }
     }
 
@@ -82,20 +79,23 @@ public class WorkspaceInfoPanel extends JPanel {
     
     private void setSampleName(String name) {
         // if name is too wide, it messes up our panel width; tooltip has full name
+        // 2024: increased width; not sure what the limit is, but we have more width
+        //  available than we used to
         sampleNameLabel.setToolTipText(name);
-        if (name.length() > 22) {
-            name = name.substring(0, 20) + "...";
+        if (name.length() > 40) {
+            name = name.substring(0, 38) + "...";
         }
         sampleNameLabel.setText("Sample: " + name);
     }
 
-    private void setWorkspaceName(String name) {
-        // if name is too wide, it messes up our panel width; tooltip has full name
-        workspaceNameLabel.setToolTipText(name);
-        if (name.length() > 24) {
-            name = name.substring(0, 22) + "...";
+    private void setWorkspaceName(String name, boolean readOnly) {
+        // see comment above on width
+        String displayName = (readOnly ? " (read-only) " : "") + name;
+        workspaceNameLabel.setToolTipText(displayName);
+        if (displayName.length() > 40) {
+            displayName = displayName.substring(0, 38) + "...";
         }
-        workspaceNameLabel.setText("Name: " + name);
+        workspaceNameLabel.setText("Name: " + displayName);
     }
 
 }
