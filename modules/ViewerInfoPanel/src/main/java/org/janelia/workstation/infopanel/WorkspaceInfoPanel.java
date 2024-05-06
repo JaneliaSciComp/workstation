@@ -28,12 +28,11 @@ public class WorkspaceInfoPanel extends JPanel {
     
         titleLabel = new JLabel("WORKSPACE", JLabel.LEADING);
         Font font = titleLabel.getFont();
-        titleLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize()));
+        titleLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize() + 2));
 
 
         // workspace information; show name, whatever attributes
         add(titleLabel);
-        add(Box.createRigidArea(new Dimension(0, 10)));
 
         workspaceNameLabel = new JLabel("", JLabel.LEADING);
         add(workspaceNameLabel);

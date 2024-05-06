@@ -18,16 +18,7 @@ import org.janelia.workstation.controller.model.annotations.neuron.FilteredAnnot
 import org.janelia.workstation.controller.model.annotations.neuron.InterestingAnnotation;
 import org.janelia.workstation.controller.model.annotations.neuron.PredefinedNote;
 
-import javax.swing.AbstractAction;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.RowFilter;
+import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -349,10 +340,9 @@ public class FilteredAnnotationList extends JPanel {
         c.insets = new Insets(10, 0, 0, 0);
         c.weightx = 1.0;
         c.weighty = 0.0;
-        //mainLabel = new JLabel("Annotations", JLabel.LEADING);
         mainLabel = new JLabel("ANNOTATIONS", JLabel.LEADING);
         Font font = mainLabel.getFont();
-        mainLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize()));
+        mainLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize() + 2));
         add(mainLabel, c);
 
         // table
@@ -460,10 +450,15 @@ public class FilteredAnnotationList extends JPanel {
         JButton reviewButton = new JButton();
         JButton unique1Button = new JButton();
         JButton unique2Button = new JButton();
+        filterButtons.add(Box.createRigidArea(new Dimension(5, 0)));
         filterButtons.add(endsButton);
+        filterButtons.add(Box.createRigidArea(new Dimension(5, 0)));
         filterButtons.add(branchButton);
+        filterButtons.add(Box.createRigidArea(new Dimension(5, 0)));
         filterButtons.add(reviewButton);
+        filterButtons.add(Box.createRigidArea(new Dimension(5, 0)));
         filterButtons.add(unique1Button);
+        filterButtons.add(Box.createRigidArea(new Dimension(5, 0)));
         filterButtons.add(unique2Button);
 
         GridBagConstraints c4 = new GridBagConstraints();

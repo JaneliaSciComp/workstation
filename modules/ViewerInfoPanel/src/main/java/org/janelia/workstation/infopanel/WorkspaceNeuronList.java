@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.AbstractTableModel;
@@ -122,7 +123,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         c.insets = new Insets(10, 0, 0, 0);
         neuronLabel =new JLabel("NEURON THINGS", JLabel.LEADING);
         Font font = neuronLabel.getFont();
-        neuronLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize()));
+        neuronLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize() + 2));
         add(neuronLabel, c);
 
 
@@ -357,6 +358,7 @@ public class WorkspaceNeuronList extends JPanel implements NeuronListProvider {
         //  in here from AnnotationPanel
         buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.LINE_AXIS));
+        buttonPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
         add(buttonPanel, c3);
 
         // text field for filter

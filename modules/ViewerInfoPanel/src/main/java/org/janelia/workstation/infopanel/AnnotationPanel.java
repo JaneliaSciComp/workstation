@@ -163,7 +163,7 @@ public class AnnotationPanel extends JPanel
 
         mainPanel.setLayout(new GridBagLayout());
 
-        // ----- workspace information; show name, whatever attributes
+        // ----- WORKSPACE information; show name, whatever attributes
         workspaceInfoPanel = new WorkspaceInfoPanel();
         GridBagConstraints cTop = new GridBagConstraints();
         cTop.gridx = 0;
@@ -291,6 +291,7 @@ public class AnnotationPanel extends JPanel
         workspaceToolButton.setIcon(gearIcon);
         workspaceToolButton.setHideActionText(true);
         workspaceToolButton.setMinimumSize(workspaceButtonsPanel.getPreferredSize());
+        workspaceButtonsPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         workspaceButtonsPanel.add(workspaceToolButton);
         workspaceToolButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ev) {
@@ -300,10 +301,11 @@ public class AnnotationPanel extends JPanel
             }
         });
 
-        // VIEWS area
+        // ----- VIEWS area
         JLabel viewLabel = new JLabel("VIEWS", JLabel.LEADING);
         Font font = viewLabel.getFont();
-        viewLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize()));
+        viewLabel.setFont(new Font(font.getName(), Font.BOLD, font.getSize() + 2));
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 30)), cVert);
         mainPanel.add(viewLabel, cVert);
         JPanel viewButtonsPanel = new JPanel();
         viewButtonsPanel.setLayout(new BoxLayout(viewButtonsPanel, BoxLayout.LINE_AXIS));
@@ -368,7 +370,8 @@ public class AnnotationPanel extends JPanel
         locationPanel.add(gotoLocationButton);
 
 
-        // list of neurons in workspace
+        // ----- list of NEURONS in workspace
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)), cVert);
         workspaceNeuronList = new WorkspaceNeuronList(width);
         mainPanel.add(workspaceNeuronList, cVert);
 
@@ -507,6 +510,7 @@ public class AnnotationPanel extends JPanel
         createNeuronButtonPlus.setAction(createNeuronAction);
 
         JButton deleteNeuronButton = new JButton("Remove");
+        neuronButtonsPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         neuronButtonsPanel.add(deleteNeuronButton);
         deleteNeuronAction.putValue(Action.NAME, "Remove");
         deleteNeuronAction.putValue(Action.SHORT_DESCRIPTION, "Remove current neuron");
@@ -520,6 +524,7 @@ public class AnnotationPanel extends JPanel
         neuronToolButton.setIcon(gearIcon);
         neuronToolButton.setHideActionText(true);
         neuronToolButton.setMinimumSize(neuronButtonsPanel.getPreferredSize());
+        neuronButtonsPanel.add(Box.createRigidArea(new Dimension(5, 0)));
         neuronButtonsPanel.add(neuronToolButton);
         neuronToolButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent ev) {
@@ -530,7 +535,7 @@ public class AnnotationPanel extends JPanel
         });
 
 
-        // ----- interesting annotations
+        // ----- interesting ANNOTATIONS
         mainPanel.add(Box.createRigidArea(new Dimension(0, 20)), cVert);
         filteredList = FilteredAnnotationList.createInstance(neuronManager, width);
         mainPanel.add(filteredList, cVert);
