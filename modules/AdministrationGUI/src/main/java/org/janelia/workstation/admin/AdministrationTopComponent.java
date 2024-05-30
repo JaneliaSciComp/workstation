@@ -99,6 +99,16 @@ public final class AdministrationTopComponent extends TopComponent {
         listGroupsButton.setHorizontalTextPosition(SwingConstants.CENTER);
         topMenu.add(listGroupsButton);
 
+        topMenu.add(Box.createHorizontalStrut(20));
+
+        JButton getLogsButton = new JButton(UIUtils.getClasspathImage(this.getClass(), "/org/janelia/workstation/admin/images/logs.png"));
+        getLogsButton.setText("Logs");
+        getLogsButton.setToolTipText("Retrieve Logs");
+        getLogsButton.addActionListener(event -> getLogs());
+        getLogsButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        getLogsButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        topMenu.add(getLogsButton);
+
         add(topMenu);
         add(Box.createVerticalGlue());
 
@@ -119,6 +129,14 @@ public final class AdministrationTopComponent extends TopComponent {
 
     void viewUserList() {
         UserManagementPanel panel = new UserManagementPanel(this);
+        removeAll();
+        add(panel);
+        revalidate();
+        repaint();
+        this.currentView = panel;
+    }
+    void getLogs() {
+        RetrieveLogsPanel panel = new RetrieveLogsPanel(this);
         removeAll();
         add(panel);
         revalidate();

@@ -108,6 +108,22 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         return response.readEntity(TmSample.class);
     }
 
+    public List<TmOperation> getOperationLogs(Long workspaceId, Long neuronId,
+                                   Date startTime, Date endTime,
+                                   String subjectKey ) {
+        WebTarget target =  getMouselightDataEndpoint("/operation/log/search")
+                .queryParam("username", subjectKey)
+                .queryParam("workspaceId", workspaceId)
+                .queryParam("neuronId", neuronId)
+                .queryParam("timestamp", startTime)
+                .queryParam("timestamp", endTime);
+        Response response = target
+                .request("application/json")
+                .get();
+        checkBadResponse(target, response);
+        return response.readEntity(new GenericType<List<TmOperation>>() {});
+    }
+
     public void createOperationLog(Long sampleId, Long workspaceId, Long neuronId,
                                    TmOperation.Activity activity, String timestamp, Long elapsedTime,
                                    String subjectKey ) {
