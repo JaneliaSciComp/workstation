@@ -218,7 +218,8 @@ public class RefreshHandler implements MessageHandler {
         try {
             log.info("Processing neuron '{}' ({}) remotely deleted by {}", neuron.getName(), neuron.getId(), user);
             updateFilter(neuron, NeuronMessageConstants.MessageType.NEURON_DELETE);
-            neuronManager.fireNeuronDeleted(neuron);
+            // comment this out for now with shared workspace to see if merges are causing most of the issues
+            // neuronManager.fireNeuronDeleted(neuron);
         } catch (Exception e) {
             FrameworkAccess.handleExceptionQuietly("Error handling neuron deletion: " + e.getMessage(), e);
         }

@@ -1,3 +1,8 @@
+// 9.18.8
+
+FlyLight
+* Fixed exception when viewing LSMs for a sample
+
 // 9.18.7
 
 Horta

@@ -1,4 +1,6 @@
-// 9.18.8
+// 9.19
 
-FlyLight
-* Fixed exception when viewing LSMs for a sample
+Horta
+* Added client support for downloading Tile-loading logging data
+* Fixed issue with multi-swc imports in HortaCloud
+* Added some fixes for SharedWorkspace Exceptions
