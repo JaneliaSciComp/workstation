@@ -1,6 +1,6 @@
-// 9.19
+// 9.19.1
 
 Horta
-* Added client support for downloading Tile-loading logging data
-* Fixed issue with multi-swc imports in HortaCloud
-* Added some fixes for SharedWorkspace Exceptions
+* Changed default key bindings:
+    - Hide neuron is now "alt-h"
+    - Hide other neurons is now "alt-shift-h"

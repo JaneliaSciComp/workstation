@@ -1,3 +1,10 @@
+// 9.19
+
+Horta
+* Added client support for downloading Tile-loading logging data
+* Fixed issue with multi-swc imports in HortaCloud
+* Added some fixes for SharedWorkspace Exceptions
+
 // 9.18.8
 
 FlyLight

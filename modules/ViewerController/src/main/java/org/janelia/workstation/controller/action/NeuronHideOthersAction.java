@@ -22,7 +22,7 @@ import org.openide.awt.ActionRegistration;
         lazy = true
 )
 @ActionReferences({
-    @ActionReference(path = "Shortcuts", name = "S-H")
+    @ActionReference(path = "Shortcuts", name = "AS-H")
 })
 public class NeuronHideOthersAction extends EditAction {
 
