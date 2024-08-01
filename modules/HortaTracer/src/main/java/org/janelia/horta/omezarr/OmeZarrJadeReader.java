@@ -38,28 +38,34 @@ public class OmeZarrJadeReader {
         return this.basePath;
     }
 
+    public boolean exists(String location) {
+        final Path path = Paths.get(getBasePath(), location);
+        String relativePath = storageLocation.getRelativePath(path.toString().replace("\\", "/"));
+        return jadeStorage.exists(storageLocation,relativePath);
+    }
+
     public InputStream getInputStream(String location) {
-        final Path path = Paths.get(basePath, location);
+        final Path path = Paths.get(getBasePath(), location);
         String relativePath = storageLocation.getRelativePath(path.toString().replace("\\", "/"));
         return jadeStorage.getContent(storageLocation, relativePath);
     }
 
     public InputStream getAttributesStream() {
-        final Path path = Paths.get(basePath, attributesFile);
+        final Path path = Paths.get(getBasePath(), attributesFile);
         String relativePath = storageLocation.getRelativePath(path.toString().replace("\\", "/"));
         return jadeStorage.getContent(storageLocation, relativePath);
     }
 
     public String[] list(final String pathName) throws IOException {
         log.trace("list " + pathName);
-        final Path path = Paths.get(basePath, pathName);
+        final Path path = Paths.get(getBasePath(), pathName);
         String relativePath = storageLocation.getRelativePath(path.toString());
 
         try (Stream<StorageObject> stream = jadeStorage.getChildren(storageLocation, relativePath).stream()) {
             return stream
-                    .filter(a -> a.isCollection())
+                    .filter(StorageObject::isCollection)
                     .map(a -> path.relativize(Paths.get(a.getAbsolutePath())).toString())
-                    .toArray(n -> new String[n]);
+                    .toArray(String[]::new);
         } catch (StorageObjectNotFoundException e) {
             throw new RuntimeException(e);
         }

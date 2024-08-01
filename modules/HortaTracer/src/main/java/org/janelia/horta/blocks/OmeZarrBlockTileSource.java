@@ -68,7 +68,7 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
 
         this.reader = null;
 
-        omeZarrGroup = OmeZarrGroup.open(Paths.get(localPath));
+        omeZarrGroup = OmeZarrGroupFactory.open(Paths.get(localPath));
 
         return init(progressObserver, completionObserver);
     }
@@ -82,20 +82,20 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
 
         this.reader = new OmeZarrJadeReader(FileMgr.getFileMgr().getStorageService(), this.sampleOmeZarrTilesBaseDir);
 
-        omeZarrGroup = OmeZarrGroup.open(new JadeZarrStoreProvider("", reader));
+        omeZarrGroup = OmeZarrGroupFactory.open(new JadeZarrStoreProvider("", reader));
 
         return init(progressObserver, completionObserver);
     }
 
     private OmeZarrBlockTileSource init(OmeZarrReaderProgressObserver progressObserver, OmeZarrReaderCompletionObserver completionObserver) {
         cachedThreadPool.submit(() -> {
-            int datasetCount = omeZarrGroup.getAttributes().getMultiscales()[0].getDatasets().size();
+            int datasetCount = omeZarrGroup.getDatasetCount();
 
             boolean haveExtents = false;
 
             for (int idx = datasetCount - 1; idx >= 0; idx--) {
                 try {
-                    OmeZarrDataset dataset = omeZarrGroup.getAttributes().getMultiscales()[0].getDatasets().get(idx);
+                    OmeZarrDataset dataset = omeZarrGroup.getDataset(idx);
 
                     if (this.reader != null) {
                         dataset.setExternalZarrStore(new JadeZarrStoreProvider(dataset.getPath(), reader));
