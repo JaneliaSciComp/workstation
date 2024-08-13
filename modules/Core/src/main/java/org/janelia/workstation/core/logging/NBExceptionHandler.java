@@ -9,7 +9,7 @@ import com.google.common.util.concurrent.RateLimiter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.util.MailDialogueBox;
+import org.janelia.workstation.core.util.ErrorReportDialogueBox;
 import org.janelia.workstation.core.util.SystemInfo;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
@@ -194,30 +194,30 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         try {
             String firstLine = getSummary(stacktrace);
             log.info("Reporting exception: "+firstLine);
-            String subject = LoggingUtils.getReportEmailSubject(!askForInput)+" -- "+firstLine;
+            String subject = LoggingUtils.getErrorReportSubject(!askForInput)+" -- "+firstLine;
 
-            MailDialogueBox mailDialogueBox = MailDialogueBox.newDialog(FrameworkAccess.getMainFrame())
+            ErrorReportDialogueBox errorReportDialogueBox = ErrorReportDialogueBox.newDialog(FrameworkAccess.getMainFrame())
                     .withTitle("Create A Ticket")
                     .withPromptText("If possible, please describe what you were doing when the error occurred:")
                     .withEmailSubject(subject)
                     .appendStandardPrefix();
             
             if (askForInput) {
-                String problemDesc = mailDialogueBox.showPopup();
+                String problemDesc = errorReportDialogueBox.showPopup();
                 if (problemDesc==null) {
                     // User pressed cancel
                     return;
                 }
                 else {
-                    mailDialogueBox.append("\n\nProblem Description:\n");
-                    mailDialogueBox.append(problemDesc);
+                    errorReportDialogueBox.append("\n\nProblem Description:\n");
+                    errorReportDialogueBox.append(problemDesc);
                 }
             }
 
-            mailDialogueBox.append("\n\nStack Trace:\n");
-            mailDialogueBox.append(stacktrace);
+            errorReportDialogueBox.append("\n\nStack Trace:\n");
+            errorReportDialogueBox.append(stacktrace);
             
-            mailDialogueBox.sendEmail();
+            errorReportDialogueBox.sendEmail();
         }
         catch (Exception ex) {
             log.warn("Error sending exception email",ex);

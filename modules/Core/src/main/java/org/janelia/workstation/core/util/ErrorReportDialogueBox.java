@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
  * @author kimmelr
  * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
  */
-public class MailDialogueBox {
+public class ErrorReportDialogueBox {
 
-    private static final Logger log = LoggerFactory.getLogger(MailDialogueBox.class);
+    private static final Logger log = LoggerFactory.getLogger(ErrorReportDialogueBox.class);
 
     private static final String LOG_FILE_NAME = "messages.log";
 
@@ -36,40 +36,40 @@ public class MailDialogueBox {
     private StringBuffer body = new StringBuffer();
     private JFrame parentFrame;
 
-    private MailDialogueBox(JFrame parentFrame) {
+    private ErrorReportDialogueBox(JFrame parentFrame) {
         this.parentFrame = parentFrame;
     }
     
-    public static MailDialogueBox newDialog(JFrame parentFrame) {
-        return new MailDialogueBox(parentFrame);
+    public static ErrorReportDialogueBox newDialog(JFrame parentFrame) {
+        return new ErrorReportDialogueBox(parentFrame);
     }
 
-    public MailDialogueBox withTitle(String title) {
+    public ErrorReportDialogueBox withTitle(String title) {
         this.title = title;
         return this;
     }
 
-    public MailDialogueBox withPromptText(String promptText) {
+    public ErrorReportDialogueBox withPromptText(String promptText) {
         this.promptText = promptText;
         return this;
     }
 
-    public MailDialogueBox withTextAreaBody(String initialBody) {
+    public ErrorReportDialogueBox withTextAreaBody(String initialBody) {
         this.initialBody = initialBody;
         return this;
     }
     
-    public MailDialogueBox withEmailSubject(String subject) {
+    public ErrorReportDialogueBox withEmailSubject(String subject) {
         this.subject = subject;
         return this;
     }
 
-    public MailDialogueBox append(String str) {
+    public ErrorReportDialogueBox append(String str) {
         body.append(str);
         return this;
     }
     
-    public MailDialogueBox appendStandardPrefix() {
+    public ErrorReportDialogueBox appendStandardPrefix() {
         append("\nSubject: ").append(AccessManager.getSubjectKey());
         append("\nApplication: ").append(SystemInfo.appName).append(" v").append(SystemInfo.appVersion);
         append("\nServer: ").append(ConnectionMgr.getConnectionMgr().getConnectionString());
@@ -88,7 +88,7 @@ public class MailDialogueBox {
         return this;
     }
 
-    public MailDialogueBox appendLine(String str) {
+    public ErrorReportDialogueBox appendLine(String str) {
         body.append(str).append("\n");
         return this;
     }
