@@ -897,7 +897,8 @@ public final class NeuronTracerTopComponent extends TopComponent
                 //  can't be loaded by everyone who sees the workspace;
                 //  that's ok, but log it
                 if (!Paths.get(mesh.getPathToObjFile()).toFile().exists()) {
-                    throw new RuntimeException("unable to load mesh " + mesh.getName());
+                    logger.info("unable to load mesh {} from path {}", mesh.getName(), mesh.getPathToObjFile());
+                    continue;
                 }
                 meshGeometry = WavefrontObjLoader.load(Files.newInputStream(Paths.get(mesh.getPathToObjFile())));
                 TransparentEnvelope material = new TransparentEnvelope();
