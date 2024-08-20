@@ -321,5 +321,8 @@ public class TmViewerManager implements GlobalViewerController {
 
         // re-enable updates once the model is fully loaded
         RefreshHandler.getInstance().ifPresent(rh -> rh.setReceiveUpdates(true));
+
+        PostSampleLoadEvent postLoadEvent = new PostSampleLoadEvent(currProject, currProject instanceof TmSample);
+        ViewerEventBus.postEvent(postLoadEvent);
     }
 }

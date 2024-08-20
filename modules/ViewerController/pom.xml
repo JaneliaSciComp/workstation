@@ -157,6 +157,10 @@
             <groupId>org.janelia.workstation</groupId>
             <artifactId>viewer3d</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>geometry3d</artifactId>
+        </dependency>
 
 
     </dependencies>

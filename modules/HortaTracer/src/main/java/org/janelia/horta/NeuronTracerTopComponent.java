@@ -44,6 +44,7 @@ import org.janelia.horta.omezarr.OmeZarrReaderProgressObserver;
 import org.janelia.horta.loader.*;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.controller.dialog.NeuronColorDialog;
+import org.janelia.workstation.controller.dialog.SaveOrOpenDeepLinkDialog;
 import org.janelia.workstation.controller.listener.ColorModelListener;
 import org.janelia.workstation.controller.listener.UnmixingListener;
 import org.janelia.workstation.controller.listener.NeuronVertexCreationListener;
@@ -1269,6 +1270,14 @@ public final class NeuronTracerTopComponent extends TopComponent
                 snapPanel.add(snapSelectionText);
 
                 snapMenu.add(snapPanel);
+
+                topMenu.add(new AbstractAction("Create Deep Link") {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        SaveOrOpenDeepLinkDialog deepLinkDialog = new SaveOrOpenDeepLinkDialog();
+                        deepLinkDialog.showDialog();
+                    }
+                });
 
                 JMenu viewMenu = new JMenu("View");
                 topMenu.add(viewMenu);
