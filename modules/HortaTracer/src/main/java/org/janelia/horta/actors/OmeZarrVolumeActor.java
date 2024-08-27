@@ -209,7 +209,8 @@ public class OmeZarrVolumeActor extends BasicGL3Actor implements DepthSlabClippe
         List<GL3Actor> otherActorList = new ArrayList<>();
         List<Object3d> otherList = new ArrayList<>();
         for (SortableBlockActor actor : dynamicTiles.getDisplayedActors()) {
-            blockList.add(actor);
+            if (actor!=null)
+                blockList.add(actor);
         }
         for (Object3d child : getChildren()) {
             if (child instanceof SortableBlockActorSource) {
@@ -220,7 +221,8 @@ public class OmeZarrVolumeActor extends BasicGL3Actor implements DepthSlabClippe
                 		Vector3 maxp = ((OmeZarrVolumeMeshActor)block).getBBoxMax();
                 		((OmeZarrVolumeMeshActor)block).setDistance(calcDistanceFromCamera(minp, maxp, modelViewMatrix));
                 	}
-                    blockList.add(block);
+                    if (block!=null)
+                        blockList.add(block);
                 }
             }
             else if (child instanceof GL3Actor) {
