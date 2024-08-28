@@ -26,6 +26,8 @@ import org.openide.awt.ActionReferences;
 import org.openide.awt.ActionRegistration;
 import org.openide.util.NbBundle;
 import org.openide.util.actions.SystemAction;
+import org.openide.windows.TopComponent;
+import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,9 +83,25 @@ public class OpenDeepLinkAction extends BaseContextualNodeAction {
             log.warn("Action performed with null domain object");
             return;
         }
+        boolean needsOpen = false;
+        if (deepLink.getWorkspace()!=null) {
+            if (TmModelManager.getInstance().getCurrentWorkspace().getId()!=deepLink.getWorkspace().getId()) {
+                needsOpen = true;
+            }
+        }
+        if (deepLink.getSample()!=null) {
+            if (TmModelManager.getInstance().getCurrentSample().getId() != deepLink.getSample().getId()) {
+                needsOpen = true;
+            }
+        }
 
-        ViewerEventBus.registerForEvents(this);
-        openProject(sample);
+        if (needsOpen) {
+            ViewerEventBus.registerForEvents(this);
+            openProject(sample);
+        } else {
+            finishDeepLinkOpen(new PostSampleLoadEvent(sample,
+                    deepLink.getWorkspace()==null));
+        }
     }
 
     private void

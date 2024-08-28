@@ -127,10 +127,12 @@ public class SaveOrOpenDeepLinkDialog extends ModalDialog {
         }
 
         TmViewState view = TmModelManager.getInstance().getCurrentView();
+        float[] vtxLocation = TmModelManager.getInstance().getLocationInMicrometers(view.getCameraFocusX(),
+                view.getCameraFocusY(), view.getCameraFocusZ());
         deepLink.setViewpoint(view);
-        deepLinkMap.put("viewFocusX", view.getCameraFocusX());
-        deepLinkMap.put("viewFocusY", view.getCameraFocusY());
-        deepLinkMap.put("viewFocusZ", view.getCameraFocusZ());
+        deepLinkMap.put("viewFocusX", vtxLocation[0]);
+        deepLinkMap.put("viewFocusY", vtxLocation[1]);
+        deepLinkMap.put("viewFocusZ", vtxLocation[2]);
         deepLinkMap.put("viewZoom", view.getZoomLevel());
 
         ObjectMapper mapper = new ObjectMapper();
@@ -188,6 +190,7 @@ public class SaveOrOpenDeepLinkDialog extends ModalDialog {
             OpenDeepLinkAction action = new OpenDeepLinkAction();
             action.setDeepLink(parsedDeepLink);
             action.performAction();
+            onCancel();
         } catch (Exception e) {
             FrameworkAccess.handleException(e);
         }

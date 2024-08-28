@@ -1,6 +1,7 @@
 
 package org.janelia.scenewindow;
 
+import Jama.Matrix;
 import org.janelia.geometry3d.Vector3;
 import java.awt.Component;
 import java.awt.event.MouseEvent;
@@ -13,6 +14,9 @@ import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.Rotation;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Viewport;
+import org.janelia.workstation.controller.model.TmModelManager;
+import org.janelia.workstation.controller.model.TmViewState;
+import org.janelia.workstation.geom.Vec3;
 
 /**
  *
@@ -34,6 +38,24 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
     
     public void notifyObservers() {
         camera.getVantage().notifyObservers();
+        Vantage vantage = camera.getVantage();
+        Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
+        Jama.Matrix micLoc = new Jama.Matrix(new double[][]{
+                {vantage.getFocus()[0],},
+                {vantage.getFocus()[1],},
+                {vantage.getFocus()[2],},
+                {1.0,},});
+        // NeuronVertex API requires coordinates in micrometers
+        Jama.Matrix voxLoc = m2v.times(micLoc);
+        Vec3 voxelXyz = new Vec3(
+                (float) voxLoc.get(0, 0),
+                (float) voxLoc.get(1, 0),
+                (float) voxLoc.get(2, 0));
+        TmViewState currView = TmModelManager.getInstance().getCurrentView();
+        currView.setCameraFocusX(voxelXyz.getX());
+        currView.setCameraFocusY(voxelXyz.getY());
+        currView.setCameraFocusZ(voxelXyz.getZ());
+        currView.setZoomLevel(vantage.getSceneUnitsPerViewportHeight());
     }
     
     public boolean panPixels(int dx, int dy, int dz) {

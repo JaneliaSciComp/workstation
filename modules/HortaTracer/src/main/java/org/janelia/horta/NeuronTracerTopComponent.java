@@ -1271,7 +1271,7 @@ public final class NeuronTracerTopComponent extends TopComponent
 
                 snapMenu.add(snapPanel);
 
-                topMenu.add(new AbstractAction("Create Deep Link") {
+                topMenu.add(new AbstractAction("Deep Link") {
                     @Override
                     public void actionPerformed(ActionEvent e) {
                         SaveOrOpenDeepLinkDialog deepLinkDialog = new SaveOrOpenDeepLinkDialog();
