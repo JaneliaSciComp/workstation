@@ -1,3 +1,10 @@
+// 9.19.1
+
+Horta
+* Changed default key bindings:
+    - Hide neuron is now "alt-h"
+    - Hide other neurons is now "alt-shift-h"
+
 // 9.19
 
 Horta

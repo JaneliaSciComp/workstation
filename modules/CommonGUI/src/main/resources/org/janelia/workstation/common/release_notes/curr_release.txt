@@ -1,6 +1,6 @@
-// 9.19.1
+// 9.20.1
 
 Horta
-* Changed default key bindings:
-    - Hide neuron is now "alt-h"
-    - Hide other neurons is now "alt-shift-h"
+* Added "deeplink" functionality, that allows the creation of a positional cross-sample bookmark in Horta3D
+* Added protections for Null Zarr Actors in Horta3D
+* Removed stable branch to simplify deployment
