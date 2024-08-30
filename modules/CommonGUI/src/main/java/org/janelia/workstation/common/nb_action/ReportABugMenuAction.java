@@ -32,14 +32,14 @@ public final class ReportABugMenuAction extends AbstractAction {
         ErrorReportDialogueBox popup = ErrorReportDialogueBox.newDialog(FrameworkAccess.getMainFrame())
                 .withTitle("Create A Ticket")
                 .withPromptText("Problem Description:")
-                .withEmailSubject(subject)
+                .withSubject(subject)
                 .appendStandardPrefix()
                 .append("\n\nMessage:\n");
         
         String desc = popup.showPopup();
         if (desc!=null) {
             popup.appendLine(desc);
-            popup.sendEmail();
+            popup.sendReport();
         }
         
     }

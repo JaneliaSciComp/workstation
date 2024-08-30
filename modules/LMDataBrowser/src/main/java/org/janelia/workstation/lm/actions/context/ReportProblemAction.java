@@ -5,10 +5,7 @@ import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.logging.LoggingUtils;
-import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.core.util.ErrorReportDialogueBox;
-import org.janelia.workstation.core.util.MailHelper;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -77,10 +74,10 @@ public class ReportProblemAction extends BaseContextualNodeAction {
         ErrorReportDialogueBox errorReportDialogueBox = ErrorReportDialogueBox.newDialog(FrameworkAccess.getMainFrame())
                 .withTitle("not displayed")
                 .withPromptText("not displayed")
-                .withEmailSubject(subject);
+                .withSubject(subject);
 
         errorReportDialogueBox.append(createEntityReport(domainObject));
-        errorReportDialogueBox.sendEmail();
+        errorReportDialogueBox.sendReport();
     }
 
     private String createEntityReport(DomainObject domainObject) {
