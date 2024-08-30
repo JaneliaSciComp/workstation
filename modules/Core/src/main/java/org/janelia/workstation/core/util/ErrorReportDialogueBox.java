@@ -18,16 +18,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Creates a dialog to get the user's input and then sends an email to JIRA to create a ticket.
- * 
- * @author kimmelr
- * @author <a href="mailto:rokickik@janelia.hhmi.org">Konrad Rokicki</a>
+ * Creates a dialog to get the user's input and then sends a report to create a ticket,
+ * either via email or via GitHub API.
  */
 public class ErrorReportDialogueBox {
 
     private static final Logger log = LoggerFactory.getLogger(ErrorReportDialogueBox.class);
 
     private static final String LOG_FILE_NAME = "messages.log";
+
+    // for GitHub reporting
+    private static final String ISSUES_BRANCH = "issues";
+    private static final String ATTACHMENTS_FOLDER = "attachments";
+
 
     private String subject = "";
     private String initialBody = "";
@@ -59,7 +62,7 @@ public class ErrorReportDialogueBox {
         return this;
     }
     
-    public ErrorReportDialogueBox withEmailSubject(String subject) {
+    public ErrorReportDialogueBox withSubject(String subject) {
         this.subject = subject;
         return this;
     }
@@ -106,46 +109,105 @@ public class ErrorReportDialogueBox {
         desc = textArea.getText() + "\n";
         return desc;
     }
-    
-    public void sendEmail() {
 
+    public void sendReport() {
+        String method = ConsoleProperties.getString("console.ErrorReportingMethod", null);
+        if (method == null) {
+            log.error("Cannot send error report; no value for console.ErrorReportingMethod is configured");
+            return;
+        }
+
+        if (method.equals("email")) {
+            sendEmail();
+        } else if (method.equals("github")) {
+            sendGitHub();
+        } else {
+            log.error("Cannot send error report; unknown value {} for console.ErrorReportingMethod", method);
+            return;
+        }
+    }
+
+    public void sendEmail() {
         String fromEmail = ConsoleProperties.getString("console.FromEmail", null);
         if (fromEmail==null) {
             log.error("Cannot send exception report: no value for console.FromEmail is configured.");
             return;
         }
-
         String toEmail = ConsoleProperties.getString("console.HelpEmail", null);
         if (toEmail==null) {
             log.error("Cannot send exception report: no value for console.HelpEmail is configured.");
             return;
         }
 
-        // Flush all long handlers so that we have a complete log file
-        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(""); 
-        for (java.util.logging.Handler handler : logger.getHandlers()) {
-            handler.flush();
-        }
-        
-        String filename = null;
-        File logDir = new File(Places.getUserDirectory(), "var/log");
-        File logfile = new File(logDir, LOG_FILE_NAME);
-        if (!logfile.canRead()) {
-            log.info("Can't read log file at "+logfile.getAbsolutePath());
-            logfile = null;
-        }
-        else {
+        String filename = "";
+        File logfile = getLogfile();
+        if (logfile != null) {
             filename = AccessManager.getSubjectName()+"_"+LOG_FILE_NAME;
         }
-        
+
         log.info("Sending email from {} to {} with attachment {}", fromEmail, toEmail, logfile);
         
         MailHelper helper = new MailHelper();
         helper.sendEmail(fromEmail, toEmail, subject, body.toString(), logfile, filename);
-
-        // TODO: this should only be shown when the user manually reports a bug
-//        JOptionPane.showMessageDialog(
-//                FrameworkAccess.getMainFrame(), "Bug was reported successfully", "Success",
-//                JOptionPane.INFORMATION_MESSAGE);
     }
+
+    public void sendGitHub() {
+        String githubURL = ConsoleProperties.getString("console.GitHubErrorProjectURL", null);
+        if (githubURL==null) {
+            log.error("Cannot send exception report: no value for console.GitHubErrorProjectURL is configured.");
+            return;
+        }
+        String githubToken = ConsoleProperties.getString("console.GitHubErrorProjectAccessToken", null);
+        if (githubToken==null) {
+            log.error("Cannot send exception report: no value for console.GitHubErrorProjectAccessToken is configured.");
+            return;
+        }
+
+        File logfile = getLogfile();
+        log.info("Creating GitHub issue in project {} with logfile attachment {}", githubURL, logfile);
+
+        // note that our logfiles are far too long for a GitHub issue (65k char limit),
+        //  so this is a three step process: create issue with body text, upload the
+        //  logfile to the repo, then create a comment with a link to the logfile
+
+        GitHubRestClient client = new GitHubRestClient();
+
+        int issueNumber = client.createIssue(subject, body.toString());
+        if (issueNumber <= 0) {
+            log.error("GitHub issue not created for error report");
+            return;
+        }
+
+        String path = ATTACHMENTS_FOLDER + "/issue-" + issueNumber + "-" + LOG_FILE_NAME;
+        String permalink = client.uploadLogFile(ISSUES_BRANCH, logfile, path);
+        if (permalink.isEmpty()) {
+            log.error("Logfile not uploaded or error in generating permalink");
+            return;
+        }
+
+        String comment = "[Link to uploaded log file.](" + permalink + ")";
+        boolean success = client.addComment(issueNumber, comment);
+        if (!success) {
+            log.error("Failed to add comment to GitHub issue with permalink to log.");
+        }
+    }
+
+    private File getLogfile() {
+
+        // Flush all long handlers so that we have a complete log file
+        java.util.logging.Logger logger = java.util.logging.Logger.getLogger("");
+        for (java.util.logging.Handler handler : logger.getHandlers()) {
+            handler.flush();
+        }
+
+        File logDir = new File(Places.getUserDirectory(), "var/log");
+        File logfile = new File(logDir, LOG_FILE_NAME);
+        if (!logfile.canRead()) {
+            log.info("Can't read log file at " + logfile.getAbsolutePath());
+            logfile = null;
+        }
+
+        return logfile;
+    }
+
 }

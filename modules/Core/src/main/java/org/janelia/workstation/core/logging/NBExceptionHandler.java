@@ -117,10 +117,10 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             // Allow one exception report every cooldown cycle. Our RateLimiter allows one access every 
             // second, so we need to acquire a cooldown's worth of locks.
             if (!rateLimiter.tryAcquire(COOLDOWN_TIME_SEC, 0, TimeUnit.SECONDS)) {
-                log.warn("Exception reports exceeded email rate limit. Omitting auto-send of: {}", firstLine);
+                log.warn("Exception reports exceeded rate limit. Omitting auto-send of: {}", firstLine);
                 return;
             }
-            sendEmail(st, false);
+            sendReport(st, false);
         }
         else {
             int count = exceptionCounts.count(traceHash);
@@ -186,10 +186,10 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
         SwingUtilities.windowForComponent(newFunctionButton).setVisible(false);
         // Due to the way the NotifyExcPanel works, this might not be the exception the user is currently looking at! 
         // Maybe it's better than nothing if it's right 80% of the time? 
-        sendEmail(ExceptionUtils.getStackTrace(throwable), true);
+        sendReport(ExceptionUtils.getStackTrace(throwable), true);
     }
     
-    private void sendEmail(String stacktrace, boolean askForInput) {
+    private void sendReport(String stacktrace, boolean askForInput) {
 
         try {
             String firstLine = getSummary(stacktrace);
@@ -199,7 +199,7 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             ErrorReportDialogueBox errorReportDialogueBox = ErrorReportDialogueBox.newDialog(FrameworkAccess.getMainFrame())
                     .withTitle("Create A Ticket")
                     .withPromptText("If possible, please describe what you were doing when the error occurred:")
-                    .withEmailSubject(subject)
+                    .withSubject(subject)
                     .appendStandardPrefix();
             
             if (askForInput) {
@@ -217,14 +217,14 @@ public class NBExceptionHandler extends Handler implements Callable<JButton>, Ac
             errorReportDialogueBox.append("\n\nStack Trace:\n");
             errorReportDialogueBox.append(stacktrace);
             
-            errorReportDialogueBox.sendEmail();
+            errorReportDialogueBox.sendReport();
         }
         catch (Exception ex) {
-            log.warn("Error sending exception email",ex);
-            if (askForInput) { // JW-25430: Only show this message if the email was initiated by the user
+            log.warn("Error sending exception report",ex);
+            if (askForInput) { // JW-25430: Only show this message if the report was initiated by the user
                 JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
                         "Your message was NOT able to be sent to our support staff.  "
-                        + "Please contact your support representative.", "Error sending email", JOptionPane.ERROR_MESSAGE);
+                        + "Please contact your support representative.", "Error sending report", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
