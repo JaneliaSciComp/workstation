@@ -64,7 +64,7 @@ public class MailHelper {
             Message message = new MimeMessage(session);
             message.setFrom(new InternetAddress(from));
             message.setRecipients(RecipientType.TO, InternetAddress.parse(to));
-            message.setSubject("[JW] " + subject);
+            message.setSubject(subject);
             BodyPart messagePart = new MimeBodyPart();
             messagePart.setText(bodyText);
             Multipart multipart = new MimeMultipart();
