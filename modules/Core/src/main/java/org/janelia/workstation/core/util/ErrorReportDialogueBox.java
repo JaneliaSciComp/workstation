@@ -31,6 +31,7 @@ public class ErrorReportDialogueBox {
     private static final String ISSUES_BRANCH = "issues";
     private static final String ATTACHMENTS_FOLDER = "attachments";
 
+    private static final String SUBJECT_PREFIX = "[JW] ";
 
     private String subject = "";
     private String initialBody = "";
@@ -63,6 +64,9 @@ public class ErrorReportDialogueBox {
     }
     
     public ErrorReportDialogueBox withSubject(String subject) {
+        if (!subject.startsWith(SUBJECT_PREFIX)) {
+            subject = SUBJECT_PREFIX + subject;
+        }
         this.subject = subject;
         return this;
     }
