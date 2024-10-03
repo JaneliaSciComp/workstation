@@ -177,7 +177,7 @@
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
-            <version>0.9.10</version>
+            <version>0.10.2</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
@@ -293,7 +293,7 @@
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
-            <version>3.5.0</version>
+            <version>8.11.2</version>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>
