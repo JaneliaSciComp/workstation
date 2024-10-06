@@ -1,5 +1,6 @@
 package org.janelia.horta.omezarr;
 
+import org.apache.commons.lang.StringUtils;
 import org.janelia.jacsstorage.clients.api.JadeStorageService;
 import org.janelia.jacsstorage.clients.api.StorageLocation;
 import org.janelia.jacsstorage.clients.api.StorageObject;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
@@ -39,8 +41,9 @@ public class OmeZarrJadeReader {
     }
 
     public InputStream getInputStream(String location) {
-        final Path path = Paths.get(basePath, location);
-        String relativePath = storageLocation.getRelativePath(path.toString().replace("\\", "/"));
+        String l = StringUtils.isBlank(location) ? "" : location.replace('\\', '/');
+        final String path = URI.create(basePath).resolve(l).toString();
+        String relativePath = storageLocation.getRelativePath(path);
         return jadeStorage.getContent(storageLocation, relativePath);
     }
 
