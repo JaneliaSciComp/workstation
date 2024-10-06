@@ -86,7 +86,9 @@ public class ViewLoader {
                                 + syncLocation.getZ());
                     }
 
-                    if (nttc.isPreferKtx()) {
+                    if (nttc.isPreferKtx()
+                            /** the next condition is to allow switching to a KTX sample after a ZARR sample */
+                            || sample != null && sample.getLargeVolumeZarrFilepath() == null) {
                         // for KTX tile the camera must be set before the tiles are loaded in order for them to be displayed first time
                         progress.setDisplayName("Centering on location...");
                         setCameraLocation(syncZoom, syncLocation);
