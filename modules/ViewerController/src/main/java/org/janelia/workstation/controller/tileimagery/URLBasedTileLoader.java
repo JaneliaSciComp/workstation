@@ -1,20 +1,16 @@
 package org.janelia.workstation.controller.tileimagery;
 
-import org.janelia.model.domain.DomainObject;
+import java.net.MalformedURLException;
+import java.net.URI;
+
+import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
+import org.janelia.jacsstorage.clients.api.rendering.JadeBasedRenderedVolumeLocation;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.controller.NeuronManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.JFrame;
-
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 
 public class URLBasedTileLoader extends TileLoader {
 
@@ -52,8 +48,9 @@ public class URLBasedTileLoader extends TileLoader {
 
         @Override
         public RenderedVolumeLocation getRenderedVolumeLocation(TmSample tmSample) {
-            return jadeServiceClient.findDataLocation(tmSample.getLargeVolumeOctreeFilepath())
-                    .map(dataLocation -> new JADEBasedRenderedVolumeLocation(dataLocation))
+            JadeStorageAttributes storageAttributes = new JadeStorageAttributes().setFromMap(tmSample.getStorageAttributes());
+            return jadeServiceClient.findDataLocation(tmSample.getLargeVolumeOctreeFilepath(), storageAttributes)
+                    .map(dataLocation -> new JadeBasedRenderedVolumeLocation(dataLocation))
                     .orElseThrow(() -> {
                         LOG.warn("No jade location found for {}", tmSample);
                         return new IllegalArgumentException("No location found for " + tmSample.getLargeVolumeOctreeFilepath());

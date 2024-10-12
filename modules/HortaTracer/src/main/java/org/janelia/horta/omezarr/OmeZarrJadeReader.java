@@ -1,6 +1,7 @@
 package org.janelia.horta.omezarr;
 
 import org.apache.commons.lang.StringUtils;
+import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
 import org.janelia.jacsstorage.clients.api.JadeStorageService;
 import org.janelia.jacsstorage.clients.api.StorageLocation;
 import org.janelia.jacsstorage.clients.api.StorageObject;
@@ -26,10 +27,10 @@ public class OmeZarrJadeReader {
 
     protected final String basePath;
 
-    public OmeZarrJadeReader(final JadeStorageService jadeStorage, final String basePath) throws IOException {
+    public OmeZarrJadeReader(final JadeStorageService jadeStorage, final String basePath, JadeStorageAttributes storageAttributes) throws IOException {
         this.jadeStorage = jadeStorage;
         this.basePath = basePath;
-        this.storageLocation = jadeStorage.getStorageLocationByPath(basePath);
+        this.storageLocation = jadeStorage.getStorageLocationByPath(basePath, storageAttributes);
 
         if (storageLocation == null) {
             throw new IOException("Could not find Jade location for path: " + basePath);

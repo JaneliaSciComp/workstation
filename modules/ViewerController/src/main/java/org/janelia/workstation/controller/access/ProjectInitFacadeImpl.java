@@ -1,25 +1,34 @@
 package org.janelia.workstation.controller.access;
 
+import java.net.URI;
+import java.net.URL;
+
+import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
+import org.janelia.jacsstorage.clients.api.http.ClientProxy;
 import org.janelia.model.domain.DomainObject;
 import org.janelia.model.domain.DomainUtils;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.model.util.MatrixUtilities;
-import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.eventbus.LoadMetadataEvent;
 import org.janelia.workstation.controller.eventbus.LoadProjectEvent;
-import org.janelia.workstation.controller.eventbus.NeuronSpatialFilterUpdateEvent;
 import org.janelia.workstation.controller.eventbus.UnloadProjectEvent;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
 import org.janelia.workstation.controller.scripts.spatialfilter.BoundingBoxSpatialFilter;
-import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSelectionSpatialFilter;
-import org.janelia.workstation.controller.scripts.spatialfilter.NeuronSpatialFilter;
-import org.janelia.workstation.controller.tileimagery.*;
+import org.janelia.workstation.controller.tileimagery.BlockTiffOctreeLoadAdapter;
+import org.janelia.workstation.controller.tileimagery.BlockTiffOctreeTileLoaderProvider;
+import org.janelia.workstation.controller.tileimagery.FileBasedTileLoader;
+import org.janelia.workstation.controller.tileimagery.SharedVolumeImage;
+import org.janelia.workstation.controller.tileimagery.TileFormat;
+import org.janelia.workstation.controller.tileimagery.TileLoader;
+import org.janelia.workstation.controller.tileimagery.TileServer;
+import org.janelia.workstation.controller.tileimagery.TileStackCacheController;
+import org.janelia.workstation.controller.tileimagery.TileStackOctreeLoadAdapter;
+import org.janelia.workstation.controller.tileimagery.URLBasedTileLoader;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.core.api.web.JadeServiceClient;
@@ -35,19 +44,12 @@ import org.openide.windows.WindowManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-
 public class ProjectInitFacadeImpl implements ProjectInitFacade {
     private final Logger log = LoggerFactory.getLogger(TmViewerManager.class);
     DomainObject project;
     TmWorkspace workspace;
     TmViewerManager viewerManager;
     TmModelManager modelManager;
-
-    private static final int NUMBER_FRAGMENTS_THRESHOLD = 1000;
 
     public ProjectInitFacadeImpl(DomainObject project) {
         this.project = project;
@@ -86,7 +88,8 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                 loader.loadData(sample);
 
                 SharedVolumeImage sharedVolumeImage = new SharedVolumeImage();
-                TileServer tileServer = new TileServer(sharedVolumeImage);
+                JadeStorageAttributes storageAttributes = new JadeStorageAttributes().setFromMap(sample.getStorageAttributes());
+                TileServer tileServer = new TileServer(sharedVolumeImage, storageAttributes);
                 TmModelManager.getInstance().setTileServer(tileServer);
                 URL url = TmModelManager.getInstance().getTileLoader().getUrl();
 
@@ -97,8 +100,9 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
 
                     @Override
                     public BlockTiffOctreeLoadAdapter createLoadAdapter(String baseURI) {
+                        JadeStorageAttributes storageAttributes = new JadeStorageAttributes().setFromMap(sample.getStorageAttributes());
                         return TileStackCacheController.createInstance(
-                                new TileStackOctreeLoadAdapter(tileFormat, URI.create(baseURI), concurrency));
+                                new TileStackOctreeLoadAdapter(tileFormat, URI.create(baseURI), concurrency, storageAttributes));
                     }
                 });
                 sharedVolumeImage.loadURL(url);

@@ -55,14 +55,6 @@
         </dependency>
         <dependency>
             <groupId>org.janelia.jacs-storage</groupId>
-            <artifactId>jacsstorage-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.jacs-storage</groupId>
-            <artifactId>jacsstorage-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.jacs-storage</groupId>
             <artifactId>jacsstorage-clients</artifactId>
         </dependency>
         <dependency>
@@ -776,6 +768,9 @@
                         <publicPackage>org.janelia.rendering</publicPackage>
                         <publicPackage>org.janelia.rendering.utils</publicPackage>
                         <publicPackage>org.janelia.rendering.ymlrepr</publicPackage>
+                        <publicPackage>org.janelia.jacsstorage.clients.api</publicPackage>
+                        <publicPackage>org.janelia.jacsstorage.clients.api.http</publicPackage>
+                        <publicPackage>org.janelia.jacsstorage.clients.api.rendering</publicPackage>
                         <publicPackage>org.jdesktop.swingx.*</publicPackage>
                         <publicPackage>org.jnp.*</publicPackage>
                         <publicPackage>org.perf4j</publicPackage>

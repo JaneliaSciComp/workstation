@@ -2,6 +2,7 @@ package org.janelia.workstation.n5viewer;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
 import org.janelia.jacsstorage.clients.api.JadeStorageService;
 import org.janelia.jacsstorage.clients.api.StorageLocation;
 import org.janelia.jacsstorage.clients.api.StorageObject;
@@ -48,12 +49,13 @@ public class N5JadeReader extends AbstractGsonReader {
 	 */
 	public N5JadeReader(final JadeStorageService jadeStorage,
 						final String basePath,
-						final GsonBuilder gsonBuilder) throws IOException {
+						final GsonBuilder gsonBuilder,
+						JadeStorageAttributes storageAttributes) throws IOException {
 
 		super(gsonBuilder);
 		this.jadeStorage = jadeStorage;
 		this.basePath = basePath;
-		this.storageLocation = jadeStorage.getStorageLocationByPath(basePath);
+		this.storageLocation = jadeStorage.getStorageLocationByPath(basePath, storageAttributes);
 
 		if (storageLocation == null) {
 			throw new IOException("Could not find Jade location for path: "+basePath);
@@ -77,8 +79,8 @@ public class N5JadeReader extends AbstractGsonReader {
 	 *    if the N5 version of the container is not compatible with this
 	 *    implementation.
 	 */
-	public N5JadeReader(final JadeStorageService jadeStorageService, final String basePath) throws IOException {
-		this(jadeStorageService, basePath, new GsonBuilder());
+	public N5JadeReader(final JadeStorageService jadeStorageService, final String basePath, JadeStorageAttributes storageAttributes) throws IOException {
+		this(jadeStorageService, basePath, new GsonBuilder(), storageAttributes);
 	}
 
 	/**

@@ -1,5 +1,6 @@
 package org.janelia.workstation.n5viewer;
 
+import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
 import org.janelia.jacsstorage.clients.api.JadeStorageService;
 import org.janelia.model.domain.files.N5Container;
 import org.janelia.saalfeldlab.n5.N5DatasetDiscoverer;
@@ -95,7 +96,9 @@ public class N5ContainerNode extends AbstractDomainObjectNode<N5Container> {
 //                String relativePath = storageLocation.getRelativePath(n5Container.getFilepath());
 //                N5TreeNode n5RootNode = jadeStorage.getN5Tree(storageLocation, relativePath);
 
-                N5Reader n5Reader = new N5JadeReader(jadeStorage, n5Container.getFilepath());
+                JadeStorageAttributes storageAttributes = new JadeStorageAttributes()
+                        .setFromMap(n5Container.getStorageAttributes());
+                N5Reader n5Reader = new N5JadeReader(jadeStorage, n5Container.getFilepath(), storageAttributes);
                 N5DatasetDiscoverer datasetDiscoverer = new N5DatasetDiscoverer(
                         n5Reader,
                         Executors.newCachedThreadPool(),
