@@ -119,7 +119,7 @@ public class ProjectInitFacadeImpl implements ProjectInitFacade {
                             tileFormat.getMicronToVoxMatrix(),
                             "micronToVoxMatrix"));
                     if (DomainUtils.hasWriteAccess(sample, AccessManager.getWriterSet())) {
-                        TiledMicroscopeDomainMgr.getDomainMgr().save(sample);
+                        TiledMicroscopeDomainMgr.getDomainMgr().save(sample, sample.getStorageAttributes());
                     }
                 }
                 modelManager.updateVoxToMicronMatrices();

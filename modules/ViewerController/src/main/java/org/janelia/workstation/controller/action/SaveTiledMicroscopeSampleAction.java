@@ -2,6 +2,8 @@ package org.janelia.workstation.controller.action;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
@@ -21,7 +23,7 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 public class SaveTiledMicroscopeSampleAction extends AbstractAction {
 
     private TmSample sample;
-    private String name, octreePath, ktxPath, altPath;
+    private String name, octreePath, ktxPath, altPath, accessKey, secretKey;
     private boolean rawCompressed;
 
     public SaveTiledMicroscopeSampleAction(TmSample sample) {
@@ -38,8 +40,19 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
         this.ktxPath = ktxPath;
         this.altPath = altPath;
         this.rawCompressed = rawCompressed;
-        this.sample.setStorageAttribute("AccessKey", accessKey);
-        this.sample.setStorageAttribute("SecretKey", secretKey);
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
+    }
+
+    private Map<String, Object> getStorageAttributes() {
+        Map<String, Object> storageAttributes = new HashMap<>();
+        if (accessKey != null) {
+            storageAttributes.put("AccessKey", accessKey);
+        }
+        if (secretKey != null) {
+            storageAttributes.put("SecretKey", secretKey);
+        }
+        return storageAttributes;
     }
 
     @Override
@@ -66,10 +79,10 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
                         if (altPath != null) {
                             DomainUtils.setFilepath(sample, FileType.LargeVolumeZarr, altPath);
                         }
-                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().save(sample);
-                    }
-                    else {
-                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().createSample(name, octreePath, ktxPath, altPath);
+
+                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().save(sample, getStorageAttributes());
+                    } else {
+                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().createSample(name, octreePath, ktxPath, altPath, getStorageAttributes());
                     }
             }
             
