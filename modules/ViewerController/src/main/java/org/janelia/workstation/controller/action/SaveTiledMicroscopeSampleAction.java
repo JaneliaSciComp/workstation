@@ -29,7 +29,8 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
     }
 
     public SaveTiledMicroscopeSampleAction(TmSample sample, String name, String octreePath, String ktxPath, String altPath,
-                                           boolean rawCompressed) {
+                                           boolean rawCompressed,
+                                           String accessKey, String secretKey) {
         super("Create Horta Sample");
         this.sample = sample;
         this.name = name;
@@ -37,6 +38,8 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
         this.ktxPath = ktxPath;
         this.altPath = altPath;
         this.rawCompressed = rawCompressed;
+        this.sample.setStorageAttribute("AccessKey", accessKey);
+        this.sample.setStorageAttribute("SecretKey", secretKey);
     }
 
     @Override

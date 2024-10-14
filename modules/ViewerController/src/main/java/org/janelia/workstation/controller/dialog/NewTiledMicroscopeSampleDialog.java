@@ -24,6 +24,8 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 	private final JTextField pathToOctreeTextField = new JTextField(40);
 	private final JTextField pathToKTXTextField = new JTextField(40);
 	private final JTextField pathToOmeZarrFormatTextField = new JTextField(40);
+	private final JTextField storageAccessKeyTextField = new JTextField(40);
+	private final JTextField storageSecretKeyTextField = new JTextField(40);
 	private final JCheckBox rawCompressedField = new JCheckBox();
 	private final JComboBox<String> sampleFormat = new JComboBox<>(new String[] {ktxSample, zarrSample});
 
@@ -85,6 +87,22 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		attrPanel.add(pathToOmeZarrFormatLabel, c);
 		c.gridx = 1;
 		attrPanel.add(pathToOmeZarrFormatTextField, c);
+
+		JLabel accessKeyLabel = new JLabel("Storage Access Key:");
+		accessKeyLabel.setLabelFor(storageAccessKeyTextField);
+		c.gridx = 0;
+		c.gridy = 5;
+		attrPanel.add(accessKeyLabel, c);
+		c.gridx = 1;
+		attrPanel.add(storageAccessKeyTextField, c);
+
+		JLabel secretKeyLabel = new JLabel("Storage Secret Key:");
+		secretKeyLabel.setLabelFor(storageSecretKeyTextField);
+		c.gridx = 0;
+		c.gridy = 6;
+		attrPanel.add(secretKeyLabel, c);
+		c.gridx = 1;
+		attrPanel.add(storageSecretKeyTextField, c);
 
 		// Zarr selections
 		sampleFormat.addItemListener(new ItemListener() {
@@ -182,6 +200,8 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		String octree = pathToOctreeTextField.getText();
 		String ktx = StringUtils.isBlank(pathToKTXTextField.getText()) ? null : pathToKTXTextField.getText();
 		String alt = StringUtils.isBlank(pathToOmeZarrFormatTextField.getText()) ? null : pathToOmeZarrFormatTextField.getText();
+		String accessKey = StringUtils.isBlank(storageAccessKeyTextField.getText()) ? null : storageAccessKeyTextField.getText();
+		String secretKey = StringUtils.isBlank(storageSecretKeyTextField.getText()) ? null : storageSecretKeyTextField.getText();
 		if (sampleFormat.getSelectedItem()==ktxSample && octree.isEmpty()) {
 			JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
 					"You must specify both a sample name and location!",
@@ -202,7 +222,9 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 			name = file.getName();
 		}
 
-		Action action = new SaveTiledMicroscopeSampleAction(sample, name, octree, ktx, alt, rawCompressedField.isSelected());
+		Action action = new SaveTiledMicroscopeSampleAction(
+				sample, name, octree, ktx, alt, rawCompressedField.isSelected(), accessKey, secretKey
+		);
 		action.actionPerformed(null);
 		NewTiledMicroscopeSampleDialog.this.dispose();
 	}
