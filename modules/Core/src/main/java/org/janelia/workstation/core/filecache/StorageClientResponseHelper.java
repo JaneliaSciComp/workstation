@@ -30,8 +30,7 @@ class StorageClientResponseHelper {
             if (responseCode == HttpStatus.SC_MULTI_STATUS) {
                 final MultiStatus multiStatus = method.getResponseBodyAsMultiStatus();
                 multiStatusResponses = multiStatus.getResponses();
-            }
-            else if (responseCode == HttpStatus.SC_MOVED_PERMANENTLY) {
+            } else if (responseCode == HttpStatus.SC_MOVED_PERMANENTLY) {
                 final Header locationHeader = method.getResponseHeader("Location");
                 if (locationHeader != null) {
                     final String movedHref = locationHeader.getValue();
@@ -40,12 +39,10 @@ class StorageClientResponseHelper {
                     }
                 }
                 throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
-            }
-            else if (responseCode == HttpStatus.SC_NOT_FOUND) {
+            } else if (responseCode == HttpStatus.SC_NOT_FOUND) {
                 LOG.debug("File not found: {}", href);
                 throw new FileNotFoundException("Resource " + href + " not found (" + responseCode + ")");
-            }
-            else {
+            } else {
                 throw new WebDavException(responseCode + " response code returned for " + href, responseCode);
             }
         }
@@ -71,7 +68,7 @@ class StorageClientResponseHelper {
             return null;
         }
         else {
-            return baseUrl + "/" + context + "/" + remoteFileName;
+            return baseUrl + "/" + context + "?contentPath=" + remoteFileName;
         }
     }
 

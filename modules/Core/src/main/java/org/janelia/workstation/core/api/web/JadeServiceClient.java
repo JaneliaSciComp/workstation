@@ -132,7 +132,7 @@ public class JadeServiceClient {
             LOG.debug("Check if storage path exists {}", storagePath);
             WebTarget target = httpClient.target(jadeURL)
                     .path("storage_content/storage_path_redirect")
-                    .path(storagePath);
+                    .queryParam("contentPath", storagePath);
             Response response = createRequest(target, storageAttributes).head();
             int responseStatus = response.getStatus();
             if (responseStatus != Response.Status.OK.getStatusCode()) {

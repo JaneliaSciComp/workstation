@@ -479,8 +479,8 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         Client client = RestJsonClientManager.getInstance().getHttpClient(true);
         Invocation.Builder requestInvocation = client.target(remoteStorageUrl)
                 .path("storage_content/storage_path_redirect")
-                .path(serverPath)
                 .queryParam("directoryOnly", directoryOnly)
+                .queryParam("contentPath", serverPath)
                 .request();
         if (storageAttributes.get("AccessKey") != null) {
             requestInvocation.header("AccessKey", storageAttributes.get("AccessKey"));
