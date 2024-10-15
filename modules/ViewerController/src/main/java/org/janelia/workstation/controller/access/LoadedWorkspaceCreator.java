@@ -5,6 +5,8 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CancellationException;
 
 import javax.swing.JButton;
@@ -90,7 +92,8 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         JFrame mainFrame = FrameworkAccess.getMainFrame();
         final JDialog inputDialog = new JDialog(mainFrame, true);
         final JTextField pathTextField = new JTextField();
-        final JCheckBox systemOwnerCheckbox = new JCheckBox();
+        final JTextField accessKeyTextField = new JTextField();
+        final JTextField secretKeyTextField = new JTextField();
         pathTextField.addKeyListener(new PathCorrectionKeyListener(pathTextField));
         pathTextField.setToolTipText("Backslashes will be converted to /.");
         final JLabel workspaceNameLabel = new JLabel("Workspace Name");
@@ -110,6 +113,10 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         inputDialog.add(pathTextField);
         inputDialog.add(new JLabel("Mark all neurons as fragments"));
         inputDialog.add(markAsFragmentsCheckbox);
+        inputDialog.add(new JLabel("Strage access key"));
+        inputDialog.add(accessKeyTextField);
+        inputDialog.add(new JLabel("Strage secret key"));
+        inputDialog.add(secretKeyTextField);
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BorderLayout());
         JButton cancelButton = new JButton("Cancel");
@@ -148,7 +155,8 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
                 TiledMicroscopeRestClient cf = new TiledMicroscopeRestClient();
                 String swcFolder = bldr.toString().trim();
 
-                if (cf.isServerPathAvailable(swcFolder, true) ) {
+                Map<String, Object> storageAttributes = getStorageAttributes(accessKeyTextField.getText(), secretKeyTextField.getText());
+                if (cf.isServerPathAvailable(swcFolder, true, storageAttributes) ) {
                     Boolean markAsFragments;
                     inputDialog.setVisible(false);
                     String neuronsOwnerKey;
@@ -164,7 +172,7 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
                     }
 
                     importSWC(sample.getId(), workspaceNameTextField.getText().trim(), swcFolder, neuronsOwnerKey,
-                            markAsFragments, appendToExisting);
+                            markAsFragments, appendToExisting, storageAttributes);
                 }
             }
         });
@@ -176,8 +184,19 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         inputDialog.setVisible(true);
     }
 
+    static private Map<String, Object> getStorageAttributes(String accessKeyField,String secretKeyField ) {
+        Map<String, Object> storageAttributes = new HashMap<>();
+        if (StringUtils.isNotBlank(accessKeyField)) {
+            storageAttributes.put("AccessKey", accessKeyField.trim());
+        }
+        if (StringUtils.isNotBlank(secretKeyField)) {
+            storageAttributes.put("SecretKey", secretKeyField.trim());
+        }
+        return storageAttributes;
+    }
+
     static private void importSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner,
-                                  Boolean markAsFragments, Boolean appendToExisting) {
+                                  Boolean markAsFragments, Boolean appendToExisting, Map<String, Object> storageAttributes) {
         BackgroundWorker worker = new AsyncServiceMonitoringWorker() {
 
             private String taskDisplayName;
@@ -194,7 +213,7 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
 
                 setStatus("Submitting task " + taskDisplayName);
 
-                Long taskId = startImportSWC(sampleId, workspace, swcFolder, neuronsOwner, markAsFragments, appendToExisting);
+                Long taskId = startImportSWC(sampleId, workspace, swcFolder, neuronsOwner, markAsFragments, appendToExisting, storageAttributes);
 
                 setServiceId(taskId);
 
@@ -210,7 +229,8 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
     }
 
     static private Long startImportSWC(Long sampleId, String workspace, String swcFolder, String neuronsOwner,
-                                       Boolean markAsFragments, Boolean appendToExisting) {
+                                       Boolean markAsFragments, Boolean appendToExisting,
+                                       Map<String, Object> storageAttributes) {
         AsyncServiceClient asyncServiceClient = new AsyncServiceClient();
         ImmutableList.Builder<String> serviceArgsBuilder = ImmutableList.<String>builder()
                 .add("-sampleId", sampleId.toString());
@@ -224,7 +244,8 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         return asyncServiceClient.invokeService("swcImport",
                 serviceArgsBuilder.build(),
                 null,
-                ImmutableMap.of()
+                ImmutableMap.of(),
+                storageAttributes
         );
     }
 

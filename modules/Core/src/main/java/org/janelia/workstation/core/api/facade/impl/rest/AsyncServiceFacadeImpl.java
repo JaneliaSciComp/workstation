@@ -36,7 +36,10 @@ public class AsyncServiceFacadeImpl implements AsyncServiceFacade {
         // Invoke the service
         ActivityLogHelper.logUserAction("AsyncServiceFacadeImpl.executeColorDepthService", search);
         Long serviceId = asyncServiceClient.invokeService("colorDepthObjectSearch",
-                args, DEFAULT_PROCESSING_LOCATION, ImmutableMap.of());
+                args, DEFAULT_PROCESSING_LOCATION,
+                ImmutableMap.of(),
+                ImmutableMap.of() // invocation headers
+        );
 
         // Create a monitoring worker
         AsyncServiceMonitoringWorker executeWorker = new SearchMonitoringWorker(search, serviceId);

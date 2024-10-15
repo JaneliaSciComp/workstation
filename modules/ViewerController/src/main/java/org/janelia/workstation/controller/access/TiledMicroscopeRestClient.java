@@ -475,14 +475,20 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
                 .toString();
     }
 
-    public boolean isServerPathAvailable(String serverPath, boolean directoryOnly) {
+    public boolean isServerPathAvailable(String serverPath, boolean directoryOnly, Map<String, Object> storageAttributes) {
         Client client = RestJsonClientManager.getInstance().getHttpClient(true);
-        Response response = client.target(remoteStorageUrl)
+        Invocation.Builder requestInvocation = client.target(remoteStorageUrl)
                 .path("storage_content/storage_path_redirect")
                 .path(serverPath)
                 .queryParam("directoryOnly", directoryOnly)
-                .request()
-                .head();
+                .request();
+        if (storageAttributes.get("AccessKey") != null) {
+            requestInvocation.header("AccessKey", storageAttributes.get("AccessKey"));
+        }
+        if (storageAttributes.get("SecretKey") != null) {
+            requestInvocation.header("SecretKey", storageAttributes.get("SecretKey"));
+        }
+        Response response = requestInvocation.head();
         int responseStatus = response.getStatus();
         return responseStatus == 200;
     }
