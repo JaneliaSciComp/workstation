@@ -95,6 +95,7 @@ public class RestJsonClientManager {
                 return;
             }
 
+            log.info("Redirect to {}", clientResponseContext.getLocation());
             try (Response resp = clientRequestContext.getClient()
                     .target(clientResponseContext.getLocation())
                     .request()
