@@ -117,8 +117,9 @@ public class ErrorReportDialogueBox {
     public void sendReport() {
         String method = ConsoleProperties.getString("console.ErrorReportingMethod", null);
         if (method == null) {
-            log.error("Cannot send error report; no value for console.ErrorReportingMethod is configured");
-            return;
+            // "email" was our original implementation, so if unset, default to "email" for
+            //  backward compatibility
+            method = "email";
         }
 
         if (method.equals("email")) {
