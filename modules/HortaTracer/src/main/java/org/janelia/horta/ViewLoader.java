@@ -6,15 +6,12 @@ import java.net.URL;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
 import org.janelia.horta.blocks.OmeZarrBlockTileSource;
-import org.janelia.horta.util.HttpClientHelper;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -27,12 +24,10 @@ import org.slf4j.LoggerFactory;
 
 public class ViewLoader {
     private static final Logger LOG = LoggerFactory.getLogger(ViewLoader.class);
-    private static final HttpClientHelper HTTP_HELPER = new HttpClientHelper();
 
     private final NeuronTraceLoader loader;
     private final NeuronTracerTopComponent nttc;
     private final SceneWindow sceneWindow;
-    private final ObjectMapper objectMapper;
 
 
     ViewLoader(NeuronTraceLoader loader,
@@ -41,7 +36,6 @@ public class ViewLoader {
         this.loader = loader;
         this.nttc = nttc;
         this.sceneWindow = sceneWindow;
-        this.objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public void loadView(Vec3 syncLocation, double syncZoom) throws Exception {

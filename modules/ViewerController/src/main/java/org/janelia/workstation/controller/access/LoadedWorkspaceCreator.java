@@ -16,6 +16,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -96,6 +98,8 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         final JTextField secretKeyTextField = new JTextField();
         pathTextField.addKeyListener(new PathCorrectionKeyListener(pathTextField));
         pathTextField.setToolTipText("Backslashes will be converted to /.");
+        final JLabel accessKeyLabel = new JLabel("Storage Access Key:");
+        final JLabel secretKeyLabel = new JLabel("Storage Secret Key:");
         final JLabel workspaceNameLabel = new JLabel("Workspace Name");
         final JTextField workspaceNameTextField = new JTextField();
         workspaceNameTextField.setText(workspaceName);
@@ -106,17 +110,49 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         workspaceNameTextField.setEditable(false);
         workspaceNameTextField.setFocusable(false);
         inputDialog.setTitle("SWC Load-to-Workspace Parameters");
-        inputDialog.setLayout(new GridLayout(6, 1));
+        inputDialog.setLayout(new GridLayout(7, 2));
         inputDialog.add(workspaceNameLabel);
         inputDialog.add(workspaceNameTextField);
+
         inputDialog.add(new JLabel("Enter full path to input folder"));
         inputDialog.add(pathTextField);
+
         inputDialog.add(new JLabel("Mark all neurons as fragments"));
         inputDialog.add(markAsFragmentsCheckbox);
-        inputDialog.add(new JLabel("Strage access key"));
+
+        JCheckBox storageCredentialsRequiredCheckbox = new JCheckBox();
+        inputDialog.add(new JLabel("Storage requires credentials"));
+        inputDialog.add(storageCredentialsRequiredCheckbox);
+
+        accessKeyLabel.setVisible(false);
+        accessKeyTextField.setVisible(false);
+        accessKeyLabel.setLabelFor(accessKeyTextField);
+        inputDialog.add(accessKeyLabel);
         inputDialog.add(accessKeyTextField);
-        inputDialog.add(new JLabel("Strage secret key"));
+
+        secretKeyLabel.setVisible(false);
+        secretKeyTextField.setVisible(false);
+        secretKeyLabel.setLabelFor(secretKeyTextField);
+        inputDialog.add(secretKeyLabel);
         inputDialog.add(secretKeyTextField);
+
+        storageCredentialsRequiredCheckbox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (storageCredentialsRequiredCheckbox.isSelected()) {
+                    accessKeyLabel.setVisible(true);
+                    accessKeyTextField.setVisible(true);
+                    secretKeyLabel.setVisible(true);
+                    secretKeyTextField.setVisible(true);
+                } else {
+                    accessKeyLabel.setVisible(false);
+                    accessKeyTextField.setVisible(false);
+                    secretKeyLabel.setVisible(false);
+                    secretKeyTextField.setVisible(false);
+                }
+            }
+        });
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BorderLayout());
         JButton cancelButton = new JButton("Cancel");
