@@ -3,6 +3,8 @@ package org.janelia.workstation.controller.dialog;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
@@ -24,6 +26,7 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 	private final JTextField pathToOctreeTextField = new JTextField(40);
 	private final JTextField pathToKTXTextField = new JTextField(40);
 	private final JTextField pathToOmeZarrFormatTextField = new JTextField(40);
+	private final JCheckBox storageCredentialsRequiredCheckbox = new JCheckBox();
 	private final JTextField storageAccessKeyTextField = new JTextField(40);
 	private final JTextField storageSecretKeyTextField = new JTextField(40);
 	private final JCheckBox rawCompressedField = new JCheckBox();
@@ -88,21 +91,46 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		c.gridx = 1;
 		attrPanel.add(pathToOmeZarrFormatTextField, c);
 
+		c.gridx = 0;
+		c.gridy = 5;
+		JLabel storageCredentialsRequiredLabel = new JLabel("Storage requires credentials");
+		attrPanel.add(storageCredentialsRequiredLabel, c);
+		c.gridx = 1;
+		attrPanel.add(storageCredentialsRequiredCheckbox, c);
+
 		JLabel accessKeyLabel = new JLabel("Storage Access Key:");
 		accessKeyLabel.setLabelFor(storageAccessKeyTextField);
 		c.gridx = 0;
-		c.gridy = 5;
+		c.gridy = 6;
 		attrPanel.add(accessKeyLabel, c);
 		c.gridx = 1;
 		attrPanel.add(storageAccessKeyTextField, c);
+		accessKeyLabel.setVisible(false);
+		storageAccessKeyTextField.setVisible(false);
 
 		JLabel secretKeyLabel = new JLabel("Storage Secret Key:");
 		secretKeyLabel.setLabelFor(storageSecretKeyTextField);
 		c.gridx = 0;
-		c.gridy = 6;
+		c.gridy = 7;
 		attrPanel.add(secretKeyLabel, c);
 		c.gridx = 1;
 		attrPanel.add(storageSecretKeyTextField, c);
+		secretKeyLabel.setVisible(false);
+		storageSecretKeyTextField.setVisible(false);
+
+		storageCredentialsRequiredCheckbox.addActionListener(e -> {
+            if (storageCredentialsRequiredCheckbox.isSelected()) {
+                accessKeyLabel.setVisible(true);
+				storageAccessKeyTextField.setVisible(true);
+                secretKeyLabel.setVisible(true);
+				storageSecretKeyTextField.setVisible(true);
+            } else {
+                accessKeyLabel.setVisible(false);
+				storageAccessKeyTextField.setVisible(false);
+                secretKeyLabel.setVisible(false);
+				storageSecretKeyTextField.setVisible(false);
+            }
+        });
 
 		// Zarr selections
 		sampleFormat.addItemListener(new ItemListener() {
