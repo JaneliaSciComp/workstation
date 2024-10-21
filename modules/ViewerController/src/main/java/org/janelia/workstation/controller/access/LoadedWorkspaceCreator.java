@@ -136,20 +136,17 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         inputDialog.add(secretKeyLabel);
         inputDialog.add(secretKeyTextField);
 
-        storageCredentialsRequiredCheckbox.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (storageCredentialsRequiredCheckbox.isSelected()) {
-                    accessKeyLabel.setVisible(true);
-                    accessKeyTextField.setVisible(true);
-                    secretKeyLabel.setVisible(true);
-                    secretKeyTextField.setVisible(true);
-                } else {
-                    accessKeyLabel.setVisible(false);
-                    accessKeyTextField.setVisible(false);
-                    secretKeyLabel.setVisible(false);
-                    secretKeyTextField.setVisible(false);
-                }
+        storageCredentialsRequiredCheckbox.addActionListener(e -> {
+            if (storageCredentialsRequiredCheckbox.isSelected()) {
+                accessKeyLabel.setVisible(true);
+                accessKeyTextField.setVisible(true);
+                secretKeyLabel.setVisible(true);
+                secretKeyTextField.setVisible(true);
+            } else {
+                accessKeyLabel.setVisible(false);
+                accessKeyTextField.setVisible(false);
+                secretKeyLabel.setVisible(false);
+                secretKeyTextField.setVisible(false);
             }
         });
 

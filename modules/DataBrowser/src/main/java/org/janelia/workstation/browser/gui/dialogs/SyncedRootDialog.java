@@ -28,7 +28,9 @@ import java.util.stream.Collectors;
 public class SyncedRootDialog extends ModalDialog {
 
     private JTextField pathTextField;
+    private JLabel accessKeyLabel;
     private JTextField accessKeyTextField;
+    private JLabel secretKeyLabel;
     private JTextField secretKeyTextField;
     private JTextField nameField;
     private JTextField depthField;
@@ -58,13 +60,34 @@ public class SyncedRootDialog extends ModalDialog {
         pathTextField.setToolTipText("The filepath must be accessible to the backend JADE service");
         attrPanel.addItem("Path", pathTextField);
 
+        JCheckBox storageCredentialsRequiredCheckbox = new JCheckBox();
+        attrPanel.addItem("Storage requires credentials", storageCredentialsRequiredCheckbox);
+
         accessKeyTextField = new JTextField(50);
         accessKeyTextField.setToolTipText("Access key for the provided path");
-        attrPanel.addItem("Access Key", accessKeyTextField);
+        accessKeyLabel = attrPanel.addItem("Access Key", accessKeyTextField);
+        accessKeyLabel.setVisible(false);
+        accessKeyTextField.setVisible(false);
 
         secretKeyTextField = new JTextField(50);
         secretKeyTextField.setToolTipText("Secret key for the provided path");
-        attrPanel.addItem("Secret Key", secretKeyTextField);
+        secretKeyLabel = attrPanel.addItem("Secret Key", secretKeyTextField);
+        secretKeyLabel.setVisible(false);
+        secretKeyTextField.setVisible(false);
+
+        storageCredentialsRequiredCheckbox.addActionListener(e -> {
+            if (storageCredentialsRequiredCheckbox.isSelected()) {
+                accessKeyLabel.setVisible(true);
+                secretKeyLabel.setVisible(true);
+                accessKeyTextField.setVisible(true);
+                secretKeyTextField.setVisible(true);
+            } else {
+                accessKeyLabel.setVisible(false);
+                secretKeyLabel.setVisible(false);
+                accessKeyTextField.setVisible(false);
+                secretKeyTextField.setVisible(false);
+            }
+        });
 
         this.nameField = new JTextField(50);
         nameField.setToolTipText("Name of the Synchronized Folder in the Workstation. If blank, the filepath will be used.");
