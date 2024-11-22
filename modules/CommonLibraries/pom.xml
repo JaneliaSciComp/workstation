@@ -347,7 +347,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-core</artifactId>
-            <version>3.3.0.GA</version>
+            <version>5.3.20.Final</version>
         </dependency>
         <!-- 
             TODO: this is required at runtime by some classes in legacy-shared. 
