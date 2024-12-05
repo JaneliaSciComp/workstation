@@ -367,17 +367,12 @@ public class SWCDataConverter {
     }
 
     private static SWCNode.SegmentType getSegmentType(TmGeoAnnotation ann) {
-        SWCNode.SegmentType segmentType;
-        // only marking "fork" and "end, as that's
-        //  all we can surmise from geometry
-        if (ann.getChildIds().size() == 0) {
-            segmentType = SWCNode.SegmentType.end_point;
-        } else if (ann.getChildIds().size() > 1) {
-            segmentType = SWCNode.SegmentType.fork_point;
-        } else {
-            segmentType = SWCNode.SegmentType.undefined;
-        }
-        return segmentType;
+        // historical note: before the spec linked at top existed, we marked
+        //  branches and endpoints as type 5 and 6; we currently
+        //  do not classify nodes at all, but I'm leaving this method here in
+        //  case we decide to add that capability back in the future
+
+        return SWCNode.SegmentType.undefined;
     }
 
     private double[] calcDefaultCenterOfMass(double[] rtnVal) {

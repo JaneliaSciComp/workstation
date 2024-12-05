@@ -6,14 +6,21 @@ import java.util.Map;
 /**
  * used by the SWCData class to hold each point in the neuron
  *
- * see http://research.mssm.edu/cnic/swc.html; node holds info
+ * see https://swc-specification.readthedocs.io/en/latest/; node holds info
  * from one line in SWC file
  */
 public class SWCNode {
 
     private static final Map<Integer,SegmentType> decodeToSegment = new HashMap<>();
     public static enum SegmentType {
-        undefined(0), soma(1), axon(2), dendrite(3), apical_dendrite(4), fork_point(5), end_point(6), custom(7);
+        undefined(0),
+        soma(1),
+        axon(2),
+        basal_dendrite(3),
+        apical_dendrite(4),
+        custom(5),
+        unspecified_neurite(6),
+        glia_process(7);
 
         private int decodeNum;
         public static SegmentType getSegmentType( String typeName ) {
