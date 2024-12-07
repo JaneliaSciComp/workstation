@@ -97,7 +97,7 @@ public class N5JadeReader extends AbstractGsonReader {
 		final Path path = Paths.get(basePath, pathName);
 		String relativePath = storageLocation.getRelativePath(path.toString());
 		try {
-			StorageObject metadata = jadeStorage.getMetadata(storageLocation, relativePath);
+			StorageObject metadata = jadeStorage.getMetadata(storageLocation, relativePath, true);
 			boolean exists = metadata != null && metadata.isCollection();
 			log.trace("exists {} = {}", pathName, exists);
 			return exists;
@@ -153,7 +153,7 @@ public class N5JadeReader extends AbstractGsonReader {
 		final Path path = Paths.get(basePath, pathName);
 		String relativePath = storageLocation.getRelativePath(path.toString());
 
-		try (Stream<StorageObject> stream = jadeStorage.getChildren(storageLocation, relativePath).stream()) {
+		try (Stream<StorageObject> stream = jadeStorage.getChildren(storageLocation, relativePath, true).stream()) {
 			return stream
 					.filter(a -> a.isCollection())
 					.map(a -> path.relativize(Paths.get(a.getAbsolutePath())).toString())
