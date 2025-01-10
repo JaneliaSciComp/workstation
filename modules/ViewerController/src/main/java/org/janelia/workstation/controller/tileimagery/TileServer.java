@@ -44,9 +44,9 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     private LoadStatus loadStatus = LoadStatus.UNINITIALIZED;
 
     // One thread pool to load minimal representation of volume
-    private final TexturePreFetcher minResPreFetcher; //!!!! = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, MIN_RES_TILE_LOADER_CONCURRENCY);
+    private TexturePreFetcher minResPreFetcher;
     // One thread pool to load current and prefetch textures
-    private final TexturePreFetcher futurePreFetcher; //!!!! = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, HIGHER_RES_TILE_LOADER_CONCURRENCY);
+    private TexturePreFetcher futurePreFetcher;
 
     // Refactoring 6/12/2013
     private SharedVolumeImage sharedVolumeImage;
@@ -63,9 +63,6 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     private Set<TileIndex> currentDisplayTiles = new HashSet<>();
 
     public TileServer(SharedVolumeImage sharedVolumeImage, JadeStorageAttributes storageAttributes) {
-        this.minResPreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, MIN_RES_TILE_LOADER_CONCURRENCY);
-        this.futurePreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, HIGHER_RES_TILE_LOADER_CONCURRENCY);
-
         setSharedVolumeImage(sharedVolumeImage.setTileLoaderProvider(new BlockTiffOctreeTileLoaderProvider() {
             int concurrency = HIGHER_RES_TILE_LOADER_CONCURRENCY;
 
@@ -76,8 +73,6 @@ public class TileServer implements ComponentListener, // so changes in viewer si
             }
         }));
 
-        minResPreFetcher.setTextureCache(getTextureCache());
-        futurePreFetcher.setTextureCache(getTextureCache());
         queueDrainedListener = new StatusUpdateListener() {
             @Override
             public void update() {
@@ -99,8 +94,14 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         if (!sharedVolumeImage.isLoaded()) {
             return;
         }
+        if (minResPreFetcher == null) {
+            minResPreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, MIN_RES_TILE_LOADER_CONCURRENCY);
+            minResPreFetcher.setTextureCache(getTextureCache());
+            minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
+        } else {
+            minResPreFetcher.clear();
+        }
         // queue load of all low resolution textures
-        minResPreFetcher.clear();
         TileFormat format = sharedVolumeImage.getLoadAdapter().getTileFormat();
         List<MinResSliceGenerator> generators = new ArrayList<>();
         if (format.isHasXSlices()) {
@@ -158,17 +159,18 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         if (textureIds != null) {
             textureCache.getHistoryCache().storeObsoleteTextureIds(textureIds); // so old texture ids can get deleted next draw
         }
-        minResPreFetcher.setTextureCache(textureCache);
-        futurePreFetcher.setTextureCache(textureCache);
+        if (minResPreFetcher != null) {
+            minResPreFetcher.setTextureCache(textureCache);
+        }
+        if (futurePreFetcher != null) {
+            futurePreFetcher.setTextureCache(textureCache);
+        }
         for (ViewTileManager vtm : viewTileManagers) {
             vtm.clear();
             vtm.setTextureCache(textureCache);
         }
-        if (!VolumeCache.useVolumeCache()) {
-            startMinResPreFetch();
-        }
     }
-	
+
     public TileSet createLatestTiles() {
         TileSet result = new TileSet();
         for (ViewTileManager vtm : viewTileManagers) {
@@ -258,7 +260,17 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         }
         updateLoadStatus();
 
-        futurePreFetcher.clear();
+        if (!VolumeCache.useVolumeCache()) {
+            startMinResPreFetch();
+        }
+
+        if (futurePreFetcher == null) {
+            futurePreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, HIGHER_RES_TILE_LOADER_CONCURRENCY);
+            futurePreFetcher.setTextureCache(getTextureCache());
+            futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
+        } else {
+            futurePreFetcher.clear();
+        }
 
         Set<TileIndex> cacheableTextures = new HashSet<TileIndex>();
         int maxCacheable = (int) (0.90 * getTextureCache().getFutureCache().getMaxSize());
@@ -415,8 +427,14 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     }
 
     public void stop() {
-        minResPreFetcher.clear();
-        futurePreFetcher.clear();
+        if (minResPreFetcher != null) {
+            minResPreFetcher.clear();
+            minResPreFetcher = null;
+        }
+        if (futurePreFetcher != null) {
+            futurePreFetcher.clear();
+            futurePreFetcher = null;
+        }
     }
 
     //-------------------------------------------IMPLEMENTS VolumeLoadListener
@@ -425,11 +443,8 @@ public class TileServer implements ComponentListener, // so changes in viewer si
         if (sharedVolumeImage == null) {
             return;
         }
-        // Initialize pre-fetchers
-        minResPreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
-        futurePreFetcher.setLoadAdapter(sharedVolumeImage.getLoadAdapter());
         clearCache();
-        refreshCurrentTileSet();
+//        refreshCurrentTileSet();
     }
 
 }
