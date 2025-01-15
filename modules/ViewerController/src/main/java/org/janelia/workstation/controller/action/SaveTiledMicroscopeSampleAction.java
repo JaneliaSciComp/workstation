@@ -23,7 +23,7 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 public class SaveTiledMicroscopeSampleAction extends AbstractAction {
 
     private TmSample sample;
-    private String name, octreePath, ktxPath, altPath, accessKey, secretKey;
+    private String name, octreePath, ktxPath, altPath, accessKey, secretKey, sampleRegion;
     private boolean rawCompressed;
 
     public SaveTiledMicroscopeSampleAction(TmSample sample) {
@@ -32,7 +32,7 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
 
     public SaveTiledMicroscopeSampleAction(TmSample sample, String name, String octreePath, String ktxPath, String altPath,
                                            boolean rawCompressed,
-                                           String accessKey, String secretKey) {
+                                           String accessKey, String secretKey, String sampleRegion) {
         super("Create Horta Sample");
         this.sample = sample;
         this.name = name;
@@ -42,15 +42,19 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
         this.rawCompressed = rawCompressed;
         this.accessKey = accessKey;
         this.secretKey = secretKey;
+        this.sampleRegion = sampleRegion;
     }
 
     private Map<String, Object> getStorageAttributes() {
         Map<String, Object> storageAttributes = new HashMap<>();
-        if (accessKey != null) {
+        if (accessKey != null && !accessKey.isEmpty()) {
             storageAttributes.put("AccessKey", accessKey);
         }
-        if (secretKey != null) {
+        if (secretKey != null && !secretKey.isEmpty()) {
             storageAttributes.put("SecretKey", secretKey);
+        }
+        if (sampleRegion != null && !sampleRegion.isEmpty()) {
+            storageAttributes.put("AWSRegion", sampleRegion);
         }
         return storageAttributes;
     }

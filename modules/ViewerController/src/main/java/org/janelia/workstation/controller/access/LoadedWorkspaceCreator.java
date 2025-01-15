@@ -96,10 +96,12 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         final JTextField pathTextField = new JTextField();
         final JTextField accessKeyTextField = new JTextField();
         final JTextField secretKeyTextField = new JTextField();
+        final JTextField storageRegionTextField = new JTextField();
         pathTextField.addKeyListener(new PathCorrectionKeyListener(pathTextField));
         pathTextField.setToolTipText("Backslashes will be converted to /.");
         final JLabel accessKeyLabel = new JLabel("Storage Access Key:");
         final JLabel secretKeyLabel = new JLabel("Storage Secret Key:");
+        final JLabel storageRegionLabel = new JLabel("Storage Region:");
         final JLabel workspaceNameLabel = new JLabel("Workspace Name");
         final JTextField workspaceNameTextField = new JTextField();
         workspaceNameTextField.setText(workspaceName);
@@ -136,17 +138,27 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         inputDialog.add(secretKeyLabel);
         inputDialog.add(secretKeyTextField);
 
+        storageRegionLabel.setVisible(false);
+        storageRegionTextField.setVisible(false);
+        storageRegionLabel.setLabelFor(storageRegionTextField);
+        inputDialog.add(storageRegionLabel);
+        inputDialog.add(storageRegionLabel);
+
         storageCredentialsRequiredCheckbox.addActionListener(e -> {
             if (storageCredentialsRequiredCheckbox.isSelected()) {
                 accessKeyLabel.setVisible(true);
                 accessKeyTextField.setVisible(true);
                 secretKeyLabel.setVisible(true);
                 secretKeyTextField.setVisible(true);
+                storageRegionLabel.setVisible(true);
+                storageRegionTextField.setVisible(true);
             } else {
                 accessKeyLabel.setVisible(false);
                 accessKeyTextField.setVisible(false);
                 secretKeyLabel.setVisible(false);
                 secretKeyTextField.setVisible(false);
+                storageRegionLabel.setVisible(false);
+                storageRegionTextField.setVisible(false);
             }
         });
 

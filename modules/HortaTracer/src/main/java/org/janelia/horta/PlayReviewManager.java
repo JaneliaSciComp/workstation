@@ -67,12 +67,12 @@ public class PlayReviewManager {
         playState.setPlayList(locationList);
         setPausePlayback(false);
         this.fps = speed;
-        this.fpsAnimator.setFPS(speed);
         this.stepScale = stepScale;
         this.autoRotation = autoRotation;
         SimpleWorker scrollWorker = new SimpleWorker() {
             @Override
             protected void doStuff() throws Exception {
+                fpsAnimator.setFPS(fps);
                 fpsAnimator.start();
                 TmViewState sampleLocation = locationList.get(0);
                 Quaternion q = new Quaternion();
