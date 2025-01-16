@@ -164,6 +164,9 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         if (storageAttributes.get("SecretKey") != null) {
             requestInvocation.header("SecretKey", storageAttributes.get("SecretKey"));
         }
+        if (storageAttributes.get("AWSRegion") != null) {
+            requestInvocation.header("AWSRegion", storageAttributes.get("AWSRegion"));
+        }
         Response response = requestInvocation.post(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(TmSample.class);
@@ -490,6 +493,9 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         }
         if (storageAttributes.get("SecretKey") != null) {
             requestInvocation.header("SecretKey", storageAttributes.get("SecretKey"));
+        }
+        if (storageAttributes.get("AWSRegion") != null) {
+            requestInvocation.header("AWSRegion", storageAttributes.get("AWSRegion"));
         }
         Response response = requestInvocation.head();
         int responseStatus = response.getStatus();

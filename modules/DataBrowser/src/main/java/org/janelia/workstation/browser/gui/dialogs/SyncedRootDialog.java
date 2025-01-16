@@ -32,6 +32,8 @@ public class SyncedRootDialog extends ModalDialog {
     private JTextField accessKeyTextField;
     private JLabel secretKeyLabel;
     private JTextField secretKeyTextField;
+    private JLabel storageRegionLabel;
+    private JTextField storageRegionTextField;
     private JTextField nameField;
     private JTextField depthField;
     private JPanel subjectPanel;
@@ -75,17 +77,27 @@ public class SyncedRootDialog extends ModalDialog {
         secretKeyLabel.setVisible(false);
         secretKeyTextField.setVisible(false);
 
+        storageRegionTextField = new JTextField(50);
+        storageRegionTextField.setToolTipText("S3 storage region");
+        storageRegionLabel = attrPanel.addItem("Storage Region", storageRegionTextField);
+        storageRegionLabel.setVisible(false);
+        storageRegionTextField.setVisible(false);
+
         storageCredentialsRequiredCheckbox.addActionListener(e -> {
             if (storageCredentialsRequiredCheckbox.isSelected()) {
                 accessKeyLabel.setVisible(true);
                 secretKeyLabel.setVisible(true);
+                storageRegionLabel.setVisible(true);
                 accessKeyTextField.setVisible(true);
                 secretKeyTextField.setVisible(true);
+                storageRegionTextField.setVisible(true);
             } else {
                 accessKeyLabel.setVisible(false);
                 secretKeyLabel.setVisible(false);
+                storageRegionLabel.setVisible(false);
                 accessKeyTextField.setVisible(false);
                 secretKeyTextField.setVisible(false);
+                storageRegionTextField.setVisible(false);
             }
         });
 
@@ -227,6 +239,9 @@ public class SyncedRootDialog extends ModalDialog {
         }
         if (StringUtils.isNotBlank(secretKeyTextField.getText())) {
             syncedRoot.setStorageAttribute("SecretKey", secretKeyTextField.getText().trim());
+        }
+        if (StringUtils.isNotBlank(storageRegionTextField.getText())) {
+            syncedRoot.setStorageAttribute("AWSRegion", storageRegionTextField.getText().trim());
         }
 
         if (syncedRoot.getDiscoveryAgents().isEmpty()) {

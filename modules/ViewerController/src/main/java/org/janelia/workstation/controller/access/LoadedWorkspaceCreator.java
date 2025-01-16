@@ -127,22 +127,25 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         inputDialog.add(storageCredentialsRequiredCheckbox);
 
         accessKeyLabel.setVisible(false);
+        secretKeyLabel.setVisible(false);
+        storageRegionLabel.setVisible(false);
+
         accessKeyTextField.setVisible(false);
+        secretKeyTextField.setVisible(false);
+        storageRegionTextField.setVisible(false);
+
         accessKeyLabel.setLabelFor(accessKeyTextField);
+        secretKeyLabel.setLabelFor(secretKeyTextField);
+        storageRegionLabel.setLabelFor(storageRegionTextField);
+
         inputDialog.add(accessKeyLabel);
         inputDialog.add(accessKeyTextField);
 
-        secretKeyLabel.setVisible(false);
-        secretKeyTextField.setVisible(false);
-        secretKeyLabel.setLabelFor(secretKeyTextField);
         inputDialog.add(secretKeyLabel);
         inputDialog.add(secretKeyTextField);
 
-        storageRegionLabel.setVisible(false);
-        storageRegionTextField.setVisible(false);
-        storageRegionLabel.setLabelFor(storageRegionTextField);
         inputDialog.add(storageRegionLabel);
-        inputDialog.add(storageRegionLabel);
+        inputDialog.add(storageRegionTextField);
 
         storageCredentialsRequiredCheckbox.addActionListener(e -> {
             if (storageCredentialsRequiredCheckbox.isSelected()) {
@@ -200,7 +203,8 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
                 TiledMicroscopeRestClient cf = new TiledMicroscopeRestClient();
                 String swcFolder = bldr.toString().trim();
 
-                Map<String, Object> storageAttributes = getStorageAttributes(accessKeyTextField.getText(), secretKeyTextField.getText());
+                Map<String, Object> storageAttributes = getStorageAttributes(
+                        accessKeyTextField.getText(), secretKeyTextField.getText(), storageRegionTextField.getText());
                 if (cf.isServerPathAvailable(swcFolder, true, storageAttributes) ) {
                     Boolean markAsFragments;
                     inputDialog.setVisible(false);
@@ -229,13 +233,16 @@ public class LoadedWorkspaceCreator extends BaseContextualNodeAction {
         inputDialog.setVisible(true);
     }
 
-    static private Map<String, Object> getStorageAttributes(String accessKeyField,String secretKeyField ) {
+    static private Map<String, Object> getStorageAttributes(String accessKeyField, String secretKeyField, String storageRegionField) {
         Map<String, Object> storageAttributes = new HashMap<>();
         if (StringUtils.isNotBlank(accessKeyField)) {
             storageAttributes.put("AccessKey", accessKeyField.trim());
         }
         if (StringUtils.isNotBlank(secretKeyField)) {
             storageAttributes.put("SecretKey", secretKeyField.trim());
+        }
+        if (StringUtils.isNotBlank(storageRegionField)) {
+            storageAttributes.put("AWSRegion", storageRegionField.trim());
         }
         return storageAttributes;
     }
