@@ -83,7 +83,8 @@ public class RefreshSyncedRootAction extends BaseContextualNodeAction {
                 Long taskId = asyncServiceClient.invokeService("syncedRoot",
                         serviceArgsBuilder.build(),
                         null,
-                        ImmutableMap.of()
+                        ImmutableMap.of(),
+                        syncedRoot.getStorageAttributes()
                 );
 
                 setServiceId(taskId);

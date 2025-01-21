@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 
@@ -45,7 +46,8 @@ public class AsyncServiceClient extends RESTClientBase {
     public Long invokeService(String serviceName,
                               List<String> serviceArgs,
                               String processingLocation,
-                              Map<String, String> serviceResources) throws ServiceException {
+                              Map<String, String> serviceResources,
+                              Map<String, Object> invocationHeaders) throws ServiceException {
         AsyncServiceData body = new AsyncServiceData();
         if (serviceArgs != null) {
             body.args.addAll(serviceArgs);
@@ -57,9 +59,12 @@ public class AsyncServiceClient extends RESTClientBase {
             body.processingLocation = processingLocation;
         }
         WebTarget target = service.path("async-services").path(serviceName);
-        Response response = target
-                .request("application/json")
-                .post(Entity.json(body));
+        Invocation.Builder requestInvocation = target
+                .request("application/json");
+        for (Map.Entry<String, Object> entry : invocationHeaders.entrySet()) {
+            requestInvocation = requestInvocation.header(entry.getKey(), String.valueOf(entry.getValue()));
+        }
+        Response response = requestInvocation.post(Entity.json(body));
         if (response.getStatus() != 201) {
             throw new ServiceException("Service " + serviceName + " returned status "+response.getStatus());
         }

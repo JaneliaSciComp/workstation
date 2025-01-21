@@ -12,15 +12,16 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.janelia.it.jacs.shared.utils.HttpClientHelper;
+import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
+import org.janelia.jacsstorage.clients.api.rendering.JadeBasedRenderedVolumeLocation;
 import org.janelia.model.security.AppAuthorization;
-import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.rendering.RenderedVolumeLocation;
 import org.janelia.rendering.RenderedVolumeMetadata;
 import org.janelia.rendering.TileInfo;
 import org.janelia.rendering.TileKey;
-import org.janelia.rendering.utils.ClientProxy;
+import org.janelia.jacsstorage.clients.api.http.ClientProxy;
 import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.slf4j.Logger;
@@ -42,6 +43,7 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
 
     // Metadata: file location required for local system as mount point.
     private final ObjectMapper objectMapper;
+    private final JadeStorageAttributes storageAttributes;
     private final AppAuthorization appAuthorization;
     private final RenderedVolumeLoader renderedVolumeLoader;
     private final int concurrency;
@@ -51,8 +53,10 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
     RestServiceBasedBlockTiffOctreeLoadAdapter(TileFormat tileFormat,
                                                URI volumeBaseURI,
                                                int concurrency,
+                                               JadeStorageAttributes storageAttributes,
                                                AppAuthorization appAuthorization) {
         super(tileFormat, volumeBaseURI);
+        this.storageAttributes = storageAttributes;
         this.appAuthorization = appAuthorization;
         this.renderedVolumeLoader = new RenderedVolumeLoaderImpl();
         this.concurrency = concurrency;
@@ -75,12 +79,13 @@ public class RestServiceBasedBlockTiffOctreeLoadAdapter extends BlockTiffOctreeL
             String strData = getMethod.getResponseBodyAsString();
             renderedVolumeMetadata = objectMapper.readValue(strData, RenderedVolumeMetadata.class);
             renderedVolumeLocation = new CachedRenderedVolumeLocation(
-                    new JADEBasedRenderedVolumeLocation(
+                    new JadeBasedRenderedVolumeLocation(
                             renderedVolumeMetadata.getConnectionURI(),
                             renderedVolumeMetadata.getDataStorageURI(),
                             renderedVolumeMetadata.getVolumeBasePath(),
                             appAuthorization.getAuthenticationToken(),
                             null,
+                            storageAttributes,
                             () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
                     ),
                     LocalCacheMgr.getInstance().getLocalFileCacheStorage(),

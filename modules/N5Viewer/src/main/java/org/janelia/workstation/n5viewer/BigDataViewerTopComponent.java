@@ -1,6 +1,7 @@
 package org.janelia.workstation.n5viewer;
 
 import com.google.common.eventbus.Subscribe;
+import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
 import org.janelia.jacsstorage.clients.api.JadeStorageService;
 import org.janelia.model.domain.files.N5Container;
 import org.janelia.saalfeldlab.n5.N5Reader;
@@ -104,7 +105,9 @@ public final class BigDataViewerTopComponent extends TopComponent {
 
         JadeStorageService jadeStorage = FileMgr.getFileMgr().getStorageService();
         try {
-            N5Reader n5Reader = new N5JadeReader(jadeStorage, n5Container.getFilepath());
+            JadeStorageAttributes storageAttributes = new JadeStorageAttributes()
+                    .setFromMap(n5Container.getStorageAttributes());
+            N5Reader n5Reader = new N5JadeReader(jadeStorage, n5Container.getFilepath(), storageAttributes);
             DataSelection dataSelection = new DataSelection(n5Reader,
                     Collections.singletonList(n5TreeNode.getMetadata()));
             this.n5Viewer = new N5Viewer(null, dataSelection, false);
@@ -121,7 +124,9 @@ public final class BigDataViewerTopComponent extends TopComponent {
 
         JadeStorageService jadeStorage = FileMgr.getFileMgr().getStorageService();
         try {
-            N5Reader n5Reader = new N5JadeReader(jadeStorage, n5Container.getFilepath());
+            JadeStorageAttributes storageAttributes = new JadeStorageAttributes()
+                    .setFromMap(n5Container.getStorageAttributes());
+            N5Reader n5Reader = new N5JadeReader(jadeStorage, n5Container.getFilepath(), storageAttributes);
             DataSelection dataSelection = new DataSelection(n5Reader,
                     Collections.singletonList(n5TreeNode.getMetadata()));
             n5Viewer.addData(dataSelection);

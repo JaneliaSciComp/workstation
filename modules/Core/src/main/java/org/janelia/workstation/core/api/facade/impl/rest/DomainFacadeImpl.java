@@ -208,7 +208,7 @@ public class DomainFacadeImpl extends RESTClientBase implements DomainFacade {
         WebTarget storageService = RestJsonClientManager.getInstance().getTarget(remoteStorageUrl, true);
         for (String storagePath : storagePaths) {
             WebTarget target = storageService.path("storage_content/storage_path_redirect")
-                    .path(storagePath);
+                    .queryParam("contentPath", storagePath);
             Response response = target
                     .request("application/json")
                     .delete();

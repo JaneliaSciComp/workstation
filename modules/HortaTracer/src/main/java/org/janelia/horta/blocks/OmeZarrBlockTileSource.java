@@ -11,6 +11,7 @@ import org.janelia.horta.omezarr.JadeZarrStoreProvider;
 import org.janelia.horta.omezarr.OmeZarrJadeReader;
 import org.janelia.horta.omezarr.OmeZarrReaderProgressObserver;
 import org.janelia.horta.omezarr.OmeZarrReaderCompletionObserver;
+import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
 import org.janelia.model.domain.enums.FileType;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
 import org.janelia.workstation.controller.model.color.ImageColorModel;
@@ -80,7 +81,9 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     public OmeZarrBlockTileSource init(TmSample sample, OmeZarrReaderProgressObserver progressObserver, OmeZarrReaderCompletionObserver completionObserver) throws IOException {
         this.sampleOmeZarrTilesBaseDir = StringUtils.appendIfMissing(sample.getFiles().get(FileType.LargeVolumeZarr), "/");
 
-        this.reader = new OmeZarrJadeReader(FileMgr.getFileMgr().getStorageService(), this.sampleOmeZarrTilesBaseDir);
+        JadeStorageAttributes storageAttributes = new JadeStorageAttributes()
+                .setFromMap(sample.getStorageAttributes());
+        this.reader = new OmeZarrJadeReader(FileMgr.getFileMgr().getStorageService(), this.sampleOmeZarrTilesBaseDir, storageAttributes);
 
         omeZarrGroup = OmeZarrGroup.open(new JadeZarrStoreProvider("", reader));
 

@@ -1,13 +1,26 @@
 package org.janelia.horta;
 
-import java.awt.*;
-
-import org.apache.commons.lang.StringUtils;
-import org.janelia.horta.omezarr.OmeZarrReaderCompletionObserver;
-import org.janelia.model.domain.enums.FileType;
-import java.awt.datatransfer.*;
-import java.awt.dnd.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FileDialog;
+import java.awt.FlowLayout;
+import java.awt.Frame;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -19,14 +32,37 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.concurrent.Executors;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
 import javax.media.opengl.GLAutoDrawable;
-import javax.swing.*;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComponent;
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JSlider;
+import javax.swing.JTextField;
+import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.MouseInputListener;
@@ -36,38 +72,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.jogamp.opengl.util.awt.AWTGLReadBufferUtil;
-
+import org.apache.commons.lang.StringUtils;
+import org.janelia.geometry3d.Matrix4;
+import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.ObservableInterface;
-import org.janelia.horta.actors.OmeZarrVolumeActor;
-import org.janelia.horta.blocks.OmeZarrBlockTileSource;
-import org.janelia.horta.omezarr.OmeZarrReaderProgressObserver;
-import org.janelia.horta.loader.*;
-import org.janelia.workstation.common.actions.CopyToClipboardAction;
-import org.janelia.workstation.controller.dialog.NeuronColorDialog;
-import org.janelia.workstation.controller.dialog.SaveOrOpenDeepLinkDialog;
-import org.janelia.workstation.controller.listener.ColorModelListener;
-import org.janelia.workstation.controller.listener.UnmixingListener;
-import org.janelia.workstation.controller.listener.NeuronVertexCreationListener;
-import org.janelia.workstation.controller.listener.NeuronVertexDeletionListener;
-import org.janelia.workstation.controller.listener.NeuronVertexUpdateListener;
-import org.janelia.workstation.controller.listener.TolerantMouseClickListener;
-import org.janelia.workstation.controller.model.color.ChannelColorModel;
-import org.janelia.workstation.controller.model.color.ColorSwatch;
-import org.janelia.workstation.controller.model.color.ImageColorModel;
-import org.janelia.workstation.controller.model.annotations.neuron.VertexCollectionWithNeuron;
-import org.janelia.workstation.controller.model.annotations.neuron.VertexWithNeuron;
-import org.janelia.geometry3d.*;
+import org.janelia.geometry3d.PerspectiveCamera;
+import org.janelia.geometry3d.Quaternion;
+import org.janelia.geometry3d.Rotation;
+import org.janelia.geometry3d.Vantage;
+import org.janelia.geometry3d.Vector3;
+import org.janelia.geometry3d.Vector4;
+import org.janelia.geometry3d.Viewport;
+import org.janelia.geometry3d.WavefrontObjLoader;
 import org.janelia.gltools.GL3Actor;
 import org.janelia.gltools.MeshActor;
 import org.janelia.gltools.MultipassRenderer;
 import org.janelia.gltools.material.TransparentEnvelope;
-import org.janelia.horta.volume.VolumeMipMaterial;
 import org.janelia.horta.actions.ResetHortaRotationAction;
 import org.janelia.horta.activity_logging.ActivityLogHelper;
 import org.janelia.horta.actors.CenterCrossHairActor;
+import org.janelia.horta.actors.OmeZarrVolumeActor;
 import org.janelia.horta.actors.ScaleBar;
 import org.janelia.horta.actors.TetVolumeActor;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
+import org.janelia.horta.blocks.OmeZarrBlockTileSource;
 import org.janelia.horta.controller.HortaManager;
 import org.janelia.horta.loader.DroppedFileHandler;
 import org.janelia.horta.loader.GZIPFileLoader;
@@ -75,6 +103,7 @@ import org.janelia.horta.loader.HortaKtxLoader;
 import org.janelia.horta.loader.HortaVolumeCache;
 import org.janelia.horta.loader.LZ4FileLoader;
 import org.janelia.horta.loader.ObjMeshLoader;
+import org.janelia.horta.loader.OmeZarrLoader;
 import org.janelia.horta.loader.TarFileLoader;
 import org.janelia.horta.loader.TgzFileLoader;
 import org.janelia.horta.loader.TilebaseYamlLoader;
@@ -83,24 +112,64 @@ import org.janelia.horta.volume.BrickActor;
 import org.janelia.horta.volume.BrickInfo;
 import org.janelia.horta.volume.LocalVolumeBrickSource;
 import org.janelia.horta.volume.StaticVolumeBrickSource;
+import org.janelia.horta.volume.VolumeMipMaterial;
+import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
+import org.janelia.jacsstorage.clients.api.http.ClientProxy;
 import org.janelia.model.domain.DomainConstants;
-import org.janelia.model.domain.tiledMicroscope.*;
+import org.janelia.model.domain.enums.FileType;
+import org.janelia.model.domain.tiledMicroscope.TmColorModel;
+import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
+import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
+import org.janelia.model.domain.tiledMicroscope.TmSample;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
-import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.scenewindow.OrbitPanZoomInteractor;
 import org.janelia.scenewindow.SceneRenderer;
 import org.janelia.scenewindow.SceneRenderer.CameraType;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
+import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.access.ModelTranslation;
-import org.janelia.workstation.controller.action.*;
+import org.janelia.workstation.controller.action.AddEditNoteAction;
+import org.janelia.workstation.controller.action.DeleteNeuronSubtreeAction;
+import org.janelia.workstation.controller.action.DeleteVertexLinkAction;
+import org.janelia.workstation.controller.action.NeuronDeleteAction;
+import org.janelia.workstation.controller.action.NeuronRenameAction;
+import org.janelia.workstation.controller.action.NeuronSetRadiusAction;
+import org.janelia.workstation.controller.action.RerootNeuronAction;
+import org.janelia.workstation.controller.action.SplitNeuronAtVertexAction;
+import org.janelia.workstation.controller.action.SplitNeuronBetweenVerticesAction;
+import org.janelia.workstation.controller.action.TransferNeuriteAction;
+import org.janelia.workstation.controller.dialog.NeuronColorDialog;
 import org.janelia.workstation.controller.dialog.NeuronGroupsDialog;
-import org.janelia.workstation.controller.eventbus.*;
+import org.janelia.workstation.controller.dialog.SaveOrOpenDeepLinkDialog;
+import org.janelia.workstation.controller.eventbus.AnimationEvent;
+import org.janelia.workstation.controller.eventbus.ColorModelUpdateEvent;
+import org.janelia.workstation.controller.eventbus.MeshDeleteEvent;
+import org.janelia.workstation.controller.eventbus.MeshUpdateEvent;
+import org.janelia.workstation.controller.eventbus.MeshVisibilityEvent;
+import org.janelia.workstation.controller.eventbus.MovieEvent;
+import org.janelia.workstation.controller.eventbus.NeuronUpdateEvent;
+import org.janelia.workstation.controller.eventbus.ViewEvent;
+import org.janelia.workstation.controller.eventbus.ViewerCloseEvent;
+import org.janelia.workstation.controller.eventbus.ViewerOpenEvent;
+import org.janelia.workstation.controller.listener.ColorModelListener;
+import org.janelia.workstation.controller.listener.NeuronVertexCreationListener;
+import org.janelia.workstation.controller.listener.NeuronVertexDeletionListener;
+import org.janelia.workstation.controller.listener.NeuronVertexUpdateListener;
+import org.janelia.workstation.controller.listener.TolerantMouseClickListener;
+import org.janelia.workstation.controller.listener.UnmixingListener;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.TmViewState;
+import org.janelia.workstation.controller.model.annotations.neuron.VertexCollectionWithNeuron;
+import org.janelia.workstation.controller.model.annotations.neuron.VertexWithNeuron;
+import org.janelia.workstation.controller.model.color.ChannelColorModel;
+import org.janelia.workstation.controller.model.color.ColorSwatch;
+import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.workstation.controller.options.ApplicationPanel;
 import org.janelia.workstation.core.api.LocalCacheMgr;
 import org.janelia.workstation.core.api.http.RestJsonClientManager;
@@ -2328,7 +2397,7 @@ public final class NeuronTracerTopComponent extends TopComponent
             return null;
         }
         try {
-            return new KtxOctreeBlockTileSource(getCurrentSourceURL(), getTileLoader()).init(tmSample);
+            return new KtxOctreeBlockTileSource(getCurrentSourceURL(), getTileLoader(tmSample)).init(tmSample);
         } catch (Exception e) {
             logger.warn("Error initializing KTX source for {}", TmModelManager.getInstance().getCurrentSample(), e);
             JOptionPane.showMessageDialog(
@@ -2340,10 +2409,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         }
     }
 
-    TileLoader getTileLoader() {
+    TileLoader getTileLoader(TmSample sample) {
         if (ApplicationOptions.getInstance().isUseHTTPForTileAccess()) {
             return new CachedTileLoader(
-                    new JadeBasedTileLoader(new JadeServiceClient(ConsoleProperties.getString("jadestorage.rest.url"), () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false))),
+                    new JadeBasedTileLoader(new JadeServiceClient(
+                            ConsoleProperties.getString("jadestorage.rest.url"),
+                            () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)),
+                            new JadeStorageAttributes().setFromMap(sample.getStorageAttributes())),
                     LocalCacheMgr.getInstance().getLocalFileCacheStorage(),
                     CACHE_CONCURRENCY,
                     Executors.newFixedThreadPool(

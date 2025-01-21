@@ -561,7 +561,8 @@ public class ImportImageFilesDialog extends ModalDialog {
         return asyncServiceClient.invokeService("dataTreeLoad",
                 serviceArgsBuilder.build(),
                 "LSF_JAVA",
-                ImmutableMap.of()
+                ImmutableMap.of(),
+                ImmutableMap.of() // invocation headers
         );
     }
 

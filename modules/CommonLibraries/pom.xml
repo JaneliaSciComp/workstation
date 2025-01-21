@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>9.20.1</version>
+        <version>9.21.RC4</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>CommonLibraries</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>libraries</artifactId>
-    <version>9.20.1</version>
+    <version>9.21.RC4</version>
     <packaging>nbm</packaging>
 
     <properties>
@@ -52,14 +52,6 @@
         <dependency>
             <groupId>org.janelia.jacs-model</groupId>
             <artifactId>jacs-model-rendering</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.jacs-storage</groupId>
-            <artifactId>jacsstorage-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.jacs-storage</groupId>
-            <artifactId>jacsstorage-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.janelia.jacs-storage</groupId>
@@ -776,6 +768,9 @@
                         <publicPackage>org.janelia.rendering</publicPackage>
                         <publicPackage>org.janelia.rendering.utils</publicPackage>
                         <publicPackage>org.janelia.rendering.ymlrepr</publicPackage>
+                        <publicPackage>org.janelia.jacsstorage.clients.api</publicPackage>
+                        <publicPackage>org.janelia.jacsstorage.clients.api.http</publicPackage>
+                        <publicPackage>org.janelia.jacsstorage.clients.api.rendering</publicPackage>
                         <publicPackage>org.jdesktop.swingx.*</publicPackage>
                         <publicPackage>org.jnp.*</publicPackage>
                         <publicPackage>org.perf4j</publicPackage>

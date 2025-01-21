@@ -58,11 +58,11 @@ class MasterStorageClient extends AbstractStorageClient {
     }
 
     String createStorage(String storageName, String storageContext, String storageTags) {
-        return createStorageForResource(getCreateStorageURL(storageName, "DATA_DIRECTORY"), storageContext, storageTags);
-    }
-
-    private String getCreateStorageURL(String storageName, String storageType) {
-        return baseUrl + "/storage/" + storageName + "/format/" + storageType;
+        return createStorageForResource(
+                baseUrl + "/storage/" + storageName + "/format/DATA_DIRECTORY",
+                storageContext,
+                storageTags
+        );
     }
 
     private String createStorageForResource(String resourceURI, String storageContext, String storageTags) {
