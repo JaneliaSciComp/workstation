@@ -74,7 +74,7 @@ public class TiledMicroscopeDomainMgr {
         return getSample(workspace.getSampleRef().getTargetId());
     }
 
-    public TmSample createSample(String name, String filepath, String ktxPath, String zarrPath) throws Exception {
+    public TmSample createSample(String name, String filepath, String ktxPath, String zarrPath, Map<String, Object> storageAttributes) throws Exception {
         LOG.debug("createTiledMicroscopeSample(name={}, filepath={})", name, filepath);
         Map<String,Object> constants = client.getTmSampleConstants(filepath);
         if (constants != null) {
@@ -91,7 +91,7 @@ public class TiledMicroscopeDomainMgr {
                 DomainUtils.setFilepath(sample, FileType.LargeVolumeZarr, zarrPath);
             }
             // call out to server to get origin/scaling information
-            TmSample persistedSample = save(sample);
+            TmSample persistedSample = save(sample, storageAttributes);
 
             // Server should have put the sample in the Samples root folder. Refresh the Samples folder to show it in the explorer.
             getModel().invalidate(tmSampleFolder);
@@ -103,11 +103,11 @@ public class TiledMicroscopeDomainMgr {
         }
     }
 
-    public TmSample save(TmSample sample) throws Exception {
+    public TmSample save(TmSample sample, Map<String, Object> storageAttributes) throws Exception {
         LOG.debug("save({})",sample);
         TmSample canonicalObject;
         synchronized (this) {
-            canonicalObject = getModel().putOrUpdate(sample.getId()==null ? client.create(sample) : client.update(sample));
+            canonicalObject = getModel().putOrUpdate(sample.getId()==null ? client.create(sample, storageAttributes) : client.update(sample, storageAttributes));
         }
         if (sample.getId()==null) {
             getModel().notifyDomainObjectCreated(canonicalObject);

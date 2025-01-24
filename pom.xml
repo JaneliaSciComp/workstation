@@ -6,7 +6,7 @@
     <name>Janelia Workstation</name>
     <groupId>org.janelia</groupId>
     <artifactId>workstation</artifactId>
-    <version>9.20.1</version>
+    <version>9.21.RC4</version>
     <packaging>pom</packaging>
 
     <!-- Project Metadata -->
@@ -109,11 +109,11 @@
 
         <janeliaws.jetty.version>9.4.46.v20220331</janeliaws.jetty.version>
 
-        <janeliaws.jacs-model.version>3.00</janeliaws.jacs-model.version>
+        <janeliaws.jacs-model.version>3.3.0</janeliaws.jacs-model.version>
 
         <janeliaws.jacs-messaging.version>2.5.0</janeliaws.jacs-messaging.version>
 
-        <janeliaws.jacs-storage.version>1.19.0.RELEASE</janeliaws.jacs-storage.version>
+        <janeliaws.jacs-storage.version>1.22.0</janeliaws.jacs-storage.version>
 
         <!--==== Plugin Versions ==================================================================================-->
 
@@ -379,16 +379,6 @@
                 <groupId>org.janelia.jacs-messaging</groupId>
                 <artifactId>jacs-messaging-core</artifactId>
                 <version>${janeliaws.jacs-messaging.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.janelia.jacs-storage</groupId>
-                <artifactId>jacsstorage-api</artifactId>
-                <version>${janeliaws.jacs-storage.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.janelia.jacs-storage</groupId>
-                <artifactId>jacsstorage-core</artifactId>
-                <version>${janeliaws.jacs-storage.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.janelia.jacs-storage</groupId>

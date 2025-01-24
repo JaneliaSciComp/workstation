@@ -59,14 +59,14 @@ public class SystemInfo {
 
     public static final boolean isMacIntel64 = isMac && "x86_64".equals(OS_ARCH);
 
-    public static final String nativeFileManagerName = isMac ? "Finder" : isGnome ? "Nautilus" : isKDE ? "Konqueror" : "Explorer";
-
     public static final String optionsMenuName = isMac ? "Preferences" : "Tools->Options";
 
     public static final String appName = ConsoleProperties.getString("client.Title");
     public static final String appVersion = ConsoleProperties.getString("client.versionNumber");
 
-    public static final boolean isDev = "DEV".equals(appVersion);
+    public static final boolean isDev = "DEV".equals(appVersion)
+            || appVersion.contains("SNAPSHOT")
+            || appVersion.contains("RC");
     public static final boolean isTest = "TEST".equals(appVersion);
     
     /**

@@ -7,6 +7,7 @@ import java.util.*;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
@@ -96,14 +97,23 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         return response.readEntity(new GenericType<Map<String,Object>>() {});
     }
 
-    public TmSample create(TmSample tmSample) {
+    public TmSample create(TmSample tmSample, Map<String, Object> storageAttributes) {
         DomainQuery query = new DomainQuery();
         query.setSubjectKey(AccessManager.getSubjectKey());
         query.setDomainObject(tmSample);
         WebTarget target = getMouselightDataEndpoint("/sample");
-        Response response = target
-                .request("application/json")
-                .put(Entity.json(query));
+        Invocation.Builder requestInvocation = target
+                .request("application/json");
+        if (storageAttributes.get("AccessKey") != null) {
+            requestInvocation.header("AccessKey", storageAttributes.get("AccessKey"));
+        }
+        if (storageAttributes.get("SecretKey") != null) {
+            requestInvocation.header("SecretKey", storageAttributes.get("SecretKey"));
+        }
+        if (storageAttributes.get("AWSRegion") != null) {
+            requestInvocation.header("AWSRegion", storageAttributes.get("AWSRegion"));
+        }
+        Response response = requestInvocation.put(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(TmSample.class);
     }
@@ -141,14 +151,23 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         checkBadResponse(target, response);
     }
 
-    public TmSample update(TmSample tmSample) {
+    public TmSample update(TmSample tmSample, Map<String, Object> storageAttributes) {
         DomainQuery query = new DomainQuery();
         query.setDomainObject(tmSample);
         query.setSubjectKey(AccessManager.getSubjectKey());
         WebTarget target = getMouselightDataEndpoint("/sample");
-        Response response = target
-                .request("application/json")
-                .post(Entity.json(query));
+        Invocation.Builder requestInvocation = target
+                .request("application/json");
+        if (storageAttributes.get("AccessKey") != null) {
+            requestInvocation.header("AccessKey", storageAttributes.get("AccessKey"));
+        }
+        if (storageAttributes.get("SecretKey") != null) {
+            requestInvocation.header("SecretKey", storageAttributes.get("SecretKey"));
+        }
+        if (storageAttributes.get("AWSRegion") != null) {
+            requestInvocation.header("AWSRegion", storageAttributes.get("AWSRegion"));
+        }
+        Response response = requestInvocation.post(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(TmSample.class);
     }
@@ -462,14 +481,23 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
                 .toString();
     }
 
-    public boolean isServerPathAvailable(String serverPath, boolean directoryOnly) {
+    public boolean isServerPathAvailable(String serverPath, boolean directoryOnly, Map<String, Object> storageAttributes) {
         Client client = RestJsonClientManager.getInstance().getHttpClient(true);
-        Response response = client.target(remoteStorageUrl)
+        Invocation.Builder requestInvocation = client.target(remoteStorageUrl)
                 .path("storage_content/storage_path_redirect")
-                .path(serverPath)
                 .queryParam("directoryOnly", directoryOnly)
-                .request()
-                .head();
+                .queryParam("contentPath", serverPath)
+                .request();
+        if (storageAttributes.get("AccessKey") != null) {
+            requestInvocation.header("AccessKey", storageAttributes.get("AccessKey"));
+        }
+        if (storageAttributes.get("SecretKey") != null) {
+            requestInvocation.header("SecretKey", storageAttributes.get("SecretKey"));
+        }
+        if (storageAttributes.get("AWSRegion") != null) {
+            requestInvocation.header("AWSRegion", storageAttributes.get("AWSRegion"));
+        }
+        Response response = requestInvocation.head();
         int responseStatus = response.getStatus();
         return responseStatus == 200;
     }

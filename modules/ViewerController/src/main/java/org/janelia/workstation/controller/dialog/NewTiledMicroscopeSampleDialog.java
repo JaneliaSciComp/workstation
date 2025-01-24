@@ -3,6 +3,8 @@ package org.janelia.workstation.controller.dialog;
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
@@ -24,6 +26,10 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 	private final JTextField pathToOctreeTextField = new JTextField(40);
 	private final JTextField pathToKTXTextField = new JTextField(40);
 	private final JTextField pathToOmeZarrFormatTextField = new JTextField(40);
+	private final JCheckBox storageCredentialsRequiredCheckbox = new JCheckBox();
+	private final JTextField storageAccessKeyTextField = new JTextField(40);
+	private final JTextField storageSecretKeyTextField = new JTextField(40);
+	private final JTextField storageRegionTextField = new JTextField(40);
 	private final JCheckBox rawCompressedField = new JCheckBox();
 	private final JComboBox<String> sampleFormat = new JComboBox<>(new String[] {ktxSample, zarrSample});
 
@@ -85,6 +91,61 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		attrPanel.add(pathToOmeZarrFormatLabel, c);
 		c.gridx = 1;
 		attrPanel.add(pathToOmeZarrFormatTextField, c);
+
+		c.gridx = 0;
+		c.gridy = 5;
+		JLabel storageCredentialsRequiredLabel = new JLabel("Storage requires credentials");
+		attrPanel.add(storageCredentialsRequiredLabel, c);
+		c.gridx = 1;
+		attrPanel.add(storageCredentialsRequiredCheckbox, c);
+
+		JLabel accessKeyLabel = new JLabel("Storage Access Key:");
+		accessKeyLabel.setLabelFor(storageAccessKeyTextField);
+		c.gridx = 0;
+		c.gridy = 6;
+		attrPanel.add(accessKeyLabel, c);
+		c.gridx = 1;
+		attrPanel.add(storageAccessKeyTextField, c);
+		accessKeyLabel.setVisible(false);
+		storageAccessKeyTextField.setVisible(false);
+
+		JLabel secretKeyLabel = new JLabel("Storage Secret Key:");
+		secretKeyLabel.setLabelFor(storageSecretKeyTextField);
+		c.gridx = 0;
+		c.gridy = 7;
+		attrPanel.add(secretKeyLabel, c);
+		c.gridx = 1;
+		attrPanel.add(storageSecretKeyTextField, c);
+		secretKeyLabel.setVisible(false);
+		storageSecretKeyTextField.setVisible(false);
+
+		JLabel storageRegionLabel = new JLabel("Storage Region:");
+		storageRegionLabel.setLabelFor(storageRegionTextField);
+		c.gridx = 0;
+		c.gridy = 8;
+		attrPanel.add(storageRegionLabel, c);
+		c.gridx = 1;
+		attrPanel.add(storageRegionTextField, c);
+		storageRegionLabel.setVisible(false);
+		storageRegionTextField.setVisible(false);
+
+		storageCredentialsRequiredCheckbox.addActionListener(e -> {
+            if (storageCredentialsRequiredCheckbox.isSelected()) {
+                accessKeyLabel.setVisible(true);
+				storageAccessKeyTextField.setVisible(true);
+                secretKeyLabel.setVisible(true);
+				storageSecretKeyTextField.setVisible(true);
+				storageRegionLabel.setVisible(true);
+				storageRegionTextField.setVisible(true);
+			} else {
+                accessKeyLabel.setVisible(false);
+				storageAccessKeyTextField.setVisible(false);
+                secretKeyLabel.setVisible(false);
+				storageSecretKeyTextField.setVisible(false);
+				storageRegionLabel.setVisible(false);
+				storageRegionTextField.setVisible(false);
+            }
+        });
 
 		// Zarr selections
 		sampleFormat.addItemListener(new ItemListener() {
@@ -182,6 +243,9 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 		String octree = pathToOctreeTextField.getText();
 		String ktx = StringUtils.isBlank(pathToKTXTextField.getText()) ? null : pathToKTXTextField.getText();
 		String alt = StringUtils.isBlank(pathToOmeZarrFormatTextField.getText()) ? null : pathToOmeZarrFormatTextField.getText();
+		String accessKey = StringUtils.isBlank(storageAccessKeyTextField.getText()) ? null : storageAccessKeyTextField.getText();
+		String secretKey = StringUtils.isBlank(storageSecretKeyTextField.getText()) ? null : storageSecretKeyTextField.getText();
+		String storageRegion = StringUtils.isBlank(storageRegionTextField.getText()) ? null : storageRegionTextField.getText();
 		if (sampleFormat.getSelectedItem()==ktxSample && octree.isEmpty()) {
 			JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
 					"You must specify both a sample name and location!",
@@ -202,7 +266,9 @@ public class NewTiledMicroscopeSampleDialog extends ModalDialog {
 			name = file.getName();
 		}
 
-		Action action = new SaveTiledMicroscopeSampleAction(sample, name, octree, ktx, alt, rawCompressedField.isSelected());
+		Action action = new SaveTiledMicroscopeSampleAction(
+				sample, name, octree, ktx, alt, rawCompressedField.isSelected(), accessKey, secretKey, storageRegion
+		);
 		action.actionPerformed(null);
 		NewTiledMicroscopeSampleDialog.this.dispose();
 	}

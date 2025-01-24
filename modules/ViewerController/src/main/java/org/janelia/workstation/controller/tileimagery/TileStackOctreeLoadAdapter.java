@@ -2,6 +2,7 @@ package org.janelia.workstation.controller.tileimagery;
 
 import java.net.URI;
 
+import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
 import org.janelia.workstation.core.api.AccessManager;
 
 /**
@@ -15,12 +16,12 @@ public class TileStackOctreeLoadAdapter extends BlockTiffOctreeLoadAdapter {
 
     private final BlockTiffOctreeLoadAdapter blockTiffOctreeLoadAdapter;
 
-    public TileStackOctreeLoadAdapter(TileFormat tileFormat, URI baseURI, int concurrency) {
+    public TileStackOctreeLoadAdapter(TileFormat tileFormat, URI baseURI, int concurrency, JadeStorageAttributes storageAttributes) {
         super(tileFormat, baseURI);
         if (baseURI.getScheme().startsWith("file")) {
             blockTiffOctreeLoadAdapter = new FileBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI, concurrency);
         } else if (baseURI.getScheme().startsWith("http")) {
-            blockTiffOctreeLoadAdapter = new RestServiceBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI, concurrency, AccessManager.getAccessManager().getAppAuthorization());
+            blockTiffOctreeLoadAdapter = new RestServiceBasedBlockTiffOctreeLoadAdapter(tileFormat, baseURI, concurrency, storageAttributes, AccessManager.getAccessManager().getAppAuthorization());
         } else {
             throw new IllegalArgumentException("Don't know how to load " + baseURI);
         }

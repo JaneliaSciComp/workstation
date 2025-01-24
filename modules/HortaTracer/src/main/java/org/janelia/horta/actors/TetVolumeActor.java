@@ -71,11 +71,10 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
     private final UnmixingParameters unmixMinScale = new UnmixingParameters(new float[] {0.0f, 0.0f, 0.5f, 0.5f});
     private VolumeState volumeState = new VolumeState();
 
-    private KtxOctreeBlockTileSource source;
-    private final BlockSorter blockSorter = new BlockSorter();    
+    private final BlockSorter blockSorter = new BlockSorter();
     private final KtxTileCache dynamicTiles = new KtxTileCache(null);
     private BlockChooser<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> chooser;
-    private BlockDisplayUpdater<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> blockDisplayUpdater;
+    private final BlockDisplayUpdater<KtxOctreeBlockTileKey, KtxOctreeBlockTileSource> blockDisplayUpdater;
     private final Collection<GL3Resource> obsoleteActors = new ArrayList<>();
 
     // Singleton actor has private constructor
@@ -85,9 +84,8 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
         BufferedImage colorMapImage = null;
         try {
             colorMapImage = ImageIO.read(
-                    getClass().getResourceAsStream(
-                            "/org/janelia/horta/images/"
-                            + "HotColorMap.png"));
+                    getClass().getResourceAsStream("/org/janelia/horta/images/HotColorMap.png")
+            );
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
         }
@@ -144,7 +142,6 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
     public void setKtxTileSource(KtxOctreeBlockTileSource source) {
         dynamicTiles.setSource(source);
         blockDisplayUpdater.setBlockTileSource(source);
-        this.source = source;
     }
     
     public ObservableInterface getDynamicTileUpdateObservable() {
@@ -182,9 +179,7 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
         if (! isInitialized) init(gl);
 
         if (! dynamicTiles.canDisplay()) {
-            if (getChildren() == null)
-                return;
-            if (getChildren().size() < 1)
+            if (getChildren() == null || getChildren().isEmpty())
                 return;
         }
 
@@ -274,18 +269,18 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
                         c2.isVisible() ? 1.0f : 0.0f
                     }, 0);
                 // color
-                float hsv0[] = new float[3];
-                float hsv1[] = new float[3];
-                float hsv2[] = new float[3];
+                float[] hsv0 = new float[3];
+                float[] hsv1 = new float[3];
+                float[] hsv2 = new float[3];
                 Color.RGBtoHSB(c0.getColor().getRed(), c0.getColor().getGreen(), c0.getColor().getBlue(), hsv0);
                 Color.RGBtoHSB(c1.getColor().getRed(), c1.getColor().getGreen(), c1.getColor().getBlue(), hsv1);
                 Color.RGBtoHSB(c2.getColor().getRed(), c2.getColor().getGreen(), c2.getColor().getBlue(), hsv2);
-                float hues[] = new float[] {360.0f*hsv0[0], 360.0f*hsv1[0], 360.0f*hsv2[0]};
-                float saturations[] = new float[] {hsv0[1], hsv1[1], hsv2[1]};
-                
+                float[] hues = new float[] {360.0f*hsv0[0], 360.0f*hsv1[0], 360.0f*hsv2[0]};
+                float[] saturations = new float[] {hsv0[1], hsv1[1], hsv2[1]};
+
                 gl.glUniform3fv(11, 1, hues, 0);
                 gl.glUniform3fv(12, 1, saturations, 0);
-                
+
                 // unmixing parameters
                 gl.glUniform4fv(7, 1, unmixMinScale.getParams(), 0);
                 
@@ -305,18 +300,13 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
 
             // 3) Sort individual blocks by distance from camera, for 
             //    correct transparency blending
-            List<SortableBlockActor> blockList = new ArrayList<>();
+            List<SortableBlockActor> blockList = new ArrayList<>(dynamicTiles.getDisplayedActors());
             List<GL3Actor> otherActorList = new ArrayList<>();
             List<Object3d> otherList = new ArrayList<>();
-            for (SortableBlockActor actor : dynamicTiles.getDisplayedActors()) {
-                blockList.add(actor);
-            }
             for (Object3d child : getChildren()) {
                 if (child instanceof SortableBlockActorSource) {
                     SortableBlockActorSource source = (SortableBlockActorSource)child;
-                    for (SortableBlockActor block : source.getSortableBlockActors()) {
-                        blockList.add(block);
-                    }
+                    blockList.addAll(source.getSortableBlockActors());
                 }
                 else if (child instanceof GL3Actor) {
                     otherActorList.add((GL3Actor)child);
@@ -331,7 +321,7 @@ public class TetVolumeActor extends BasicGL3Actor implements DepthSlabClipper {
             // Order does not matter in MIP mode
             if (volumeState.projectionMode != VolumeState.PROJECTION_MAXIMUM) {
                 blockSorter.setViewMatrix(modelViewMatrix);
-                Collections.sort(blockList, blockSorter);        
+                blockList.sort(blockSorter);
             }
 
             // 4) Display blocks

@@ -1,43 +1,20 @@
 package org.janelia.horta;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URL;
-import java.nio.file.Paths;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Objects;
-
-import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.lang.StringUtils;
-import org.janelia.geometry3d.Viewport;
-import org.janelia.horta.actors.OmeZarrVolumeActor;
-import org.janelia.horta.blocks.OmeZarrBlockTileSource;
-import org.janelia.horta.omezarr.OmeZarrReaderCompletionObserver;
-import org.janelia.horta.omezarr.OmeZarrReaderProgressObserver;
-import org.janelia.workstation.controller.tileimagery.OsFilePathRemapper;
 import org.janelia.geometry3d.PerspectiveCamera;
 import org.janelia.geometry3d.Vantage;
 import org.janelia.geometry3d.Vector3;
 import org.janelia.horta.blocks.KtxOctreeBlockTileSource;
-import org.janelia.horta.util.HttpClientHelper;
+import org.janelia.horta.blocks.OmeZarrBlockTileSource;
 import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.model.security.AppAuthorization;
-import org.janelia.rendering.FileBasedRenderedVolumeLocation;
-import org.janelia.rendering.JADEBasedRenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolume;
-import org.janelia.rendering.RenderedVolumeLocation;
-import org.janelia.rendering.RenderedVolumeMetadata;
-import org.janelia.rendering.utils.ClientProxy;
 import org.janelia.scenewindow.SceneWindow;
 import org.janelia.workstation.controller.model.TmModelManager;
-import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.api.http.RestJsonClientManager;
 import org.janelia.workstation.geom.Vec3;
 import org.netbeans.api.progress.ProgressHandle;
 import org.netbeans.api.progress.ProgressHandleFactory;
@@ -47,12 +24,10 @@ import org.slf4j.LoggerFactory;
 
 public class ViewLoader {
     private static final Logger LOG = LoggerFactory.getLogger(ViewLoader.class);
-    private static final HttpClientHelper HTTP_HELPER = new HttpClientHelper();
 
     private final NeuronTraceLoader loader;
     private final NeuronTracerTopComponent nttc;
     private final SceneWindow sceneWindow;
-    private final ObjectMapper objectMapper;
 
 
     ViewLoader(NeuronTraceLoader loader,
@@ -61,7 +36,6 @@ public class ViewLoader {
         this.loader = loader;
         this.nttc = nttc;
         this.sceneWindow = sceneWindow;
-        this.objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public void loadView(Vec3 syncLocation, double syncZoom) throws Exception {
@@ -86,7 +60,9 @@ public class ViewLoader {
                                 + syncLocation.getZ());
                     }
 
-                    if (nttc.isPreferKtx()) {
+                    if (nttc.isPreferKtx()
+                            /** the next condition is to allow switching to a KTX sample after a ZARR sample */
+                            || sample != null && sample.getLargeVolumeZarrFilepath() == null) {
                         // for KTX tile the camera must be set before the tiles are loaded in order for them to be displayed first time
                         progress.setDisplayName("Centering on location...");
                         setCameraLocation(syncZoom, syncLocation);
@@ -134,43 +110,6 @@ public class ViewLoader {
         RequestProcessor.getDefault().post(task);
     }
 
-    private RenderedVolume getVolumeInfo(URI renderedOctreeUri) {
-        RenderedVolumeLocation renderedVolumeLocation;
-        RenderedVolumeMetadata renderedVolumeMetadata;
-        if (StringUtils.equalsIgnoreCase(renderedOctreeUri.getScheme(), "http") || StringUtils.equalsIgnoreCase(renderedOctreeUri.getScheme(), "https")) {
-            String url = renderedOctreeUri.resolve("volume_info").toString();
-            LOG.trace("Getting volume metadata from: {}", url);
-            GetMethod getMethod = new GetMethod(url);
-            getMethod.getParams().setParameter("http.method.retry-handler", new DefaultHttpMethodRetryHandler(3, false));
-            AppAuthorization appAuthorization = AccessManager.getAccessManager().getAppAuthorization();
-            try {
-                int statusCode = HTTP_HELPER.executeMethod(getMethod, appAuthorization);
-                if (statusCode != 200) {
-                    throw new IllegalStateException("HTTP status " + statusCode + " (not OK) from url " + url);
-                }
-                renderedVolumeMetadata = objectMapper.readValue(getMethod.getResponseBodyAsStream(), RenderedVolumeMetadata.class);
-                renderedVolumeLocation = new JADEBasedRenderedVolumeLocation(
-                        renderedVolumeMetadata.getConnectionURI(),
-                        renderedVolumeMetadata.getDataStorageURI(),
-                        renderedVolumeMetadata.getVolumeBasePath(),
-                        appAuthorization.getAuthenticationToken(),
-                        null,
-                        () -> new ClientProxy(RestJsonClientManager.getInstance().getHttpClient(true), false)
-                );
-            } catch (Exception e) {
-                LOG.error("Error getting sample volume info from {} for renderedOctree at {}", url, renderedOctreeUri, e);
-                throw new IllegalStateException(e);
-            } finally {
-                getMethod.releaseConnection();
-            }
-        } else {
-            renderedVolumeLocation = new FileBasedRenderedVolumeLocation(Paths.get(renderedOctreeUri), p -> Paths.get(OsFilePathRemapper.remapLinuxPath(p.toString())));
-            renderedVolumeMetadata = nttc.getRenderedVolumeLoader().loadVolume(renderedVolumeLocation).orElseThrow(() -> new IllegalStateException("No rendering information found for " + renderedVolumeLocation.getDataStorageURI()));
-        }
-
-        return new RenderedVolume(renderedVolumeLocation, renderedVolumeMetadata);
-    }
-
     private KtxOctreeBlockTileSource createKtxSource(URL renderedOctreeUrl, TmSample sample) {
         KtxOctreeBlockTileSource previousSource = nttc.getKtxSource();
         if (previousSource != null) {
@@ -179,7 +118,7 @@ public class ViewLoader {
                 return previousSource; // Source did not change
             }
         }
-        return new KtxOctreeBlockTileSource(renderedOctreeUrl, nttc.getTileLoader()).init(sample);
+        return new KtxOctreeBlockTileSource(renderedOctreeUrl, nttc.getTileLoader(sample)).init(sample);
     }
 
     private OmeZarrBlockTileSource createOmeZarrSource(URL renderedOmeZarrUrl, TmSample sample, ProgressHandle progress) throws IOException {

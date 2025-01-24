@@ -11,6 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
 import org.janelia.workstation.geom.CoordinateAxis;
 import org.janelia.workstation.controller.listener.LoadStatusListener;
 import org.janelia.workstation.controller.listener.StatusUpdateListener;
@@ -60,7 +62,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
     // New path for handling tile updates July 9, 2013 cmb
     private Set<TileIndex> currentDisplayTiles = new HashSet<>();
 
-    public TileServer(SharedVolumeImage sharedVolumeImage) {
+    public TileServer(SharedVolumeImage sharedVolumeImage, JadeStorageAttributes storageAttributes) {
         this.minResPreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, MIN_RES_TILE_LOADER_CONCURRENCY);
         this.futurePreFetcher = new TexturePreFetcher(MIN_RES_TILE_LOADER_CONCURRENCY, HIGHER_RES_TILE_LOADER_CONCURRENCY);
 
@@ -70,7 +72,7 @@ public class TileServer implements ComponentListener, // so changes in viewer si
             @Override
             public BlockTiffOctreeLoadAdapter createLoadAdapter(String baseURI) {
                 return TileStackCacheController.createInstance(
-                        new TileStackOctreeLoadAdapter(new TileFormat(), URI.create(baseURI), concurrency));
+                        new TileStackOctreeLoadAdapter(new TileFormat(), URI.create(baseURI), concurrency, storageAttributes));
             }
         }));
 

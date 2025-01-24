@@ -147,7 +147,6 @@ public class CachedRenderedVolumeLocation implements RenderedVolumeLocation {
         public boolean deleteProxy() {
             return false;
         }
-
     }
 
     @Override

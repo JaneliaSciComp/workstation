@@ -2,6 +2,8 @@ package org.janelia.workstation.controller.action;
 
 import java.awt.Component;
 import java.awt.event.ActionEvent;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.AbstractAction;
 import javax.swing.JOptionPane;
@@ -21,7 +23,7 @@ import org.janelia.model.domain.tiledMicroscope.TmSample;
 public class SaveTiledMicroscopeSampleAction extends AbstractAction {
 
     private TmSample sample;
-    private String name, octreePath, ktxPath, altPath;
+    private String name, octreePath, ktxPath, altPath, accessKey, secretKey, sampleRegion;
     private boolean rawCompressed;
 
     public SaveTiledMicroscopeSampleAction(TmSample sample) {
@@ -29,7 +31,8 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
     }
 
     public SaveTiledMicroscopeSampleAction(TmSample sample, String name, String octreePath, String ktxPath, String altPath,
-                                           boolean rawCompressed) {
+                                           boolean rawCompressed,
+                                           String accessKey, String secretKey, String sampleRegion) {
         super("Create Horta Sample");
         this.sample = sample;
         this.name = name;
@@ -37,6 +40,23 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
         this.ktxPath = ktxPath;
         this.altPath = altPath;
         this.rawCompressed = rawCompressed;
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
+        this.sampleRegion = sampleRegion;
+    }
+
+    private Map<String, Object> getStorageAttributes() {
+        Map<String, Object> storageAttributes = new HashMap<>();
+        if (accessKey != null && !accessKey.isEmpty()) {
+            storageAttributes.put("AccessKey", accessKey);
+        }
+        if (secretKey != null && !secretKey.isEmpty()) {
+            storageAttributes.put("SecretKey", secretKey);
+        }
+        if (sampleRegion != null && !sampleRegion.isEmpty()) {
+            storageAttributes.put("AWSRegion", sampleRegion);
+        }
+        return storageAttributes;
     }
 
     @Override
@@ -63,10 +83,10 @@ public class SaveTiledMicroscopeSampleAction extends AbstractAction {
                         if (altPath != null) {
                             DomainUtils.setFilepath(sample, FileType.LargeVolumeZarr, altPath);
                         }
-                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().save(sample);
-                    }
-                    else {
-                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().createSample(name, octreePath, ktxPath, altPath);
+
+                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().save(sample, getStorageAttributes());
+                    } else {
+                        newSample = TiledMicroscopeDomainMgr.getDomainMgr().createSample(name, octreePath, ktxPath, altPath, getStorageAttributes());
                     }
             }
             

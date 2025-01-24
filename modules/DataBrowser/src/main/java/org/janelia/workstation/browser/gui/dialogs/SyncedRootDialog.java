@@ -28,6 +28,12 @@ import java.util.stream.Collectors;
 public class SyncedRootDialog extends ModalDialog {
 
     private JTextField pathTextField;
+    private JLabel accessKeyLabel;
+    private JTextField accessKeyTextField;
+    private JLabel secretKeyLabel;
+    private JTextField secretKeyTextField;
+    private JLabel storageRegionLabel;
+    private JTextField storageRegionTextField;
     private JTextField nameField;
     private JTextField depthField;
     private JPanel subjectPanel;
@@ -52,9 +58,48 @@ public class SyncedRootDialog extends ModalDialog {
 
         attrPanel.addItem(instructions);
 
-        this.pathTextField = new JTextField(50);
+        pathTextField = new JTextField(50);
         pathTextField.setToolTipText("The filepath must be accessible to the backend JADE service");
         attrPanel.addItem("Path", pathTextField);
+
+        JCheckBox storageCredentialsRequiredCheckbox = new JCheckBox();
+        attrPanel.addItem("Storage requires credentials", storageCredentialsRequiredCheckbox);
+
+        accessKeyTextField = new JTextField(50);
+        accessKeyTextField.setToolTipText("Access key for the provided path");
+        accessKeyLabel = attrPanel.addItem("Access Key", accessKeyTextField);
+        accessKeyLabel.setVisible(false);
+        accessKeyTextField.setVisible(false);
+
+        secretKeyTextField = new JTextField(50);
+        secretKeyTextField.setToolTipText("Secret key for the provided path");
+        secretKeyLabel = attrPanel.addItem("Secret Key", secretKeyTextField);
+        secretKeyLabel.setVisible(false);
+        secretKeyTextField.setVisible(false);
+
+        storageRegionTextField = new JTextField(50);
+        storageRegionTextField.setToolTipText("S3 storage region");
+        storageRegionLabel = attrPanel.addItem("Storage Region", storageRegionTextField);
+        storageRegionLabel.setVisible(false);
+        storageRegionTextField.setVisible(false);
+
+        storageCredentialsRequiredCheckbox.addActionListener(e -> {
+            if (storageCredentialsRequiredCheckbox.isSelected()) {
+                accessKeyLabel.setVisible(true);
+                secretKeyLabel.setVisible(true);
+                storageRegionLabel.setVisible(true);
+                accessKeyTextField.setVisible(true);
+                secretKeyTextField.setVisible(true);
+                storageRegionTextField.setVisible(true);
+            } else {
+                accessKeyLabel.setVisible(false);
+                secretKeyLabel.setVisible(false);
+                storageRegionLabel.setVisible(false);
+                accessKeyTextField.setVisible(false);
+                secretKeyTextField.setVisible(false);
+                storageRegionTextField.setVisible(false);
+            }
+        });
 
         this.nameField = new JTextField(50);
         nameField.setToolTipText("Name of the Synchronized Folder in the Workstation. If blank, the filepath will be used.");
@@ -138,8 +183,7 @@ public class SyncedRootDialog extends ModalDialog {
                 JCheckBox checkBox = agentTypeMap.get(agentType);
                 checkBox.setSelected(syncedRoot.getDiscoveryAgents().contains(agentType));
             }
-        }
-        else {
+        } else {
             setTitle("Add Synchronized Folder");
             subjectPanel.add(subjectCombobox);
         }
@@ -190,6 +234,16 @@ public class SyncedRootDialog extends ModalDialog {
             }
         }
 
+        if (StringUtils.isNotBlank(accessKeyTextField.getText())) {
+            syncedRoot.setStorageAttribute("AccessKey", accessKeyTextField.getText().trim());
+        }
+        if (StringUtils.isNotBlank(secretKeyTextField.getText())) {
+            syncedRoot.setStorageAttribute("SecretKey", secretKeyTextField.getText().trim());
+        }
+        if (StringUtils.isNotBlank(storageRegionTextField.getText())) {
+            syncedRoot.setStorageAttribute("AWSRegion", storageRegionTextField.getText().trim());
+        }
+
         if (syncedRoot.getDiscoveryAgents().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Select one or more discovery agents", "No agents selected", JOptionPane.ERROR_MESSAGE);
             return;
@@ -202,7 +256,7 @@ public class SyncedRootDialog extends ModalDialog {
         setVisible(false);
     }
 
-    public static void refreshSyncedRoot(SyncedRoot root) {
+    private static void refreshSyncedRoot(SyncedRoot root) {
 
         BackgroundWorker worker = new AsyncServiceMonitoringWorker() {
 
@@ -226,7 +280,8 @@ public class SyncedRootDialog extends ModalDialog {
                 Long taskId = asyncServiceClient.invokeService("syncedRoot",
                         serviceArgsBuilder.build(),
                         null,
-                        ImmutableMap.of()
+                        ImmutableMap.of(),
+                        savedRoot.getStorageAttributes()
                 );
 
                 setServiceId(taskId);
