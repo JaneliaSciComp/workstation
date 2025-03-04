@@ -64,14 +64,13 @@ public class DatabaseCleanupPanel extends JPanel implements Refreshable {
 
             @Override
             protected void doStuff() {
-                SwingUtilities.invokeLater(() -> tableModel.clear());
-
                 TiledMicroscopeDomainMgr domainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
                 workspaceResults = domainMgr.getLargestWorkspaces();
             }
 
             @Override
             protected void hadSuccess() {
+                tableModel.clear();
                 tableModel.setWorkspaces(workspaceResults);
             }
 
