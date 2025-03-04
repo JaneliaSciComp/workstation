@@ -77,9 +77,11 @@ public final class AdministrationTopComponent extends TopComponent {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         this.topMenu = new JPanel();
-        BoxLayout layout = new BoxLayout(topMenu, BoxLayout.X_AXIS);
-        topMenu.setLayout(layout);
+        topMenu.setLayout(new BoxLayout(topMenu, BoxLayout.Y_AXIS)); // Main panel with vertical layout
 
+        // First row with "Users" and "Groups"
+        JPanel row1 = new JPanel();
+        row1.setLayout(new BoxLayout(row1, BoxLayout.X_AXIS));
         // top level buttons
         JButton listUsersButton = new JButton(UIUtils.getClasspathImage(this.getClass(), "/org/janelia/workstation/admin/images/user.png"));
         listUsersButton.setText("Users");
@@ -87,9 +89,9 @@ public final class AdministrationTopComponent extends TopComponent {
         listUsersButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         listUsersButton.setHorizontalTextPosition(SwingConstants.CENTER);
         listUsersButton.addActionListener(event -> viewUserList());
-        topMenu.add(listUsersButton);
+        row1.add(listUsersButton);
 
-        topMenu.add(Box.createHorizontalStrut(20));
+        row1.add(Box.createHorizontalStrut(20)); // Add space between buttons
 
         JButton listGroupsButton = new JButton(UIUtils.getClasspathImage(this.getClass(), "/org/janelia/workstation/admin/images/group.png"));
         listGroupsButton.setText("Groups");
@@ -97,17 +99,30 @@ public final class AdministrationTopComponent extends TopComponent {
         listGroupsButton.setToolTipText("Show all groups");
         listGroupsButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         listGroupsButton.setHorizontalTextPosition(SwingConstants.CENTER);
-        topMenu.add(listGroupsButton);
+        listGroupsButton.addActionListener(event -> viewGroupList());
+        row1.add(listGroupsButton);
 
-        topMenu.add(Box.createHorizontalStrut(20));
-
+        row1.add(Box.createHorizontalStrut(20));
         JButton getLogsButton = new JButton(UIUtils.getClasspathImage(this.getClass(), "/org/janelia/workstation/admin/images/logs.png"));
         getLogsButton.setText("Logs");
         getLogsButton.setToolTipText("Retrieve Logs");
         getLogsButton.addActionListener(event -> getLogs());
         getLogsButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         getLogsButton.setHorizontalTextPosition(SwingConstants.CENTER);
-        topMenu.add(getLogsButton);
+        row1.add(getLogsButton);
+
+        row1.add(Box.createHorizontalStrut(20));
+
+        JButton workspaceCleanupButton = new JButton(UIUtils.getClasspathImage(this.getClass(), "/org/janelia/workstation/admin/images/clean.png"));
+        workspaceCleanupButton.setText("Cleanup Db");
+        workspaceCleanupButton.setToolTipText("Manage and delete large workspaces");
+        workspaceCleanupButton.setVerticalTextPosition(SwingConstants.BOTTOM);
+        workspaceCleanupButton.setHorizontalTextPosition(SwingConstants.CENTER);
+        workspaceCleanupButton.addActionListener(event -> databaseCleanup());
+        row1.add(workspaceCleanupButton);
+
+        // Add both rows to the main menu
+        topMenu.add(row1);
 
         add(topMenu);
         add(Box.createVerticalGlue());
@@ -125,6 +140,15 @@ public final class AdministrationTopComponent extends TopComponent {
         if (event.isTotalInvalidation()) {
             if (currentView != null) currentView.refresh();
         }
+    }
+
+    void databaseCleanup() {
+        DatabaseCleanupPanel panel = new DatabaseCleanupPanel(this);
+        removeAll();
+        add(panel);
+        revalidate();
+        repaint();
+        this.currentView = panel;
     }
 
     void viewUserList() {
