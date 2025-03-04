@@ -1,4 +1,5 @@
-// 9.21
+// 9.22
 
 Horta
-* Adjusted SWC export to be compliant with new specification
+* Added S3 URI support for HortaCloud
+* Added Admin feature for deleting large TmWorkspaces
