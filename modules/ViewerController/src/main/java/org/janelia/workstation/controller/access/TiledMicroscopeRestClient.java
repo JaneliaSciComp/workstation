@@ -15,6 +15,7 @@ import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
 
@@ -116,6 +117,27 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         Response response = requestInvocation.put(Entity.json(query));
         checkBadResponse(target, response);
         return response.readEntity(TmSample.class);
+    }
+
+    public List<TmWorkspaceInfo> getLargestWorkspaces(String subjectKey ) {
+        WebTarget target =  getMouselightDataEndpoint("/workspace/largest")
+                .queryParam("username", subjectKey);
+        Response response = target
+                .request("application/json")
+                .get();
+        checkBadResponse(target, response);
+        try {
+            String jsonResponse = response.readEntity(String.class);
+
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(jsonResponse, new TypeReference<List<TmWorkspaceInfo>>() {
+            });
+        } catch (Exception e) {
+            FrameworkAccess.handleException(e);
+            LOG.error ("Problems returning the largest workspaces in the db");
+            throw new RemoteServiceException("Client had problems retrieving largest workspaces");
+        }
     }
 
     public List<TmOperation> getOperationLogs(Long workspaceId, Long neuronId,
@@ -500,5 +522,14 @@ public class TiledMicroscopeRestClient extends RESTClientBase {
         Response response = requestInvocation.head();
         int responseStatus = response.getStatus();
         return responseStatus == 200;
+    }
+
+    public void removeWorkspaces(List<Long> selectedWorkspaces) {
+        WebTarget target = getMouselightDataEndpoint("/workspaces/remove");
+
+        Response response = target
+                .request("application/json")
+                .put(Entity.json(selectedWorkspaces));
+        checkBadResponse(target, response);
     }
 }

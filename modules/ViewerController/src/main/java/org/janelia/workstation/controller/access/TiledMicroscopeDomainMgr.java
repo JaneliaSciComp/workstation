@@ -15,6 +15,7 @@ import org.janelia.workstation.core.api.DomainModel;
 import org.janelia.workstation.core.events.Events;
 import org.janelia.workstation.core.events.lifecycle.ConsolePropsLoaded;
 import org.janelia.model.domain.tiledMicroscope.BoundingBox3d;
+import org.janelia.model.domain.tiledMicroscope.TmWorkspaceInfo;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -153,6 +154,11 @@ public class TiledMicroscopeDomainMgr {
         return client.getWorkspaceBoundingBoxes(workspaceId);
     }
 
+    public  List<TmWorkspaceInfo> getLargestWorkspaces () {
+        LOG.debug("getLargestWorkspaces()");
+        return client.getLargestWorkspaces(AccessManager.getSubjectKey());
+    }
+
     public List<TmOperation> getOperationLogs (Long workspaceId, Long neuronId, Date startTime, Date endTime,
                                                String subjectKey) {
         LOG.debug("getOperationLogs(workspaceId={}, neuronId={}, startTime={}, endTime={})",
@@ -229,6 +235,11 @@ public class TiledMicroscopeDomainMgr {
         LOG.debug("remove({})", workspace);
         client.remove(workspace);
         getModel().notifyDomainObjectRemoved(workspace);
+    }
+
+    public void removeWorkspaces(List<Long> selectedWorkspaces) {
+        LOG.debug("removeWorkspaces({})", selectedWorkspaces);
+        client.removeWorkspaces(selectedWorkspaces);
     }
 
     class RetrieveNeuronsTask extends RecursiveTask<Stream<TmNeuronMetadata>> {
