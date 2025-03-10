@@ -78,41 +78,50 @@ public class DeleteHortaWorkspaceAction extends BaseContextualNodeAction {
             return;
         }
 
-        if (domainObject instanceof TmWorkspace) {
-            TmWorkspace workspace = (TmWorkspace) this.domainObject;
+        int confirmation = JOptionPane.showConfirmDialog(null,
+                "Are you sure you want to delete the selected workspaces?",
+                "Confirm Deletion", JOptionPane.YES_NO_OPTION);
 
-            BackgroundWorker deleter = new BackgroundWorker() {
-                @Override
-                public String getName() {
-                    return "Deleting TmWorkspaces";
-                }
+        if (confirmation == JOptionPane.YES_OPTION) {
 
-                @Override
-                protected void doStuff() {
-                    TiledMicroscopeDomainMgr domainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
-                    List<Long> workspaceIds = new ArrayList<>();
-                    workspaceIds.add(workspace.getId());
-                    domainMgr.removeWorkspaces(workspaceIds);
-                }
+            if (domainObject instanceof TmWorkspace) {
+                TmWorkspace workspace = (TmWorkspace) this.domainObject;
 
-                @Override
-                protected void hadSuccess() {
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Selected workspaces deleted successfully.",
-                            "Success", JOptionPane.INFORMATION_MESSAGE);
+                BackgroundWorker deleter = new BackgroundWorker() {
+                    @Override
+                    public String getName() {
+                        return "Deleting TmWorkspaces";
+                    }
+
+                    @Override
+                    protected void doStuff() {
+                        TiledMicroscopeDomainMgr domainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
+                        List<Long> workspaceIds = new ArrayList<>();
+                        workspaceIds.add(workspace.getId());
+                        domainMgr.removeWorkspaces(workspaceIds);
+                    }
+
+                    @Override
+                    protected void hadSuccess() {
+                        JOptionPane.showMessageDialog(
+                                null,
+                                "Selected workspaces deleted successfully.",
+                                "Success", JOptionPane.INFORMATION_MESSAGE);
+                    }
+
+                    ;
+
+                    @Override
+                    protected void hadError(Throwable error) {
+                        log.error("Error deleting workspaces", error);
+                        JOptionPane.showMessageDialog(
+                                null,
+                                "Failed to delete workspaces: " + error.getMessage(), "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
                 };
-
-                @Override
-                protected void hadError(Throwable error) {
-                    log.error("Error deleting workspaces", error);
-                    JOptionPane.showMessageDialog(
-                            null,
-                            "Failed to delete workspaces: " + error.getMessage(), "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                }
-            };
-            deleter.executeWithEvents();
+                deleter.executeWithEvents();
+            }
         }
     }
 }
