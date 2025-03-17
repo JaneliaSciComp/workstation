@@ -37,6 +37,10 @@ implements MouseListener, MouseMotionListener, MouseWheelListener
     public abstract String getToolTipText();
     
     public void notifyObservers() {
+        if (TmModelManager.getInstance().getCurrentSample() == null)
+            // no sample, no notifications
+            return;
+
         camera.getVantage().notifyObservers();
         Vantage vantage = camera.getVantage();
         Matrix m2v = TmModelManager.getInstance().getMicronToVoxMatrix();
