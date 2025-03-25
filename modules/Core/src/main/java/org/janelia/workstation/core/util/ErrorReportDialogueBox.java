@@ -40,6 +40,9 @@ public class ErrorReportDialogueBox {
     private StringBuffer body = new StringBuffer();
     private JFrame parentFrame;
 
+    // flag to track whether we've reported an error about reporting errors already
+    private static boolean reportedErrorReportingError = false;
+
     private ErrorReportDialogueBox(JFrame parentFrame) {
         this.parentFrame = parentFrame;
     }
@@ -122,6 +125,7 @@ public class ErrorReportDialogueBox {
             method = "email";
         }
 
+
         if (method.equals("email")) {
             sendEmail();
         } else if (method.equals("github")) {
@@ -179,22 +183,29 @@ public class ErrorReportDialogueBox {
 
         int issueNumber = client.createIssue(subject, body.toString());
         if (issueNumber <= 0) {
-            log.error("GitHub issue not created for error report");
+            String message = "GitHub issue not created for error report";
+            log.error(message);
+            reportErrorReportingError(message);
             return;
         }
 
         String path = ATTACHMENTS_FOLDER + "/issue-" + issueNumber + "-" + LOG_FILE_NAME;
         String permalink = client.uploadLogFile(ISSUES_BRANCH, logfile, path);
         if (permalink.isEmpty()) {
-            log.error("Logfile not uploaded or error in generating permalink");
+            String message = "Logfile not uploaded or error in generating permalink";
+            log.error(message);
+            reportErrorReportingError(message);
             return;
         }
 
         String comment = "[Link to uploaded log file.](" + permalink + ")";
         boolean success = client.addComment(issueNumber, comment);
         if (!success) {
-            log.error("Failed to add comment to GitHub issue with permalink to log.");
+            String message = "Failed to add comment to GitHub issue with permalink to log.";
+            log.error(message);
+            reportErrorReportingError(message);
         }
+
     }
 
     private File getLogfile() {
@@ -215,4 +226,24 @@ public class ErrorReportDialogueBox {
         return logfile;
     }
 
+    private void reportErrorReportingError(String message) {
+        if (reportedErrorReportingError) {
+            return;
+        }
+        reportedErrorReportingError = true;
+
+        Object[] buttons = {"Silence", "Continue"};
+        message = "An error was encountered while reporting previous error:\n\n" + message +
+            "\n\nPlease report this error to the site admins, as it cannot be reported automatically!" +
+            "\n\nContinue reporting this class of error, or Silence reports for this session?";
+        JOptionPane.showOptionDialog(null,
+            message,
+            "Error while reporting error!",
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.ERROR_MESSAGE,
+            null,
+            buttons,
+            buttons[0]
+        );
+    }
 }
