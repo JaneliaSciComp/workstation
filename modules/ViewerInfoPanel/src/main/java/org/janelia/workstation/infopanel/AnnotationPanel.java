@@ -75,7 +75,6 @@ public class AnnotationPanel extends JPanel
     private WorkspaceSaveAsAction saveAsAction;
     private JCheckBoxMenuItem automaticTracingMenuItem;
     private JCheckBoxMenuItem automaticRefinementMenuItem;
-    private JCheckBoxMenuItem tempOwnerAdminItem;
     private NeuronExportAllAction exportAllSWCAction;
     private NeuronFilterAction neuronFilterAction;
     private ImportSWCAction importSWCAction;
@@ -258,31 +257,6 @@ public class AnnotationPanel extends JPanel
 
         saveAsAction = new WorkspaceSaveAsAction();
         workspaceToolMenu.add(new JMenuItem(saveAsAction));
-
-        tempOwnerAdminItem = new JCheckBoxMenuItem("Temp ownership admin");
-        tempOwnerAdminItem.setSelected(false);
-        tempOwnerAdminItem.addItemListener(e -> {
-                    if (e.getStateChange() == ItemEvent.SELECTED) {
-                        // about to get temporary ownership admin: dialog warning!
-                        int ans = JOptionPane.showConfirmDialog(
-                                ComponentUtil.getMainWindow(),
-                                "You are about to give yourself permission to change any neuron's owner. Be careful!\n\nContinue?",
-                                "Become owner admin?",
-                                JOptionPane.OK_CANCEL_OPTION,
-                                JOptionPane.WARNING_MESSAGE
-                        );
-                        if (ans == JOptionPane.CANCEL_OPTION) {
-                            tempOwnerAdminItem.setSelected(false);
-                        } else {
-                            TmViewerManager.getInstance().setTempOwnershipAdmin(true);
-                        }
-                    } else {
-                        // giving up admin
-                        TmViewerManager.getInstance().setTempOwnershipAdmin(false);
-                    }
-                }
-        );
-        workspaceToolMenu.add(tempOwnerAdminItem);
 
         // workspace tool menu button
         final JButton workspaceToolButton = new JButton();
