@@ -23,11 +23,11 @@ public class MailHelper {
     public MailHelper() {
     }
 
-    public void sendEmail(String from, String to, String subject, String bodyText) {
-        this.sendEmail(from, to, subject, bodyText, null, null);
+    public boolean sendEmail(String from, String to, String subject, String bodyText) {
+        return this.sendEmail(from, to, subject, bodyText, null, null);
     }
 
-    public void sendEmail(String from, String to, String subject, String bodyText, File attachedFile, String filename) {
+    public boolean sendEmail(String from, String to, String subject, String bodyText, File attachedFile, String filename) {
         try {
             String mailServer = ConsoleProperties.getString("console.MailServer");
             String mailUser = ConsoleProperties.getString("console.MailUser", "");
@@ -88,9 +88,12 @@ public class MailHelper {
             log.info("  To: " + to);
             log.info("  Body: " + bodyText);
 
+            return true;
+
         }
         catch (MessagingException var13) {
             log.error("Error sending email", var13);
+            return false;
         }
 
     }

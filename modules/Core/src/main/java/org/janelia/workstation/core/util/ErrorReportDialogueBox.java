@@ -41,7 +41,7 @@ public class ErrorReportDialogueBox {
     private JFrame parentFrame;
 
     // flag to track whether we've reported an error about reporting errors already
-    private static boolean reportedErrorReportingError = false;
+    private static boolean silenceErrorReportingFailure = false;
 
     private ErrorReportDialogueBox(JFrame parentFrame) {
         this.parentFrame = parentFrame;
@@ -125,7 +125,6 @@ public class ErrorReportDialogueBox {
             method = "email";
         }
 
-
         if (method.equals("email")) {
             sendEmail();
         } else if (method.equals("github")) {
@@ -157,7 +156,11 @@ public class ErrorReportDialogueBox {
         log.info("Sending email from {} to {} with attachment {}", fromEmail, toEmail, logfile);
         
         MailHelper helper = new MailHelper();
-        helper.sendEmail(fromEmail, toEmail, subject, body.toString(), logfile, filename);
+        boolean result = helper.sendEmail(fromEmail, toEmail, subject, body.toString(), logfile, filename);
+        if (!result) {
+            String message = "Error reporting email not sent or error in sending email";
+            reportErrorReportingFailure(message);
+        }
     }
 
     public void sendGitHub() {
@@ -185,16 +188,16 @@ public class ErrorReportDialogueBox {
         if (issueNumber <= 0) {
             String message = "GitHub issue not created for error report";
             log.error(message);
-            reportErrorReportingError(message);
+            reportErrorReportingFailure(message);
             return;
         }
 
         String path = ATTACHMENTS_FOLDER + "/issue-" + issueNumber + "-" + LOG_FILE_NAME;
         String permalink = client.uploadLogFile(ISSUES_BRANCH, logfile, path);
         if (permalink.isEmpty()) {
-            String message = "Logfile not uploaded or error in generating permalink";
+            String message = "Logfile not uploaded to GitHub or error in generating permalink";
             log.error(message);
-            reportErrorReportingError(message);
+            reportErrorReportingFailure(message);
             return;
         }
 
@@ -203,7 +206,7 @@ public class ErrorReportDialogueBox {
         if (!success) {
             String message = "Failed to add comment to GitHub issue with permalink to log.";
             log.error(message);
-            reportErrorReportingError(message);
+            reportErrorReportingFailure(message);
         }
 
     }
@@ -226,24 +229,30 @@ public class ErrorReportDialogueBox {
         return logfile;
     }
 
-    private void reportErrorReportingError(String message) {
-        if (reportedErrorReportingError) {
+    private void reportErrorReportingFailure(String message) {
+        if (silenceErrorReportingFailure) {
             return;
         }
-        reportedErrorReportingError = true;
 
         Object[] buttons = {"Silence", "Continue"};
-        message = "An error was encountered while reporting previous error:\n\n" + message +
-            "\n\nPlease report this error to the site admins, as it cannot be reported automatically!" +
-            "\n\nContinue reporting this class of error, or Silence reports for this session?";
-        JOptionPane.showOptionDialog(null,
+        message = "Error reporting failed:\n\n" + message +
+            "\n\nPlease report this issue to the site admins, as it cannot be reported automatically!" +
+            "\n\nContinue to show this dialog when error reporting fails, or Silence these dialogs for this session?";
+        Object response = JOptionPane.showOptionDialog(null,
             message,
-            "Error while reporting error!",
+            "Error not reported!",
             JOptionPane.DEFAULT_OPTION,
             JOptionPane.ERROR_MESSAGE,
             null,
             buttons,
             buttons[0]
         );
+        int index = (int) response;
+        if (index < 0 || index >= buttons.length) {
+            return;
+        }
+        if (buttons[index].equals("Silence")) {
+            silenceErrorReportingFailure = true;
+        }
     }
 }
