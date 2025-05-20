@@ -53,10 +53,12 @@ public class DeleteHortaWorkspaceAction extends BaseContextualNodeAction {
     @Override
     protected void processContext() {
         if (getNodeContext().isSingleObjectOfType(TmWorkspace.class)) {
+            domainObject = getNodeContext().getSingleObjectOfType(TmWorkspace.class);
             if (AccessManager.getAccessManager().isAdmin() ||
                     domainObject.getOwnerKey().equals(AccessManager.getSubjectKey())) {
-                domainObject = getNodeContext().getSingleObjectOfType(TmWorkspace.class);
                 setEnabledAndVisible(true);
+            } else {
+                setEnabledAndVisible(false);
             }
         }
         else {
