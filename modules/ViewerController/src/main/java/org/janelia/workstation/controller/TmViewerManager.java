@@ -39,7 +39,6 @@ public class TmViewerManager implements GlobalViewerController {
     private ProjectInitFacade projectInit;
     private DomainObject currProject;
     private int NUMBER_FRAGMENTS_THRESHOLD = 100;
-    private boolean isTempOwnershipAdmin = false;
     private boolean areOperationsLogged = false;
 
 
@@ -195,22 +194,9 @@ public class TmViewerManager implements GlobalViewerController {
         return ClientDomainUtils.hasWriteAccess(modelManager.getCurrentWorkspace());
     }
 
-    public boolean isTempOwnershipAdmin() {
-        return isTempOwnershipAdmin;
-    }
-
-    public void setTempOwnershipAdmin(boolean tempOwnershipAdmin) {
-        isTempOwnershipAdmin = tempOwnershipAdmin;
-    }
-
     public boolean isOwnershipAdmin() {
         // workstation admins always qualify
         if (AccessManager.getAccessManager().isAdmin()) {
-            return true;
-        }
-
-        // user has temporary admin (think of it as sudo)
-        if (isTempOwnershipAdmin()) {
             return true;
         }
 
