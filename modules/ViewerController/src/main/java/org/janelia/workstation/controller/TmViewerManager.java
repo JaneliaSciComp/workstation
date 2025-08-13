@@ -26,6 +26,9 @@ import org.janelia.workstation.core.util.ConsoleProperties;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class TmViewerManager implements GlobalViewerController {
@@ -60,16 +63,19 @@ public class TmViewerManager implements GlobalViewerController {
         if (!ApplicationPanel.isOperationsLogged()) {
             return;
         }
-        String timestampDate = null;
-        if (timestamp!=null) {
-            timestampDate = timestamp.toString();
-        }
         Long workspaceId = null, sampleId = null;
         if (modelManager.getCurrentWorkspace()!=null)
             workspaceId = modelManager.getCurrentWorkspace().getId();
-        tmDomainMgr.createOperationLog(modelManager.getCurrentSample().getId(),
-                workspaceId, null,
-                activity, timestampDate, elapsedTime, AccessManager.getSubjectKey());
+        TmOperation newOperationLog = new TmOperation();
+        newOperationLog.setActivity(activity);
+        newOperationLog.setTimestamp(timestamp);
+        newOperationLog.setElapsedTime(elapsedTime);
+        newOperationLog.setWorkspaceId(workspaceId);
+        if (modelManager.getCurrentSelections().getCurrentNeuron()!=null)
+            newOperationLog.setNeuronId(modelManager.getCurrentSelections().getCurrentNeuron().getId());
+        if (modelManager.getCurrentSelections().getCurrentVertex()!=null)
+            newOperationLog.setVertexId(modelManager.getCurrentSelections().getCurrentVertex().getId());
+        tmDomainMgr.createOperationLog(newOperationLog, AccessManager.getSubjectKey());
     }
 
     @Subscribe

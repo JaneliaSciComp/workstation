@@ -31,6 +31,8 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.MouseInputListener;
 
 import Jama.Matrix;
+import org.janelia.model.domain.tiledMicroscope.*;
+import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.action.AnnotationSetRadiusAction;
 import org.janelia.workstation.controller.action.NeuronChooseColorAction;
 import org.janelia.workstation.controller.model.DefaultNeuron;
@@ -45,8 +47,6 @@ import org.janelia.horta.actors.ParentVertexActor;
 import org.janelia.horta.actors.SpheresActor;
 import org.janelia.horta.actors.VertexHighlightActor;
 import org.janelia.horta.options.TileLoadingPanel;
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
 import org.janelia.workstation.controller.NeuronManager;
 import org.janelia.workstation.controller.SpatialIndexManager;
 import org.janelia.workstation.controller.ViewerEventBus;
@@ -58,8 +58,6 @@ import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.keybind.KeymapUtil;
 import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronTagMap;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -323,8 +321,9 @@ public class TracingInteractor extends MouseAdapter
 
     public boolean selectParentVertex(TmGeoAnnotation vertex, TmNeuronMetadata neuron)
     {
+        long startTime = System.currentTimeMillis();
         if (vertex == null) return false;
-        
+
         if (cachedParentVertex == vertex)
             return false;
         cachedParentVertex = vertex;
@@ -378,6 +377,9 @@ public class TracingInteractor extends MouseAdapter
         updateActorListener.neuronVertexUpdated(new VertexWithNeuron(
                 vertex, neuron));
         log.info("Horta parent vertex set");
+        long endTime = System.currentTimeMillis();
+        TmViewerManager.getInstance().logOperation(TmOperation.Activity.SELECT_VERTEX,
+                null, endTime-startTime);
 
         return true; 
     }
@@ -555,6 +557,7 @@ public class TracingInteractor extends MouseAdapter
             return;
         }
 
+        long startTime = System.currentTimeMillis();
         // log.info("Dragging a vertex");       
         // Update display (only) of dragged vertex
         // Update location of hover vertex glyph
@@ -593,6 +596,10 @@ public class TracingInteractor extends MouseAdapter
 
         event.consume(); // Don't let OrbitPanZoomInteractor drag the world
         // log.info("Consumed tracing drag event");
+
+        long endTime = System.currentTimeMillis();
+        TmViewerManager.getInstance().logOperation(TmOperation.Activity.MOVE_VERTEX,
+                null, endTime-startTime);
     }
     
     @Override
@@ -987,7 +994,7 @@ public class TracingInteractor extends MouseAdapter
         }
         
         public boolean appendVertex() {
-            long beginAppendTime = System.nanoTime();
+            long startTime = System.currentTimeMillis();
             if (! canAppendVertex())
                 return false;
             if (!TmModelManager.checkOwnership(
@@ -1009,6 +1016,9 @@ public class TracingInteractor extends MouseAdapter
                 FrameworkAccess.handleException(error);
                 return false;
             }
+            long endTime = System.currentTimeMillis();
+            TmViewerManager.getInstance().logOperation(TmOperation.Activity.APPEND_VERTEX,
+                    null, endTime-startTime);
             return true;
         }
 
@@ -1041,9 +1051,14 @@ public class TracingInteractor extends MouseAdapter
         public void clearParent() {
             if (! canClearParent())
                 return;
+
+            long startTime = System.currentTimeMillis();
             clearParentVertex();
             SelectionAnnotationEvent annEvent = new SelectionAnnotationEvent(this,
                     null, false, true);
+            long endTime = System.currentTimeMillis();
+            TmViewerManager.getInstance().logOperation(TmOperation.Activity.CLEAR_PARENT_ANCHOR,
+                    null, endTime-startTime);
             ViewerEventBus.postEvent(annEvent);
         }
         
@@ -1087,16 +1102,6 @@ public class TracingInteractor extends MouseAdapter
             if (TmModelManager.getInstance().getCurrentView().isProjectReadOnly()) return false;
             return true;
         }
-        
-        public boolean splitNeurite() {
-            if (!canSplitNeurite())
-                return false;
-            if (!TmModelManager.checkOwnership(NeuronManager.getInstance().getNeuronFromNeuronID(hoveredVertex.getNeuronId()))) {
-                return false;
-            }
-
-          return true;
-        }
 
         private List<Long> findAncestors(Long neuronId, TmGeoAnnotation vertex) {
             List<Long> ancestors = new ArrayList<>();
@@ -1124,6 +1129,7 @@ public class TracingInteractor extends MouseAdapter
         public boolean mergeNeurites() {
             if (!canMergeNeurite())
                 return false;
+            long startTime = System.currentTimeMillis();
             if (hoveredNeuron == parentNeuron) {
                 List<Long> targetAncestors = findAncestors(hoveredNeuron.getId(), hoveredVertex);
                 List<Long> sourceAncestors = findAncestors(hoveredNeuron.getId(), parentVertex);
@@ -1168,6 +1174,9 @@ public class TracingInteractor extends MouseAdapter
                 FrameworkAccess.handleException(error);
                 return false;
             }
+            long endTime = System.currentTimeMillis();
+            TmViewerManager.getInstance().logOperation(TmOperation.Activity.MERGE_NEURITES,
+                    null, endTime-startTime);
             return true;
         }
         
@@ -1205,6 +1214,7 @@ public class TracingInteractor extends MouseAdapter
         }
         
         public void selectParent() {
+            long startTime = System.currentTimeMillis();
             TmModelManager.getInstance().getCurrentSelections().setCurrentNeuron(hoveredNeuron);
             TmModelManager.getInstance().getCurrentSelections().setCurrentVertex(hoveredVertex);
             SelectionAnnotationEvent event = new SelectionAnnotationEvent(this,
@@ -1213,6 +1223,10 @@ public class TracingInteractor extends MouseAdapter
             ViewerEventBus.postEvent(event);
             selectParentVertex(hoveredVertex, hoveredNeuron);
             NeuronManager.getInstance().updateFragsByAnnotation(hoveredNeuron.getId(), hoveredVertex.getId());
+
+            long endTime = System.currentTimeMillis();
+            TmViewerManager.getInstance().logOperation(TmOperation.Activity.SELECT_VERTEX,
+                    null, endTime-startTime);
 
         }
 

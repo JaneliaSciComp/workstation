@@ -23,6 +23,9 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputListener;
+
+import org.janelia.model.domain.tiledMicroscope.TmOperation;
+import org.janelia.workstation.controller.TmViewerManager;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -167,10 +170,14 @@ implements MouseListener, MouseMotionListener, MouseWheelListener, MouseInputLis
                 }
                 // Middle drag to rotate
                 else if (isRotateMode(event)) {
+                    long startTime = System.currentTimeMillis();
                     if (camera.getVantage().isConstrainedToUpDirection())
                         bChanged = orbitPixels(dx, -dy, 6.0f);
                     else 
                         bChanged = rotatePixels(dx, -dy, 6.0f);
+                    long endTime = System.currentTimeMillis();
+                    TmViewerManager.getInstance().logOperation(TmOperation.Activity.ROTATE_SCREEN,
+                            null, endTime-startTime);
                 }
             }
         }

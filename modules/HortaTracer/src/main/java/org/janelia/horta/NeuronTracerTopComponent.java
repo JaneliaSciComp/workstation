@@ -117,12 +117,7 @@ import org.janelia.jacsstorage.clients.api.JadeStorageAttributes;
 import org.janelia.jacsstorage.clients.api.http.ClientProxy;
 import org.janelia.model.domain.DomainConstants;
 import org.janelia.model.domain.enums.FileType;
-import org.janelia.model.domain.tiledMicroscope.TmColorModel;
-import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
-import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
-import org.janelia.model.domain.tiledMicroscope.TmObjectMesh;
-import org.janelia.model.domain.tiledMicroscope.TmSample;
-import org.janelia.model.domain.tiledMicroscope.TmWorkspace;
+import org.janelia.model.domain.tiledMicroscope.*;
 import org.janelia.rendering.RenderedVolumeLoader;
 import org.janelia.rendering.RenderedVolumeLoaderImpl;
 import org.janelia.scenewindow.OrbitPanZoomInteractor;
@@ -132,6 +127,7 @@ import org.janelia.scenewindow.SceneWindow;
 import org.janelia.scenewindow.fps.FrameTracker;
 import org.janelia.workstation.common.actions.CopyToClipboardAction;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.ViewerEventBus;
 import org.janelia.workstation.controller.access.ModelTranslation;
 import org.janelia.workstation.controller.action.AddEditNoteAction;
@@ -1356,8 +1352,12 @@ public final class NeuronTracerTopComponent extends TopComponent
                     viewMenu.add(new AbstractAction("Recenter on This 3D Position [left-click]") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
+                            long startTime = System.currentTimeMillis();
                             PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
                             neuronTraceLoader.animateToFocusXyz(mouseStageLocation, pCam.getVantage(), 150);
+                            long endTime = System.currentTimeMillis();
+                            TmViewerManager.getInstance().logOperation(TmOperation.Activity.RECENTER_3D_VIEW,
+                                    null, endTime-startTime);
                         }
                     });
                 }
@@ -1782,6 +1782,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         topMenu.add(new AbstractAction("Center on Current Anchor") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
+                                long startTime = System.currentTimeMillis();
                                 PerspectiveCamera pCam = (PerspectiveCamera) sceneWindow.getCamera();
                                 float[] vtxLocation = TmModelManager.getInstance().getLocationInMicrometers(vertex.getX(),
                                         vertex.getY(), vertex.getZ());
@@ -1792,6 +1793,9 @@ public final class NeuronTracerTopComponent extends TopComponent
                                         null,
                                         false);
                                 setSampleLocation(event);
+                                long endTime = System.currentTimeMillis();
+                                TmViewerManager.getInstance().logOperation(TmOperation.Activity.CENTER_CURRENT_ANCHOR,
+                                        null, endTime-startTime);
                             }
                         });
 
@@ -1833,24 +1837,36 @@ public final class NeuronTracerTopComponent extends TopComponent
                             topMenu.add(new AbstractAction("Set Vertex as Neuron Root") {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
+                                    long startTime = System.currentTimeMillis();
                                     RerootNeuronAction action = new RerootNeuronAction();
                                     action.execute(vertex.getNeuronId(), vertex.getId());
+                                    long endTime = System.currentTimeMillis();
+                                    TmViewerManager.getInstance().logOperation(TmOperation.Activity.SET_VERTEX_NEURON_ROOT,
+                                            null, endTime-startTime);
                                 }
                             });
 
                             topMenu.add(new AbstractAction("Split Neuron Edge Between Vertices") {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
+                                    long startTime = System.currentTimeMillis();
                                     SplitNeuronBetweenVerticesAction action = new SplitNeuronBetweenVerticesAction();
                                     action.execute(vertex.getNeuronId(), vertex.getId());
+                                    long endTime = System.currentTimeMillis();
+                                    TmViewerManager.getInstance().logOperation(TmOperation.Activity.SPLIT_NEURON_EDGE_VERTICES,
+                                            null, endTime-startTime);
                                 }
                             });
 
                             topMenu.add(new AbstractAction("Split Neurite At Vertex") {
                                 @Override
                                 public void actionPerformed(ActionEvent e) {
+                                    long startTime = System.currentTimeMillis();
                                     SplitNeuronAtVertexAction action = new SplitNeuronAtVertexAction();
                                     action.execute(vertex.getNeuronId(), vertex.getId());
+                                    long endTime = System.currentTimeMillis();
+                                    TmViewerManager.getInstance().logOperation(TmOperation.Activity.SPLIT_NEURITE_AT_VERTEX,
+                                            null, endTime-startTime);
                                 }
                             });
                         }
@@ -1875,10 +1891,14 @@ public final class NeuronTracerTopComponent extends TopComponent
                     AbstractAction hideNeuronAction = new AbstractAction("Hide Neuron") {
                         @Override
                         public void actionPerformed(ActionEvent e) {
+                            long startTime = System.currentTimeMillis();
                             TmModelManager.getInstance().getCurrentView().addAnnotationToHidden(indicatedNeuron.getId());
                             NeuronUpdateEvent updateEvent = new NeuronUpdateEvent(
                                     this, Arrays.asList(new TmNeuronMetadata[]{indicatedNeuron}));
                             ViewerEventBus.postEvent(updateEvent);
+                            long endTime = System.currentTimeMillis();
+                            TmViewerManager.getInstance().logOperation(TmOperation.Activity.HIDE_NEURON,
+                                    null, endTime-startTime);
                         }
                     };
                     topMenu.add(hideNeuronAction);
@@ -1949,6 +1969,7 @@ public final class NeuronTracerTopComponent extends TopComponent
                         topMenu.add(new AbstractAction("Merge neurites...") {
                             @Override
                             public void actionPerformed(ActionEvent e) {
+
                                 interactorContext.mergeNeurites();
                             }
                         });

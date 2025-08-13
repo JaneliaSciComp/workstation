@@ -1,7 +1,9 @@
 package org.janelia.workstation.controller.action;
 
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmOperation;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.api.AccessManager;
 import org.openide.awt.ActionID;
@@ -34,6 +36,7 @@ public class NeuronDeleteAction extends EditAction {
     
     @Override
     public void actionPerformed(ActionEvent e) {
+        long startTime = System.currentTimeMillis();
         if (targetNeuron == null) {
             targetNeuron = TmModelManager.getInstance().getCurrentSelections().getCurrentNeuron();
             if (targetNeuron == null) {
@@ -64,5 +67,8 @@ public class NeuronDeleteAction extends EditAction {
             NeuronManager.getInstance().deleteNeuron(targetNeuron);
         }
         this.targetNeuron = null;
+        long endTime = System.currentTimeMillis();
+        TmViewerManager.getInstance().logOperation(TmOperation.Activity.DELETE_NEURON,
+                null, endTime-startTime);
     }
 }
