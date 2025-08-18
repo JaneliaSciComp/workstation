@@ -29,6 +29,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -140,11 +141,15 @@ public class RetrieveLogsPanel extends JPanel implements Refreshable {
                         null, null, AccessManager.getSubjectKey());
                 try {
                     BufferedWriter writer = new BufferedWriter(new FileWriter(fileOutputLocation.getText()));
-                    for(TmOperation log: logs) {
-                        writer.write(log.getTimestamp().toString() + "," +
-                                log.getWorkspaceId() + "," + log.getNeuronId() + "," +
-                                log.getUser() + "," + log.getActivity() + "," +
-                                log.getElapsedTime());
+                    for (TmOperation log : logs) {
+                        writer.write(
+                                Objects.toString(log.getTimestamp(), "") + "," +
+                                        Objects.toString(log.getWorkspaceId(), "") + "," +
+                                        Objects.toString(log.getNeuronId(), "") + "," +
+                                        Objects.toString(log.getUser(), "") + "," +
+                                        Objects.toString(log.getActivity(), "") + "," +
+                                        Objects.toString(log.getElapsedTime(), "")
+                        );
                         writer.newLine();
                     }
                     writer.close();
