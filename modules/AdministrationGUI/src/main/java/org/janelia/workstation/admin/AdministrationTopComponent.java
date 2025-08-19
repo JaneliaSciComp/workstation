@@ -13,6 +13,7 @@ import org.janelia.model.security.Group;
 import org.janelia.model.security.User;
 import org.janelia.model.security.UserGroupRole;
 import org.janelia.workstation.common.gui.util.UIUtils;
+import org.janelia.workstation.core.api.AccessManager;
 import org.janelia.workstation.core.api.DomainMgr;
 import org.janelia.workstation.core.api.facade.interfaces.SubjectFacade;
 import org.janelia.workstation.core.events.Events;
@@ -67,6 +68,8 @@ public final class AdministrationTopComponent extends TopComponent {
         setupGUI();
         setName(Bundle.CTL_AdministrationTopComponent());
         setToolTipText(Bundle.HINT_AdministrationTopComponent());
+        boolean enabled = AccessManager.getAccessManager().isAdmin();
+        setEnabled(enabled);
     }
 
     public static AdministrationTopComponent getInstance() {
