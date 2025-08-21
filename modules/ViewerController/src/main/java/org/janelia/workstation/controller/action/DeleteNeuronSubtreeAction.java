@@ -2,7 +2,9 @@ package org.janelia.workstation.controller.action;
 
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmOperation;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.core.workers.SimpleWorker;
 import org.janelia.workstation.integration.util.FrameworkAccess;
@@ -44,10 +46,14 @@ import java.awt.event.ActionEvent;
         }
 
         public void execute(Long neuronID, Long vertexID) {
+            long startTime = System.currentTimeMillis();
             NeuronManager manager = NeuronManager.getInstance();
             TmGeoAnnotation vertex = manager.getGeoAnnotationFromID(neuronID, vertexID);
             TmNeuronMetadata neuron = manager.getNeuronFromNeuronID(neuronID);
             deleteSubTree(neuron, vertex);
+            long endTime = System.currentTimeMillis();
+            TmViewerManager.getInstance().logOperation(TmOperation.Activity.DELETE_NEURON_SUBTREE,
+                    null, endTime-startTime);
         }
 
         public void deleteSubTree(TmNeuronMetadata neuron, TmGeoAnnotation vertex) {

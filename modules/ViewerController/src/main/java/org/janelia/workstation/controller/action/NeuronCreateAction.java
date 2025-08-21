@@ -8,7 +8,9 @@ import java.util.regex.Pattern;
 
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;
+import org.janelia.model.domain.tiledMicroscope.TmOperation;
 import org.janelia.workstation.controller.NeuronManager;
+import org.janelia.workstation.controller.TmViewerManager;
 import org.janelia.workstation.controller.action.EditAction;
 import org.janelia.workstation.controller.model.TmModelManager;
 import org.janelia.workstation.controller.model.annotations.neuron.NeuronModel;
@@ -46,6 +48,7 @@ public class NeuronCreateAction extends EditAction {
     }
 
     private void createNeuron(boolean createInitVertex, Vec3 vertexLoc) {
+        long startTime = System.currentTimeMillis();
         if (TmModelManager.getInstance().getCurrentWorkspace() == null) {
             // dialog?
             return;
@@ -83,5 +86,8 @@ public class NeuronCreateAction extends EditAction {
             };
             creator.execute();
         }
+        long endTime = System.currentTimeMillis();
+        TmViewerManager.getInstance().logOperation(TmOperation.Activity.CREATE_NEURON,
+                null, endTime-startTime);
     }
 }

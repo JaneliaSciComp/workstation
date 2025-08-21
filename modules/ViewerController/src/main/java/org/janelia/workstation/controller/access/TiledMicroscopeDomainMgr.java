@@ -166,10 +166,10 @@ public class TiledMicroscopeDomainMgr {
         return client.getOperationLogs(workspaceId, neuronId, startTime, endTime, subjectKey);
     }
 
-    public void createOperationLog (Long sampleId, Long workspaceId,  Long neuronId, TmOperation.Activity activity,
-                                    String timestamp, Long elapsedTime, String subjectKey) {
-        LOG.debug("createOperationLog(activity={}, timestamp={}, elapsedTime={})",activity, timestamp, elapsedTime);
-        client.createOperationLog(sampleId, workspaceId, neuronId, activity, timestamp, elapsedTime, subjectKey);
+    public void createOperationLog (TmOperation operation, String subjectKey) {
+        LOG.debug("createOperationLog(activity={}, timestamp={}, elapsedTime={})",operation.getActivity(),
+                operation.getTimestamp(), operation.getElapsedTime());
+        client.createOperationLog(operation, subjectKey);
     }
 
     public TmWorkspace createWorkspace(Long sampleId, String name) throws Exception {

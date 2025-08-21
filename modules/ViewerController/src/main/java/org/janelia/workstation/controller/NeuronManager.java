@@ -494,7 +494,7 @@ public class NeuronManager implements DomainObjectSelectionSupport {
     }
 
     public synchronized void deleteNeuron(final TmNeuronMetadata deletedNeuron) {
-
+        long startTime = System.currentTimeMillis();
         // Update the UI first
         if (applyFilter) {
             // if filter, add and remove fragments as necessary
@@ -517,6 +517,10 @@ public class NeuronManager implements DomainObjectSelectionSupport {
             FrameworkAccess.handleException(e);
             return null;
         });
+
+        long endTime = System.currentTimeMillis();
+        TmViewerManager.getInstance().logOperation(TmOperation.Activity.DELETE_NEURON,
+                null, endTime-startTime);
     }
 
     /**
@@ -1256,7 +1260,6 @@ public class NeuronManager implements DomainObjectSelectionSupport {
         if (rootAnnotation == null) {
             return;
         }
-
         final TmNeuronMetadata neuron = getNeuronFromNeuronID(rootAnnotation.getNeuronId());
         TmModelManager.getInstance().getNeuronHistory().checkBackup(neuron);
         if (neuron == null) {
