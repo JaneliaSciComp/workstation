@@ -44,11 +44,6 @@ import org.slf4j.LoggerFactory;
 )
 @TopComponent.Registration(mode = "editor", openAtStartup = false)
 @ActionID(category = "Window", id = "org.janelia.workstation.admin.AdministrationTopComponent")
-@ActionReference(path = "Menu/Window/Core", position = 10)
-@TopComponent.OpenActionRegistration(
-        displayName = "#CTL_AdministrationTopComponentAction",
-        preferredID = AdministrationTopComponent.PREFERRED_ID
-)
 @Messages({
         "CTL_AdministrationTopComponentAction=Administration Tool",
         "CTL_AdministrationTopComponent=" + AdministrationTopComponent.LABEL_TEXT,
@@ -63,13 +58,12 @@ public final class AdministrationTopComponent extends TopComponent {
 
     private JPanel topMenu;
     private Refreshable currentView;
-    private boolean enabled;
 
     public AdministrationTopComponent() {
         setupGUI();
         setName(Bundle.CTL_AdministrationTopComponent());
         setToolTipText(Bundle.HINT_AdministrationTopComponent());
-        enabled = AccessManager.getAccessManager().isAdmin();
+        boolean enabled = AccessManager.getAccessManager().isAdmin();
         setEnabled(enabled);
     }
 
@@ -93,7 +87,6 @@ public final class AdministrationTopComponent extends TopComponent {
         listUsersButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         listUsersButton.setHorizontalTextPosition(SwingConstants.CENTER);
         listUsersButton.addActionListener(event -> viewUserList());
-        listUsersButton.setEnabled(enabled);
         row1.add(listUsersButton);
 
         row1.add(Box.createHorizontalStrut(20)); // Add space between buttons
@@ -105,7 +98,6 @@ public final class AdministrationTopComponent extends TopComponent {
         listGroupsButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         listGroupsButton.setHorizontalTextPosition(SwingConstants.CENTER);
         listGroupsButton.addActionListener(event -> viewGroupList());
-        listGroupsButton.setEnabled(enabled);
         row1.add(listGroupsButton);
 
         row1.add(Box.createHorizontalStrut(20));
@@ -115,7 +107,6 @@ public final class AdministrationTopComponent extends TopComponent {
         getLogsButton.addActionListener(event -> getLogs());
         getLogsButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         getLogsButton.setHorizontalTextPosition(SwingConstants.CENTER);
-        getLogsButton.setEnabled(enabled);
         row1.add(getLogsButton);
 
         row1.add(Box.createHorizontalStrut(20));
@@ -126,7 +117,6 @@ public final class AdministrationTopComponent extends TopComponent {
         workspaceCleanupButton.setVerticalTextPosition(SwingConstants.BOTTOM);
         workspaceCleanupButton.setHorizontalTextPosition(SwingConstants.CENTER);
         workspaceCleanupButton.addActionListener(event -> databaseCleanup());
-        workspaceCleanupButton.setEnabled(enabled);
         row1.add(workspaceCleanupButton);
 
         // Add both rows to the main menu
