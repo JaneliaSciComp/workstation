@@ -1,3 +1,9 @@
+// 9.22
+
+Horta
+* Added S3 URI support for HortaCloud
+* Added Admin feature for deleting large TmWorkspaces
+
 // 9.21
 
 Horta
