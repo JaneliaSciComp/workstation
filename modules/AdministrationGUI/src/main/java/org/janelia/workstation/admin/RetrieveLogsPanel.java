@@ -93,15 +93,44 @@ public class RetrieveLogsPanel extends JPanel implements Refreshable {
         constraints.gridy = 1;
         contentPanel.add(neuronNameTextField, constraints);
 
+        // Activity filter
+        final JLabel activityLabel = new JLabel("Activity");
+        final JComboBox<TmOperation.Activity> activityComboBox = new JComboBox<>(
+                TmOperation.Activity.values());  // assuming Activity is an enum in TmOperation
+        activityComboBox.insertItemAt(null, 0); // allow 'no filter'
+        activityComboBox.setSelectedIndex(0);
+
+        constraints.gridx = 0;
+        constraints.gridy = 2;
+        contentPanel.add(activityLabel, constraints);
+        constraints.gridx = 1;
+        constraints.gridy = 2;
+        contentPanel.add(activityComboBox, constraints);
+
+        // UserID filter
+        final JLabel userIdLabel = new JLabel("User ID");
+        final JTextField userIdTextField = new JTextField();
+        userIdTextField.setText("");
+        userIdTextField.setEditable(true);
+        userIdTextField.setFocusable(true);
+
+        constraints.gridx = 0;
+        constraints.gridy = 3;
+        contentPanel.add(userIdLabel, constraints);
+        constraints.gridx = 1;
+        constraints.gridy = 3;
+        contentPanel.add(userIdTextField, constraints);
+
+
         File defaultFile = Utils.getOutputFile(System.getProperty("user.home"), "log_results", "csv");
         final JTextField fileOutputLocation = new JTextField();
         fileOutputLocation.setText(defaultFile.getAbsolutePath());
         JButton outputButton = new JButton("Choose Export Location");
         constraints.gridx = 1;
-        constraints.gridy = 2;
+        constraints.gridy = 4;
         contentPanel.add(fileOutputLocation, constraints);
         constraints.gridx = 0;
-        constraints.gridy = 2;
+        constraints.gridy = 4;
         contentPanel.add(outputButton, constraints);
 
         add(contentPanel, BorderLayout.CENTER);
@@ -134,11 +163,13 @@ public class RetrieveLogsPanel extends JPanel implements Refreshable {
                 TiledMicroscopeDomainMgr domainMgr = TiledMicroscopeDomainMgr.getDomainMgr();
                 String workspaceId = workspaceNameTextField.getText();
                 String neuronId = neuronNameTextField.getText();
+                TmOperation.Activity activity = (TmOperation.Activity) activityComboBox.getSelectedItem();
+                String userId = userIdTextField.getText().isEmpty() ? null : userIdTextField.getText();
+
                 Long workspaceId_L =(workspaceId.equals("")?null:Long.parseLong(workspaceId));
                 Long neuronId_L =(neuronId.equals("")?null:Long.parseLong(neuronId));
                 List<TmOperation> logs = domainMgr.getOperationLogs(workspaceId_L,
-                        neuronId_L,
-                        null, null, AccessManager.getSubjectKey());
+                        neuronId_L,  userId, activity, AccessManager.getSubjectKey());
                 try {
                     BufferedWriter writer = new BufferedWriter(new FileWriter(fileOutputLocation.getText()));
                     for (TmOperation log : logs) {
@@ -161,11 +192,11 @@ public class RetrieveLogsPanel extends JPanel implements Refreshable {
         });
 
         constraints.gridx = 1;
-        constraints.gridy = 3;
+        constraints.gridy = 5;
         contentPanel.add(okButton, constraints);
 
         constraints.gridx = 1;
-        constraints.gridy = 4;
+        constraints.gridy = 6;
         contentPanel.add(statusLabel, constraints);
         revalidate();
     }

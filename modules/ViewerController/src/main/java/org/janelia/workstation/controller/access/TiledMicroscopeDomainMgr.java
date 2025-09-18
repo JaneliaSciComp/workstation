@@ -159,11 +159,11 @@ public class TiledMicroscopeDomainMgr {
         return client.getLargestWorkspaces(AccessManager.getSubjectKey());
     }
 
-    public List<TmOperation> getOperationLogs (Long workspaceId, Long neuronId, Date startTime, Date endTime,
+    public List<TmOperation> getOperationLogs (Long workspaceId, Long neuronId, String userId, TmOperation.Activity activity,
                                                String subjectKey) {
         LOG.debug("getOperationLogs(workspaceId={}, neuronId={}, startTime={}, endTime={})",
-                workspaceId, neuronId, startTime, endTime);
-        return client.getOperationLogs(workspaceId, neuronId, startTime, endTime, subjectKey);
+                workspaceId, neuronId, userId, activity);
+        return client.getOperationLogs(workspaceId, neuronId, userId, activity, subjectKey);
     }
 
     public void createOperationLog (TmOperation operation, String subjectKey) {

@@ -1,5 +1,5 @@
-// 9.23
+// 9.23.1
 
 Horta
-* Added support for self-registration for Demo Hortacloud instance
-* Expanded event logging for additional user events
+* Added filter for userId and activity in search events
+* Fixed issue with recording of timestamp and user in event logging

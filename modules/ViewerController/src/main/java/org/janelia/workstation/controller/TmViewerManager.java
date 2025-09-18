@@ -68,7 +68,8 @@ public class TmViewerManager implements GlobalViewerController {
             workspaceId = modelManager.getCurrentWorkspace().getId();
         TmOperation newOperationLog = new TmOperation();
         newOperationLog.setActivity(activity);
-        newOperationLog.setTimestamp(timestamp);
+        newOperationLog.setTimestamp(new Date());
+        newOperationLog.setUser(AccessManager.getSubjectKey() );
         newOperationLog.setElapsedTime(elapsedTime);
         newOperationLog.setWorkspaceId(workspaceId);
         if (modelManager.getCurrentSelections().getCurrentNeuron()!=null)
