@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>9.23</version>
+        <version>9.23.1</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>Horta</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>application_horta</artifactId>
-    <version>9.23</version>
+    <version>9.23.1</version>
     <packaging>nbm-application</packaging>
 
     <properties>
