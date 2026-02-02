@@ -1,5 +1,9 @@
-// 9.23.1
+// 9.24
 
 Horta
-* Added filter for userId and activity in search events
-* Fixed issue with recording of timestamp and user in event logging
+* Added support for different types of OmeZarr compression
+
+HortaCloud
+* Added bzip compression for backup and restore of large Mongo collections
+* Added support for individual workspace restore from backups
+* Added Appstream client RTT latency logging

@@ -1,3 +1,9 @@
+// 9.23.1
+
+Horta
+* Added filter for userId and activity in search events
+* Fixed issue with recording of timestamp and user in event logging
+
 // 9.23
 
 Horta
