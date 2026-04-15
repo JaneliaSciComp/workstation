@@ -1,7 +1,6 @@
 # Janelia Workstation
 
 [![Java CI with Maven](https://github.com/JaneliaSciComp/workstation/actions/workflows/maven.yml/badge.svg)](https://github.com/JaneliaSciComp/workstation/actions/workflows/maven.yml)
-[![DOI](https://zenodo.org/badge/177317416.svg)](https://doi.org/10.5281/zenodo.14609840)
 
 The Janelia Workstation is a neuroscience discovery platform for processing, analysis, annotation, and sharing of large-scale 3D microscopy data. 
 
@@ -32,4 +31,3 @@ The canonical two-server deployment of the MouseLight neuron tracing tools is de
 ## For Developers
 
 For information about building this code base, see the [Development](docs/Development.md). To create an official release, see the [Release](docs/ReleaseProcess.md) documentation.
-
