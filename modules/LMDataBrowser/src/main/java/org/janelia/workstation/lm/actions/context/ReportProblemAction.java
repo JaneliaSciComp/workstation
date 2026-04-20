@@ -5,8 +5,7 @@ import org.janelia.model.domain.sample.Sample;
 import org.janelia.workstation.common.actions.BaseContextualNodeAction;
 import org.janelia.workstation.core.activity_logging.ActivityLogHelper;
 import org.janelia.workstation.core.api.AccessManager;
-import org.janelia.workstation.core.util.ConsoleProperties;
-import org.janelia.workstation.core.util.MailHelper;
+import org.janelia.workstation.core.util.ErrorReportDialogueBox;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
@@ -45,8 +44,7 @@ public class ReportProblemAction extends BaseContextualNodeAction {
         if (getNodeContext().isSingleObjectOfType(Sample.class)) {
             this.selectedObject = getNodeContext().getSingleObjectOfType(Sample.class);
             setEnabledAndVisible(true);
-        }
-        else {
+        } else {
             setEnabledAndVisible(false);
         }
     }
@@ -61,66 +59,37 @@ public class ReportProblemAction extends BaseContextualNodeAction {
             reportData(domainObject);
 
             JOptionPane.showMessageDialog(FrameworkAccess.getMainFrame(),
-                    "Successfully reported problem with "+domainObject.getName(),
+                    "Successfully reported problem with " + domainObject.getName(),
                     "Data Problem Reported", JOptionPane.PLAIN_MESSAGE);
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             FrameworkAccess.handleException(ex);
         }
     }
 
     private void reportData(DomainObject domainObject) {
 
-        String fromEmail = ConsoleProperties.getString("console.FromEmail", null);
-        if (fromEmail==null) {
-            log.error("Cannot send exception report: no value for console.FromEmail is configured.");
-            return;
-        }
+        String subject = "Reported Data: " + domainObject.getName();
 
-        String toEmail = ConsoleProperties.getString("console.HelpEmail", null);
-        if (toEmail==null) {
-            log.error("Cannot send exception report: no value for console.HelpEmail is configured.");
-            return;
-        }
+        // this dialog box will not be displayed; we do not call errorReportDialogueBox.showPopup()
+        ErrorReportDialogueBox errorReportDialogueBox = ErrorReportDialogueBox.newDialog(FrameworkAccess.getMainFrame())
+                .withTitle("not displayed")
+                .withPromptText("not displayed")
+                .withSubject(subject);
 
-        DataReporter reporter = new DataReporter(fromEmail, toEmail);
-        reporter.reportData(domainObject, null);
+        errorReportDialogueBox.append(createEntityReport(domainObject));
+        errorReportDialogueBox.sendReport();
     }
 
-    public static class DataReporter {
+    private String createEntityReport(DomainObject domainObject) {
+        StringBuilder sBuf = new StringBuilder();
 
-        private final String fromEmail;
-        private final String toEmail;
+        String user = AccessManager.getSubjectKey();
+        sBuf.append("Reporting user: ").append(user).append("\n");
 
-        public DataReporter(String fromEmail, String toEmail) {
-            this.fromEmail = fromEmail;
-            this.toEmail = toEmail;
-        }
-
-        private String createEntityReport(DomainObject domainObject, String annotation) {
-            StringBuilder sBuf = new StringBuilder();
-
-            String user = AccessManager.getSubjectKey();
-            sBuf.append("Reporting user: ").append(user).append("\n");
-
-            sBuf.append("GUID: ").append(domainObject.getId().toString()).append("\n");
-            sBuf.append("Type: ").append(domainObject.getType()).append("\n");
-            sBuf.append("Owner: ").append(domainObject.getOwnerKey()).append("\n");
-            sBuf.append("Name: ").append(domainObject.getName()).append("\n");
-            if (annotation!=null) {
-                sBuf.append("Annotation: ").append(annotation).append("\n\n");
-            }
-            return sBuf.toString();
-        }
-
-        public void reportData(DomainObject domainObject, String annotation) {
-            String subject = "Reported Data: " + domainObject.getName();
-            if (annotation!=null) {
-                subject += " ("+annotation+")";
-            }
-            String report = createEntityReport(domainObject, annotation);
-            MailHelper helper = new MailHelper();
-            helper.sendEmail(fromEmail, toEmail, subject, report);
-        }
+        sBuf.append("GUID: ").append(domainObject.getId().toString()).append("\n");
+        sBuf.append("Type: ").append(domainObject.getType()).append("\n");
+        sBuf.append("Owner: ").append(domainObject.getOwnerKey()).append("\n");
+        sBuf.append("Name: ").append(domainObject.getName()).append("\n");
+        return sBuf.toString();
     }
 }
