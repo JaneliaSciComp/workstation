@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.janelia</groupId>
         <artifactId>workstation</artifactId>
-        <version>9.21</version>
+        <version>10.0</version>
         <relativePath>../..</relativePath>
     </parent>
 
     <name>Jogl260Lib</name>
     <groupId>org.janelia.workstation</groupId>
     <artifactId>jogl260lib</artifactId>
-    <version>9.21</version>
+    <version>10.0</version>
     <packaging>nbm</packaging>
 
     <dependencies>
