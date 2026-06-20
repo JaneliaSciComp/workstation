@@ -14,6 +14,51 @@ To build the Janelia HortaCloud application, use the `horta` profile:
 mvn --batch-mode -T 8 -Djava.awt.headless=true -P horta clean install
 ```
 
+To build the full project without running tests:
+```
+mvn -DskipTests compile
+```
+
+### Packaging
+
+Native application images and installers are built with `jpackage`.
+
+To build the Janelia Workstation application image:
+```
+mvn -Pjaneliaws,deployment -pl modules/application -am -DskipTests -Djpackage.type=APP_IMAGE package
+```
+
+The generated application image is written under:
+```
+modules/application/target/jpackage/
+```
+
+To build the Horta application image:
+```
+mvn -Phorta,deployment -pl modules/application_horta -am -DskipTests -Djpackage.type=APP_IMAGE package
+```
+
+The generated application image is written under:
+```
+modules/application_horta/target/jpackage/
+```
+
+To build a native installer instead of an application image, change `jpackage.type` to the package type for the target operating system:
+```
+# macOS
+-Djpackage.type=DMG
+-Djpackage.type=PKG
+
+# Windows
+-Djpackage.type=MSI
+-Djpackage.type=EXE
+
+# Linux
+-Djpackage.type=DEB
+```
+
+Native packages must be built on the target operating system. For example, build `DMG` or `PKG` on macOS, `MSI` or `EXE` on Windows, and `DEB` on Linux.
+
 ## Running 
 
 To run the Janelia Workstation application, use the `janeliaws` profile:

@@ -155,6 +155,7 @@
         <janeliaws.build-helper-maven-plugin.version>3.0.0</janeliaws.build-helper-maven-plugin.version>
 
         <janeliaws.nbm-maven-plugin.version>14.5</janeliaws.nbm-maven-plugin.version>
+        <janeliaws.jpackage-maven-plugin.version>1.7.4</janeliaws.jpackage-maven-plugin.version>
         
         <janeliaws.wagon-maven-plugin.version>2.0.0</janeliaws.wagon-maven-plugin.version>
         
@@ -713,9 +714,9 @@
                     </dependencies>
                 </plugin>
                 <plugin>
-                    <groupId>org.panteam</groupId>
+                    <groupId>org.panteleyev</groupId>
                     <artifactId>jpackage-maven-plugin</artifactId>
-                    <version>1.6.0</version>
+                    <version>${janeliaws.jpackage-maven-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>

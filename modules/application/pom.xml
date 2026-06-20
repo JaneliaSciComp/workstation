@@ -17,6 +17,9 @@
 
     <properties>
         <jarGoalPhase>package</jarGoalPhase>
+        <jpackage.type>APP_IMAGE</jpackage.type>
+        <jpackage.icon>${basedir}/src/main/app-resources/janeliaws128.png</jpackage.icon>
+        <jpackage.max.heap>-Xmx8192m</jpackage.max.heap>
     </properties>
 
     <!-- Dependencies -->
@@ -262,11 +265,26 @@
     
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile-jpackage-launcher</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- Build jar only when not in deployment mode so install does not fail due to no attached artifacts -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <configuration combine.self="override">
+                    <classifier>launcher</classifier>
                 </configuration>
                 <executions>
                     <execution>
@@ -278,37 +296,17 @@
                 </executions>
             </plugin>
             
-            <!-- Disable the ZIP goal. Also set up the location of the ${brandingToken}.conf -->
+            <!-- Configure the NetBeans application layout used by local runs and jpackage. -->
             <plugin>
                 <groupId>org.apache.netbeans.utilities</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <finalName>${clusterName}</finalName>
-                    <installersFilePrefix>${clusterName}</installersFilePrefix>
                     <debugAdditionalArguments>${janeliaws.debug.args}</debugAdditionalArguments>
                     <etcConfFile>${basedir}/target/${brandingToken}.conf</etcConfFile>
-                    <!-- Override ANT-based installer builder -->
-                    <templateFile>${basedir}/src/main/app-resources/template.xml</templateFile>
-                    <!--
-                        Disable Pack200 because it adds a lot of time to the build and install,
-                        and the Workstation is typically distributed over LANs so the size isn't as important
-                    -->
-                    <installerPack200Enable>false</installerPack200Enable>
-                    <userSettings>
-                        <suite.props.app.title>${project.name.capitalized}</suite.props.app.title>
-                        <nbi.install.dir>${clusterName}</nbi.install.dir>
-                        <nbi.stub.buildfile>${basedir}/src/main/app-resources/build.xml</nbi.stub.buildfile>
-                        <nbi.installer.script>${basedir}/src/main/app-resources/launcher.sh</nbi.installer.script>
-                        <nbi.icon.file>${basedir}/src/main/app-resources/janeliaws48.png</nbi.icon.file>
-                        <nbi.dock.icon.file>${basedir}/src/main/app-resources/janeliaws.icns</nbi.dock.icon.file>
-                        <nbi.instleftcorner.file>${basedir}/src/main/app-resources/janeliaws48.png</nbi.instleftcorner.file>
-                        <configuration.logic.file>${basedir}/src/main/app-resources/ConfigurationLogic.java</configuration.logic.file>
-                        <unix.launcher.prop.file>${basedir}/src/main/app-resources/unix.launcher.properties</unix.launcher.prop.file>
-                        <windows.launcher.prop.file>${basedir}/src/main/app-resources/windows.launcher.properties</windows.launcher.prop.file>
-                    </userSettings>
                 </configuration>
 
-                <!-- disable ZIP goal, because it needs to be run after replace-mac-executable -->
+                <!-- Disable the default ZIP; deployment enables it after launcher replacement. -->
                 <executions>
                     <execution>
                         <id>default-standalone-zip</id>
@@ -414,13 +412,12 @@
 
     <profiles>
         
-        <!-- The deployment profile is built for daily releases.
-             It builds the standalone zip, the installers, and the update site.-->
+        <!-- The deployment profile builds the NetBeans app layout, update site, and jpackage output. -->
         <profile>
             <id>deployment</id>
 
             <properties>
-                <jarGoalPhase>none</jarGoalPhase>
+                <jarGoalPhase>package</jarGoalPhase>
             </properties>
 
             <build>
@@ -449,17 +446,16 @@
                                 <phase>none</phase>
                             </execution>
 
-                            <!-- Create the zip file, which will be used to create the installers -->
+                            <!-- Create the NetBeans application layout consumed by jpackage. -->
                             <execution>
                                 <id>default-standalone-zip</id>
                                 <phase>package</phase>
                             </execution>
 
-                            <!-- Create the installers and the update site -->
+                            <!-- Create the update site. Native packages are created by jpackage. -->
                             <execution>
-                                <id>installers-and-site</id>
+                                <id>autoupdate-site</id>
                                 <goals>
-                                    <goal>build-installers</goal>
                                     <goal>autoupdate</goal>
                                 </goals>
                             </execution>
@@ -477,11 +473,102 @@
                                 <id>replace-mac-executable</id>
                                 <phase>none</phase>
                             </execution>
+                            <execution>
+                                <id>prepare-jpackage-input</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <delete dir="${project.build.directory}/jpackage-input"/>
+                                        <mkdir dir="${project.build.directory}/jpackage-input"/>
+                                        <copy file="${project.build.directory}/${project.build.finalName}-launcher.jar"
+                                              todir="${project.build.directory}/jpackage-input"/>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.panteleyev</groupId>
+                        <artifactId>jpackage-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jpackage-native-package</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jpackage</goal>
+                                </goals>
+                                <configuration>
+                                    <name>${clusterName}</name>
+                                    <appVersion>${project.version}</appVersion>
+                                    <vendor>Howard Hughes Medical Institute</vendor>
+                                    <description>${project.description}</description>
+                                    <destination>${project.build.directory}/jpackage</destination>
+                                    <removeDestination>true</removeDestination>
+                                    <type>${jpackage.type}</type>
+                                    <input>${project.build.directory}/jpackage-input</input>
+                                    <mainJar>${project.build.finalName}-launcher.jar</mainJar>
+                                    <mainClass>org.janelia.workstation.application.NetBeansJPackageLauncher</mainClass>
+                                    <runtimeImage>${java.home}</runtimeImage>
+                                    <icon>${jpackage.icon}</icon>
+                                    <appContentPaths>
+                                        <appContentPath>${project.build.directory}/${brandingToken}</appContentPath>
+                                    </appContentPaths>
+                                    <javaOptions>
+                                        <javaOption>-Dworkstation.brandingToken=${brandingToken}</javaOption>
+                                        <javaOption>-Dworkstation.clusterName=${clusterName}</javaOption>
+                                        <javaOption>-Dbranding.token=${brandingToken}</javaOption>
+                                        <javaOption>-Dapple.awt.brushMetalLook=false</javaOption>
+                                        <javaOption>-XX:+UseParallelGC</javaOption>
+                                        <javaOption>-Dhttp.maxConnections=20</javaOption>
+                                        <javaOption>-Xms1024m</javaOption>
+                                        <javaOption>${jpackage.max.heap}</javaOption>
+                                        <javaOption>-Dnetbeans.exception.alert.min.level=2000</javaOption>
+                                        <javaOption>-Dnetbeans.exception.report.min.level=3000</javaOption>
+                                        <javaOption>-Dplugin.manager.check.interval=10</javaOption>
+                                        <javaOption>-Dplugin.manager.check.new.plugins=true</javaOption>
+                                        <javaOption>-Dplugin.manager.check.updates=true</javaOption>
+                                        <javaOption>--add-exports=java.desktop/sun.swing=ALL-UNNAMED</javaOption>
+                                        <javaOption>--add-opens=java.base/java.lang=ALL-UNNAMED</javaOption>
+                                        <javaOption>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</javaOption>
+                                        <javaOption>--add-opens=java.base/java.net=ALL-UNNAMED</javaOption>
+                                        <javaOption>--add-opens=java.base/java.nio=ALL-UNNAMED</javaOption>
+                                        <javaOption>--add-opens=java.base/java.util=ALL-UNNAMED</javaOption>
+                                        <javaOption>--add-opens=java.base/java.security=ALL-UNNAMED</javaOption>
+                                        <javaOption>--add-opens=java.desktop/javax.swing=ALL-UNNAMED</javaOption>
+                                        <javaOption>--add-opens=java.desktop/javax.swing.plaf.basic=ALL-UNNAMED</javaOption>
+                                        <javaOption>--add-opens=java.desktop/java.awt=ALL-UNNAMED</javaOption>
+                                        <javaOption>--add-opens=java.desktop/sun.awt=ALL-UNNAMED</javaOption>
+                                        <javaOption>--add-opens=java.prefs/java.util.prefs=ALL-UNNAMED</javaOption>
+                                    </javaOptions>
+                                    <macPackageName>${janeliaws.appbundle.name}</macPackageName>
+                                    <macPackageIdentifier>org.janelia.workstation.${brandingToken}</macPackageIdentifier>
+                                    <linuxPackageName>${brandingToken}</linuxPackageName>
+                                    <linuxShortcut>true</linuxShortcut>
+                                    <winMenu>true</winMenu>
+                                    <winShortcut>true</winShortcut>
+                                </configuration>
+                            </execution>
                         </executions>
                     </plugin>
 
                 </plugins>
             </build>
+        </profile>
+
+        <profile>
+            <id>macos-jpackage</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <properties>
+                <jpackage.icon>${basedir}/src/main/app-resources/janeliaws.icns</jpackage.icon>
+            </properties>
         </profile>
 
         <!-- Profile used along with deployment to create the autoupdate site -->

@@ -32,4 +32,3 @@ The canonical two-server deployment of the MouseLight neuron tracing tools is de
 ## For Developers
 
 For information about building this code base, see the [Development](docs/Development.md). To create an official release, see the [Release](docs/ReleaseProcess.md) documentation.
-
