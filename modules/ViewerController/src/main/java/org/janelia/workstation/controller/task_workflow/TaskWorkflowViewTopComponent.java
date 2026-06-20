@@ -191,7 +191,7 @@ public final class TaskWorkflowViewTopComponent extends TopComponent implements 
 
     }
     
-    public static final TaskWorkflowViewTopComponent getInstance() {
+    public static TaskWorkflowViewTopComponent getInstance() {
         return (TaskWorkflowViewTopComponent)WindowManager.getDefault().findTopComponent(PREFERRED_ID);
     }
     

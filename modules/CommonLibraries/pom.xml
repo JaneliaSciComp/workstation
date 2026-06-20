@@ -58,6 +58,10 @@
             <artifactId>jacsstorage-clients</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.janelia.workstation</groupId>
+            <artifactId>woodstoxlib</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.janelia.legacy</groupId>
             <artifactId>shared</artifactId>
         </dependency>
@@ -130,6 +134,16 @@
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-xml</artifactId>
             <version>${janeliaws.jackson.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.woodstox</groupId>
+                    <artifactId>woodstox-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.codehaus.woodstox</groupId>
+                    <artifactId>stax2-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -281,6 +295,12 @@
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-solrj</artifactId>
             <version>3.5.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.codehaus.woodstox</groupId>
+                    <artifactId>wstx-asl</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.jackrabbit</groupId>

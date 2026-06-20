@@ -246,6 +246,13 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- WoodstoxLib -->
+            <dependency>
+                <groupId>org.janelia.workstation</groupId>
+                <artifactId>woodstoxlib</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- CommonGUI -->
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
@@ -821,6 +828,77 @@
                     <showDeprecation>${janeliaws.javac.showDeprecation}</showDeprecation>
                     <showWarnings>${janeliaws.javac.showWarnings}</showWarnings>
                     <fork>${janeliaws.javac.fork}</fork>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.netbeans.api</groupId>
+                            <artifactId>org-netbeans-api-annotations-common</artifactId>
+                            <version>${netbeans.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.netbeans.api</groupId>
+                            <artifactId>org-netbeans-modules-options-api</artifactId>
+                            <version>${netbeans.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.netbeans.api</groupId>
+                            <artifactId>org-netbeans-modules-settings</artifactId>
+                            <version>${netbeans.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.netbeans.api</groupId>
+                            <artifactId>org-openide-awt</artifactId>
+                            <version>${netbeans.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.netbeans.api</groupId>
+                            <artifactId>org-openide-filesystems</artifactId>
+                            <version>${netbeans.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.netbeans.api</groupId>
+                            <artifactId>org-openide-loaders</artifactId>
+                            <version>${netbeans.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.netbeans.api</groupId>
+                            <artifactId>org-openide-modules</artifactId>
+                            <version>${netbeans.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.netbeans.api</groupId>
+                            <artifactId>org-openide-nodes</artifactId>
+                            <version>${netbeans.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.netbeans.api</groupId>
+                            <artifactId>org-openide-util</artifactId>
+                            <version>${netbeans.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.netbeans.api</groupId>
+                            <artifactId>org-openide-util-lookup</artifactId>
+                            <version>${netbeans.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.netbeans.api</groupId>
+                            <artifactId>org-openide-windows</artifactId>
+                            <version>${netbeans.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                    <annotationProcessors>
+                        <annotationProcessor>org.netbeans.api.annotations.common.proc.StaticResourceProcessor</annotationProcessor>
+                        <annotationProcessor>org.netbeans.modules.options.OptionsPanelControllerProcessor</annotationProcessor>
+                        <annotationProcessor>org.netbeans.modules.settings.convertors.ConvertorProcessor</annotationProcessor>
+                        <annotationProcessor>org.netbeans.modules.openide.awt.ActionProcessor</annotationProcessor>
+                        <annotationProcessor>org.netbeans.modules.openide.filesystems.declmime.MIMEResolverProcessor</annotationProcessor>
+                        <annotationProcessor>org.netbeans.modules.openide.loaders.DataObjectFactoryProcessor</annotationProcessor>
+                        <annotationProcessor>org.netbeans.modules.openide.modules.PatchedPublicProcessor</annotationProcessor>
+                        <annotationProcessor>org.netbeans.modules.openide.nodes.NodesAnnotationProcessor</annotationProcessor>
+                        <annotationProcessor>org.netbeans.modules.openide.util.NbBundleProcessor</annotationProcessor>
+                        <annotationProcessor>org.netbeans.modules.openide.util.NamedServiceProcessor</annotationProcessor>
+                        <annotationProcessor>org.netbeans.modules.openide.util.ServiceProviderProcessor</annotationProcessor>
+                        <annotationProcessor>org.netbeans.modules.openide.windows.TopComponentProcessor</annotationProcessor>
+                    </annotationProcessors>
                     <compilerArgs>
                         <arg>${janeliaws.javac.xlint}</arg>
                         <arg>${janeliaws.javac.doclint}</arg>
@@ -942,8 +1020,8 @@
                                     <version>3.2</version>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
-                                    <version>[21,22)</version>
-                                    <message>This project requires JDK 21 (Apache NetBeans RELEASE250 does not support newer JDKs). Set JAVA_HOME to a JDK 21.</message>
+                                    <version>[21,)</version>
+                                    <message>This project requires at least JDK 21 (Apache NetBeans RELEASE300 does not support older JDKs).</message>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
@@ -1168,6 +1246,7 @@
     
     <modules>
         <module>modules/AdministrationGUI</module>
+        <module>modules/WoodstoxLib</module>
         <module>modules/CommonLibraries</module>
         <module>modules/IntegrationAPIs</module>
         <module>modules/Core</module>
