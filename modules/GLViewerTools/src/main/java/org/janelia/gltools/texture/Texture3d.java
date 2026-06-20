@@ -18,10 +18,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 import javax.media.opengl.GL3;
 
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageDecoder;
-import com.sun.media.jai.codec.MemoryCacheSeekableStream;
-import com.sun.media.jai.codec.SeekableStream;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.janelia.geometry.util.PerformanceTimer;
@@ -762,25 +761,21 @@ public class Texture3d extends BasicTexture implements GL3Resource {
     private RenderedImage[] renderedImagesFromTiffStack(InputStream stackStream) throws IOException {
         PerformanceTimer timer = new PerformanceTimer();
 
-        SeekableStream tiffStream;
-        if (stackStream instanceof SeekableStream) {
-            tiffStream = (SeekableStream) stackStream;
-        } else {
-            tiffStream = new MemoryCacheSeekableStream(stackStream);
-        }
-
-        ImageDecoder decoder = ImageCodec.createImageDecoder("tiff", tiffStream, null);
-        if (decoder != null) {
-            LOG.debug("Creating image decoder from tiff file took {} ms", timer.reportMsAndRestart());
-            int sz = decoder.getNumPages();
-            RenderedImage slices[] = new RenderedImage[sz];
+        ImageReader reader = TiffImageIOHelper.getTiffReader();
+        ImageInputStream iis = ImageIO.createImageInputStream(stackStream);
+        reader.setInput(iis);
+        try {
+            LOG.debug("Creating image reader from tiff stream took {} ms", timer.reportMsAndRestart());
+            int sz = reader.getNumImages(true);
+            RenderedImage[] slices = new RenderedImage[sz];
             for (int z = 0; z < sz; ++z) {
-                slices[z] = decoder.decodeAsRenderedImage(z);
+                slices[z] = reader.readAsRenderedImage(z, null);
             }
             LOG.debug("Creating RenderedImages for all slices took {} ms", timer.reportMsAndRestart());
             return slices;
-        } else {
-            return null;
+        } finally {
+            reader.dispose();
+            iis.close();
         }
     }
 

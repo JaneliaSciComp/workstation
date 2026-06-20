@@ -3,8 +3,7 @@ package org.janelia.workstation.common.gui.progress;
 import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.swing.DefaultLookup;
-
+import javax.swing.UIManager;
 import javax.swing.BoundedRangeModel;
 import javax.swing.JComponent;
 import javax.swing.JProgressBar;
@@ -459,7 +458,8 @@ public class SharedProgressBarUI extends BasicProgressBarUI {
     }
 
     private int initRepaintInterval() {
-        repaintInterval = DefaultLookup.getInt(progressBar, this, "ProgressBar.repaintInterval", 50);
+        repaintInterval = UIManager.getInt("ProgressBar.repaintInterval");
+        if (repaintInterval == 0) repaintInterval = 50;
         return repaintInterval;
     }
 
@@ -478,7 +478,8 @@ public class SharedProgressBarUI extends BasicProgressBarUI {
 //    }
 
     private int initCycleTime() {
-        cycleTime = DefaultLookup.getInt(progressBar, this, "ProgressBar.cycleTime", 3000);
+        cycleTime = UIManager.getInt("ProgressBar.cycleTime");
+        if (cycleTime == 0) cycleTime = 3000;
         return cycleTime;
     }
 

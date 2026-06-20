@@ -1,7 +1,5 @@
 package org.janelia.workstation.core.filecache;
 
-import com.sun.org.apache.xpath.internal.operations.Mult;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.http.HttpStatus;

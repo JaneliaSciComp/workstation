@@ -2,16 +2,13 @@ package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Iterator;
 
-import com.google.common.collect.Iterators;
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageEncoder;
-import com.sun.media.jai.codec.TIFFEncodeParam;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 
 public class CreateSyntheticTiff {
 
@@ -40,22 +37,18 @@ public class CreateSyntheticTiff {
 					}
 				}
 			}
-			// Write output tiff
-			TIFFEncodeParam params = new TIFFEncodeParam();
-			Iterator<BufferedImage> it = Iterators.forArray(slices);
-			if (it.hasNext()) it.next(); // Avoid duplicate first slice
-			params.setExtraImages(it);
-			OutputStream out;
-			try {
-				out = new FileOutputStream(tiffFile);
-				ImageEncoder encoder = ImageCodec.createImageEncoder("tiff", out, params);
-				encoder.encode(slices[0]);
-			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				System.exit(1);
+			// Write multi-page output tiff using ImageIO + TwelveMonkeys
+			try (FileOutputStream fos = new FileOutputStream(tiffFile);
+			     ImageOutputStream ios = ImageIO.createImageOutputStream(fos)) {
+				ImageWriter writer = TiffImageIOHelper.getTiffWriter();
+				writer.setOutput(ios);
+				writer.prepareWriteSequence(null);
+				for (BufferedImage slice : slices) {
+					writer.writeToSequence(new IIOImage(slice, null, null), null);
+				}
+				writer.endWriteSequence();
+				writer.dispose();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
@@ -64,5 +57,5 @@ public class CreateSyntheticTiff {
 	public static void usage() {
 		System.out.println("Usage: java -jar CreateSyntheticTiff.jar <folder_path>");
 	}
-	
+
 }

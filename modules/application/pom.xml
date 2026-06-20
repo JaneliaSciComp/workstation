@@ -28,13 +28,7 @@
             <artifactId>branding</artifactId>
         </dependency>
         
-        <!-- Darcula Look and Feel --> 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>darcula</artifactId>
-        </dependency>
-
-        <!-- Administration GUI -->
+<!-- Administration GUI -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>adminstration</artifactId>
@@ -206,10 +200,6 @@
                     <groupId>org.netbeans.modules</groupId>
                 </exclusion>
                 <exclusion>
-                    <artifactId>org-netbeans-api-htmlui</artifactId>
-                    <groupId>org.netbeans.api</groupId>
-                </exclusion>
-                <exclusion>
                     <artifactId>org-netbeans-modules-templates</artifactId>
                     <groupId>org.netbeans.modules</groupId>
                 </exclusion>
@@ -284,7 +274,7 @@
             
             <!-- Disable the ZIP goal. Also set up the location of the ${brandingToken}.conf -->
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
+                <groupId>org.apache.netbeans.utilities</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
                 <configuration>
                     <finalName>${clusterName}</finalName>
@@ -442,7 +432,7 @@
                     </plugin>
 
                     <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
+                        <groupId>org.apache.netbeans.utilities</groupId>
                         <artifactId>nbm-maven-plugin</artifactId>
 
                         <executions>
@@ -495,7 +485,7 @@
                 <plugins>
                     <!-- NBM Plugin settings. Enable the autoupdate generation -->
                     <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
+                        <groupId>org.apache.netbeans.utilities</groupId>
                         <artifactId>nbm-maven-plugin</artifactId>
                         <executions>
                             <execution>

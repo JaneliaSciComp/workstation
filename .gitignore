@@ -17,3 +17,4 @@ private
 local
 modules/DataBrowser/src/main/resources/my*.properties
 modules/Core/src/main/resources/my*.properties*
+.claude

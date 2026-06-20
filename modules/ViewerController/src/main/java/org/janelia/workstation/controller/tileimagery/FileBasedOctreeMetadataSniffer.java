@@ -1,17 +1,15 @@
 package org.janelia.workstation.controller.tileimagery;
 
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.media.jai.RenderedImageAdapter;
-
-import com.sun.media.jai.codec.FileSeekableStream;
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageDecoder;
-import com.sun.media.jai.codec.SeekableStream;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.janelia.it.jacs.model.user_data.tiledMicroscope.CoordinateToRawTransform;
 import org.janelia.workstation.geom.CoordinateAxis;
@@ -174,40 +172,45 @@ public class FileBasedOctreeMetadataSniffer {
 
             // Deduce other parameters from first image file contents
             File tiff = new File(topFolder, CHANNEL_0_STD_TIFF_NAME);
-            SeekableStream s = new FileSeekableStream(tiff);
-            ImageDecoder decoder = ImageCodec.createImageDecoder("tiff", s, null);
-            // Z dimension is related to number of tiff pages
-            int sz = decoder.getNumPages();
+            ImageReader reader = TiffImageIOHelper.getTiffReader();
+            ImageInputStream iis = ImageIO.createImageInputStream(tiff);
+            reader.setInput(iis);
+            try {
+                // Z dimension is related to number of tiff pages
+                int sz = reader.getNumImages(true);
 
-            // Get X/Y dimensions from first image
-            RenderedImageAdapter ria = new RenderedImageAdapter(
-                    decoder.decodeAsRenderedImage(0));
-            int sx = ria.getWidth();
-            int sy = ria.getHeight();
+                // Get X/Y dimensions and color model from first image
+                RenderedImage firstImage = reader.readAsRenderedImage(0, null);
+                int sx = firstImage.getWidth();
+                int sy = firstImage.getHeight();
 
-            log.info("SX={}, SY={}, SZ={}.", sx, sy, sz);
+                log.info("SX={}, SY={}, SZ={}.", sx, sy, sz);
 
-            // Full volume could be much larger than this downsampled tile
-            int[] tileSize = new int[3];
-            tileSize[2] = sz;
-            if (sz < 1) {
-                return;
+                // Full volume could be much larger than this downsampled tile
+                int[] tileSize = new int[3];
+                tileSize[2] = sz;
+                if (sz < 1) {
+                    return;
+                }
+                tileSize[0] = sx;
+                tileSize[1] = sy;
+                tileFormat.setTileSize(tileSize);
+
+                int[] volumeSize = new int[3];
+                volumeSize[2] = zoomFactor * sz;
+                volumeSize[0] = zoomFactor * sx;
+                volumeSize[1] = zoomFactor * sy;
+                tileFormat.setVolumeSize(volumeSize);
+
+                int bitDepth = firstImage.getColorModel().getPixelSize();
+                tileFormat.setBitDepth(bitDepth);
+                tileFormat.setIntensityMax((int) Math.pow(2, bitDepth) - 1);
+
+                tileFormat.setSrgb(firstImage.getColorModel().getColorSpace().isCS_sRGB());
+            } finally {
+                reader.dispose();
+                iis.close();
             }
-            tileSize[0] = sx;
-            tileSize[1] = sy;
-            tileFormat.setTileSize(tileSize);
-
-            int[] volumeSize = new int[3];
-            volumeSize[2] = zoomFactor * sz;
-            volumeSize[0] = zoomFactor * sx;
-            volumeSize[1] = zoomFactor * sy;
-            tileFormat.setVolumeSize(volumeSize);
-
-            int bitDepth = ria.getColorModel().getPixelSize();
-            tileFormat.setBitDepth(bitDepth);
-            tileFormat.setIntensityMax((int) Math.pow(2, bitDepth) - 1);
-
-            tileFormat.setSrgb(ria.getColorModel().getColorSpace().isCS_sRGB());
 
             // Setup the origin and the scale.
             updateOriginAndScale();
@@ -233,4 +236,3 @@ public class FileBasedOctreeMetadataSniffer {
     }
 
 }
-

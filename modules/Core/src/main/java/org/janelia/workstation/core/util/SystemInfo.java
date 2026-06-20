@@ -24,8 +24,8 @@ public class SystemInfo {
     public static final String JAVA_VERSION = System.getProperty("java.version", "unknown");
     public static final String JAVA_RUNTIME_NAME = System.getProperty("java.runtime.name", "Java");
     public static final String JAVA_RUNTIME_VERSION = System.getProperty("java.runtime.version", "unknown");
-    public static final String ARCH_DATA_MODEL = System.getProperty("sun.arch.data.model");
-    public static final String SUN_DESKTOP = System.getProperty("sun.desktop");
+    public static final String ARCH_DATA_MODEL = System.getProperty("sun.arch.data.model", "64");
+    public static final String SUN_DESKTOP = System.getProperty("sun.desktop", "");
 
     public static final String DOWNLOADS_DIR = "Downloads";
     public static final String WORKSTATION_FILES_DIR = "Workstation";
@@ -45,8 +45,8 @@ public class SystemInfo {
     public static final boolean isLinux = OS_NAME_LC.startsWith("linux");
     public static final boolean isUnix = !isWindows && !isOS2;
 
-    public static final boolean isKDE = SUN_DESKTOP != null && SUN_DESKTOP.toLowerCase().contains("kde");
-    public static final boolean isGnome = SUN_DESKTOP != null && SUN_DESKTOP.toLowerCase().contains("gnome");
+    public static final boolean isKDE = SUN_DESKTOP.toLowerCase().contains("kde");
+    public static final boolean isGnome = SUN_DESKTOP.toLowerCase().contains("gnome");
 
     public static final boolean isMacSystemMenu = isMac && "true".equals(System.getProperty("apple.laf.useScreenMenuBar"));
 
@@ -140,28 +140,40 @@ public class SystemInfo {
         return cp.substring(0,cp.indexOf("JaneliaWorkstation")+"JaneliaWorkstation".length());
     }
 
-    private static com.sun.management.OperatingSystemMXBean getOSMXBean() {
-        java.lang.management.OperatingSystemMXBean mxbean = java.lang.management.ManagementFactory.getOperatingSystemMXBean();
-        com.sun.management.OperatingSystemMXBean sunmxbean = (com.sun.management.OperatingSystemMXBean) mxbean;
-        return sunmxbean;
+    private static java.lang.management.OperatingSystemMXBean getOSMXBean() {
+        return java.lang.management.ManagementFactory.getOperatingSystemMXBean();
     }
 
     public static Long getTotalSystemMemory() {
         try {
-            return getOSMXBean().getTotalPhysicalMemorySize();
+            java.lang.management.OperatingSystemMXBean mxbean = getOSMXBean();
+            // JDK 14+ public API: getTotalMemorySize(); earlier public alias is getTotalPhysicalMemorySize on com.sun.
+            // Use reflection so the code compiles cleanly against the standard API on both JDK 14+ and earlier.
+            try {
+                return (Long) mxbean.getClass().getMethod("getTotalMemorySize").invoke(mxbean);
+            } catch (NoSuchMethodException e2) {
+                // Fallback for JDK < 14 (should not happen on JDK 21)
+                return (Long) mxbean.getClass().getMethod("getTotalPhysicalMemorySize").invoke(mxbean);
+            }
         }
         catch (Throwable e) {
-            log.error("Could not retrieve total system memory",e);
+            log.error("Could not retrieve total system memory", e);
             return null;
         }
     }
 
     public static Long getFreeSystemMemory() {
         try {
-            return getOSMXBean().getFreePhysicalMemorySize();
+            java.lang.management.OperatingSystemMXBean mxbean = getOSMXBean();
+            try {
+                return (Long) mxbean.getClass().getMethod("getFreeMemorySize").invoke(mxbean);
+            } catch (NoSuchMethodException e2) {
+                // Fallback for JDK < 14
+                return (Long) mxbean.getClass().getMethod("getFreePhysicalMemorySize").invoke(mxbean);
+            }
         }
         catch (Throwable e) {
-            log.error("Could not retrieve total system memory",e);
+            log.error("Could not retrieve free system memory", e);
             return null;
         }
     }

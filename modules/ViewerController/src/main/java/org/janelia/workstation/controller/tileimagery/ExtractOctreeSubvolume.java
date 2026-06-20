@@ -4,14 +4,13 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
-import java.util.Iterator;
 
-import com.google.common.collect.Iterators;
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageEncoder;
-import com.sun.media.jai.codec.TIFFEncodeParam;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
+
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.integration.util.FrameworkAccess;
 
@@ -19,7 +18,7 @@ public class ExtractOctreeSubvolume {
 
 	/**
 	 * Creates a tiff file of a subvolume from an octree on-disk volume.
-	 * 
+	 *
 	 * @param args
 	 */
 	public static void main(String[] args) {
@@ -49,31 +48,34 @@ public class ExtractOctreeSubvolume {
 			FrameworkAccess.handleException(e);
 		}
 	}
-	
+
 	/**
 	 * Implementation with stronger type arguments than main() has...
-	 * @throws IOException 
+	 * @throws IOException
 	 */
 	public static void extractSubvolume(
 			Vec3 corner1,
 			Vec3 corner2,
 			double resolutionMicrometers,
 			File inputOctreeFolder,
-			File outputTiff) throws IOException 
+			File outputTiff) throws IOException
 	{
 		SharedVolumeImage wholeImage = new SharedVolumeImage();
 		wholeImage.loadURL(inputOctreeFolder.toURI().toURL());
 		Subvolume subvolume = new Subvolume(corner1, corner2, resolutionMicrometers, wholeImage);
-		// Write output tiff
+		// Write multi-page output tiff using ImageIO + TwelveMonkeys
 		BufferedImage outSlices[] = subvolume.getAsBufferedImages();
-		TIFFEncodeParam params = new TIFFEncodeParam();
-		Iterator<BufferedImage> it = Iterators.forArray(outSlices);
-		if (it.hasNext()) it.next(); // Avoid duplicate first slice
-		params.setExtraImages(it); 
-		OutputStream out = new FileOutputStream(outputTiff);
-		ImageEncoder encoder = ImageCodec.createImageEncoder("tiff", out, params);
-		encoder.encode(outSlices[0]); 
-		out.close(); 
+		try (FileOutputStream fos = new FileOutputStream(outputTiff);
+		     ImageOutputStream ios = ImageIO.createImageOutputStream(fos)) {
+			ImageWriter writer = TiffImageIOHelper.getTiffWriter();
+			writer.setOutput(ios);
+			writer.prepareWriteSequence(null);
+			for (BufferedImage outSlice : outSlices) {
+				writer.writeToSequence(new IIOImage(outSlice, null, null), null);
+			}
+			writer.endWriteSequence();
+			writer.dispose();
+		}
 	}
 
 	private static void usage(String [] args) {

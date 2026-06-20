@@ -1,7 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer.action;
 
 import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.URI;
 import java.nio.channels.ClosedByInterruptException;
@@ -20,10 +19,6 @@ import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.collect.Iterators;
-import com.sun.media.jai.codec.ImageCodec;
-import com.sun.media.jai.codec.ImageEncoder;
-import com.sun.media.jai.codec.TIFFEncodeParam;
 import org.apache.commons.io.FileUtils;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;

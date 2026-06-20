@@ -6,23 +6,20 @@
 
 package org.janelia.workstation.img_3d_loader;
 
-import com.sun.media.jai.codec.*;
-
-import javax.media.jai.NullOpImage;
-import javax.media.jai.OpImage;
-import javax.media.jai.RenderedImageAdapter;
-
+import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.DataBufferUShort;
 import java.awt.image.RenderedImage;
-
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 
 import org.apache.log4j.Logger;
 import org.janelia.workstation.img_3d_loader.AbstractVolumeFileLoader;
@@ -37,13 +34,13 @@ public class TifVolumeFileLoader extends AbstractVolumeFileLoader {
 
     private LoaderSubsetHelper subsetHelper;
     private int sheetCountFromFile;
-    
+
     private static final Logger logger = Logger.getLogger(TifVolumeFileLoader.class);
     public static final int LOAD_SIZE = 8 * 1024 * 1024;
 
     /**
      * Sets maximum size in all dimensions, to add to outgoing image.
-     * 
+     *
      * @param dimensions how many voxels to use.
      */
     public void setOutputDimensions( int[] dimensions ) {
@@ -52,18 +49,18 @@ public class TifVolumeFileLoader extends AbstractVolumeFileLoader {
         }
         subsetHelper.setOutputDimensions(dimensions);
     }
-    
+
     public void setConversionCharacteristics( double[][] fwdTransform, double[][] invTransform, int[] minCorner, int[] extent, List<Integer> queryCoords ) {
         if ( subsetHelper == null ) {
-            subsetHelper = new LoaderSubsetHelper();            
+            subsetHelper = new LoaderSubsetHelper();
         }
         subsetHelper.setTransformCharacteristics(fwdTransform, invTransform, minCorner, extent, queryCoords);
     }
-    
+
     @Override
     public void loadVolumeFile( String fileName ) throws Exception {
         setUnCachedFileName(fileName);
-        
+
         final File file = new File(fileName);
         logger.debug("Loading the subset of images.");
         Collection<BufferedImage> allImages = loadTIFF( file );
@@ -99,7 +96,7 @@ public class TifVolumeFileLoader extends AbstractVolumeFileLoader {
                     setSx(subsetHelper.getSx());
                     setSy(subsetHelper.getSy());
                     setSz(subsetHelper.getSz());
-                
+
                     sheetSize = subsetHelper.initializeStorage(file.length());
                     setPixelBytes( subsetHelper.getPixelBytes() );
                     setArgbTextureIntArray(subsetHelper.getArgbTextureIntArray());
@@ -115,7 +112,7 @@ public class TifVolumeFileLoader extends AbstractVolumeFileLoader {
             else {
                 if ( expectedWidth != zSlice.getWidth()  ||  expectedHeight != zSlice.getHeight() ) {
                     throw new IllegalStateException( "Image number " + zOffset +
-                            " with HEIGHT=" + zSlice.getHeight() + " and WIDTH=" + 
+                            " with HEIGHT=" + zSlice.getHeight() + " and WIDTH=" +
                             zSlice.getWidth() + " has dimensions which do not match previous width * height of " + expectedWidth + " * " + expectedHeight );
                 }
             }
@@ -130,7 +127,7 @@ public class TifVolumeFileLoader extends AbstractVolumeFileLoader {
             zOffset ++;
         }
     }
-    
+
     public int initializeStorage(final long fileLength) {
         setPixelBytes((int)Math.floor( fileLength / ((getSx()*getSy()) * getSz()) ));
         if ( getPixelBytes() == 4 ) {
@@ -141,7 +138,7 @@ public class TifVolumeFileLoader extends AbstractVolumeFileLoader {
         }
         return getSx() * getSy();
     }
-    
+
     private void storeToBuffer(int zOffset, int sheetSize, BufferedImage zSlice) {
         final int outputBufferOffset = zOffset * sheetSize;
         if ( getPixelBytes() == 1 ) {
@@ -174,83 +171,73 @@ public class TifVolumeFileLoader extends AbstractVolumeFileLoader {
     }
 
     /**
-     * Load specified tiff page and return as buffered zSlice.
-     * From: http://opencapture.googlecode.com/svn/0.0.2/OpenCapture/src/net/filterlogic/util/imaging/ToTIFF.java
-     * 
-     * @param file
-     * @param imageToLoad Page to load
-     * @return BufferedImage
+     * Load specified tiff pages and return as buffered images.
+     *
+     * @param file TIFF file to load
+     * @return collection of BufferedImages, one per page
      */
     private Collection<BufferedImage> loadTIFF(File file) {
         Collection<BufferedImage> imageCollection = new ArrayList<>();
+        ImageReader reader = TiffImageIOHelper.getTiffReader();
         try {
-            BufferedImage wholeImage = null;
-            SeekableStream s = new FileSeekableStream(file);
-
-            TIFFDecodeParam param = null;
-            logger.debug("In loadTIFF " + file + " create codec...");
-            ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
+            ImageInputStream iis = ImageIO.createImageInputStream(file);
+            reader.setInput(iis);
             logger.debug("In loadTIFF " + file + " getting number of pages...");
-            int maxPage = dec.getNumPages();
-            sheetCountFromFile = maxPage;            
+            int maxPage = reader.getNumImages(true);
+            sheetCountFromFile = maxPage;
             if ( subsetHelper != null ) {
                 subsetHelper.setSourceDepth( sheetCountFromFile );
                 subsetHelper.calculateBoundingZ( sheetCountFromFile );
             }
 
             if ( logger.isDebugEnabled() )
-                logger.debug("In loadTIFF " + file + " NullOpImage loop.");
+                logger.debug("In loadTIFF " + file + " reading pages loop.");
             for (int imageToLoad = 0; imageToLoad < maxPage; imageToLoad++) {
                 if ( subsetHelper == null  ||  subsetHelper.inZSubset( imageToLoad ) ) {
-                    RenderedImage op
-                        = new NullOpImage(dec.decodeAsRenderedImage(imageToLoad),
-                                null,
-                                OpImage.OP_IO_BOUND,
-                                null);
-                    wholeImage = renderedToBuffered(op);
+                    RenderedImage ri = reader.readAsRenderedImage(imageToLoad, null);
+                    BufferedImage wholeImage = renderedToBuffered(ri);
                     imageCollection.add(wholeImage);
                 }
                 if ( logger.isDebugEnabled() )
-                    logger.debug("In loadTIFF " + file + " NullOpImage completed: " + imageToLoad);
+                    logger.debug("In loadTIFF " + file + " page completed: " + imageToLoad);
             }
             logger.debug("In loadTIFF " + file + " returning image collection.");
-            s.close();
-
+            iis.close();
             return imageCollection;
-
 
         } catch (IOException e) {
             logger.error(e.toString());
-
             return null;
+        } finally {
+            reader.dispose();
         }
-
     }
-            
+
     /**
-     * Convert RenderedImage to BufferedImage
-     * @param img
-     * @return BufferedImage
+     * Convert RenderedImage to BufferedImage, preserving sample model (e.g. 16-bit grayscale).
+     *
+     * @param img source image
+     * @return BufferedImage with the same pixel data
      */
     private static BufferedImage renderedToBuffered(RenderedImage img) {
-        if (img instanceof BufferedImage) 
-        {
+        if (img instanceof BufferedImage) {
             return (BufferedImage) img;
         }
-
-        RenderedImageAdapter imageAdapter = new RenderedImageAdapter(img);
-        BufferedImage bufImage = imageAdapter.getAsBufferedImage();
-        return bufImage;
+        // Copy to a new BufferedImage preserving the color model and sample model
+        BufferedImage bi = new BufferedImage(
+                img.getColorModel(),
+                img.getColorModel().createCompatibleWritableRaster(img.getWidth(), img.getHeight()),
+                img.getColorModel().isAlphaPremultiplied(),
+                null);
+        Graphics2D g = bi.createGraphics();
+        g.drawRenderedImage(img, new java.awt.geom.AffineTransform());
+        g.dispose();
+        return bi;
     }
-    
-    private void getImage( ImageDecoder dec, int imageToLoad, Collection<BufferedImage> imageCollection ) throws IOException {
-        RenderedImage op
-                = new NullOpImage(dec.decodeAsRenderedImage(imageToLoad),
-                        null,
-                        OpImage.OP_IO_BOUND,
-                        null);
 
-        BufferedImage wholeImage = renderedToBuffered(op);
+    private void getImage( ImageReader reader, int imageToLoad, Collection<BufferedImage> imageCollection ) throws IOException {
+        RenderedImage ri = reader.readAsRenderedImage(imageToLoad, null);
+        BufferedImage wholeImage = renderedToBuffered(ri);
         imageCollection.add(wholeImage);
     }
 

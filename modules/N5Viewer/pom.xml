@@ -52,6 +52,15 @@
             <groupId>org.janelia.saalfeldlab</groupId>
             <artifactId>n5-viewer_fiji</artifactId>
             <version>5.1.0-kr</version>
+            <exclusions>
+                <!-- FlatLaf is provided by the NetBeans platform module org.netbeans.libs.flatlaf.
+                     Bundling it here too causes a ProxyClassLoader ambiguity that prevents FlatDarkLaf
+                     from loading and forces a Metal LAF fallback. -->
+                <exclusion>
+                    <groupId>com.formdev</groupId>
+                    <artifactId>flatlaf</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.janelia.saalfeldlab</groupId>
@@ -119,7 +128,7 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
+                <groupId>org.apache.netbeans.utilities</groupId>
                 <artifactId>nbm-maven-plugin</artifactId>
             </plugin>
         </plugins>
