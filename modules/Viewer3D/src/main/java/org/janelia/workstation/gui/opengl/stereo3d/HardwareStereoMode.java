@@ -4,12 +4,12 @@ import org.janelia.workstation.gui.opengl.GLActorContext;
 import org.janelia.workstation.gui.opengl.GLError;
 import org.janelia.workstation.gui.opengl.GLSceneComposer;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLCapabilitiesImmutable;
-import javax.media.opengl.GLDrawable;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLCapabilitiesImmutable;
+import com.jogamp.opengl.GLDrawable;
 
 public class HardwareStereoMode extends BasicStereoMode 
 {

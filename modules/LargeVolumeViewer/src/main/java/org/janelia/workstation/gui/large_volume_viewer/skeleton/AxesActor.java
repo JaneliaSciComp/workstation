@@ -12,8 +12,8 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.GLAutoDrawable;
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.gui.viewer3d.MeshViewContext;
 import org.janelia.workstation.gui.viewer3d.text.AxisLabel;
@@ -158,8 +158,8 @@ public class AxesActor implements GLActor
                 vertexPointerHelper = new GenericVPLinesHelper(context, "ticked-axes-actor");
                 this.matrixManager = new MatrixManager(
                         context, 
-                        glDrawable.getWidth(), 
-                        glDrawable.getHeight()
+                        glDrawable.getSurfaceWidth(), 
+                        glDrawable.getSurfaceHeight()
                 );
 
             } catch ( Exception ex ) {

@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Set;
-import javax.media.opengl.GL3;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GLAutoDrawable;
 
 import org.janelia.geometry3d.ObservableInterface;
 import org.janelia.workstation.controller.listener.NeuronCreationListener;

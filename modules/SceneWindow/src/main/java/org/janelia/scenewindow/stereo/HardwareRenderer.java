@@ -1,12 +1,12 @@
 
 package org.janelia.scenewindow.stereo;
 
-import javax.media.opengl.DebugGL3;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLCapabilitiesImmutable;
-import javax.media.opengl.GLDrawable;
+import com.jogamp.opengl.DebugGL3;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLCapabilitiesImmutable;
+import com.jogamp.opengl.GLDrawable;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.LateralOffsetCamera;
 import org.janelia.geometry3d.PerspectiveCamera;

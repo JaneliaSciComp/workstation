@@ -11,7 +11,7 @@ import org.janelia.workstation.gui.opengl.GLActor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLAutoDrawable;
 import java.awt.Point;
 
 public abstract class ActorRenderer 

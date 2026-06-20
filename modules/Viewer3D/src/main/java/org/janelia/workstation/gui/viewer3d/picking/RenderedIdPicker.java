@@ -1,9 +1,9 @@
 package org.janelia.workstation.gui.viewer3d.picking;
 
-//import javax.media.opengl.GL2GL3;
+//import com.jogamp.opengl.GL2GL3;
 import java.nio.ByteBuffer;
-import javax.media.opengl.GL3;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GLAutoDrawable;
 
 import java.nio.IntBuffer;
 import static org.janelia.workstation.gui.viewer3d.OpenGLUtils.reportError;
@@ -51,8 +51,8 @@ public class RenderedIdPicker {
      * @param glDrawable 
      */
     public void init(GLAutoDrawable glDrawable) {        
-		this.viewportWidth = glDrawable.getWidth();
-		this.viewportHeight = glDrawable.getHeight();				
+		this.viewportWidth = glDrawable.getSurfaceWidth();
+		this.viewportHeight = glDrawable.getSurfaceHeight();				
 
         logger.debug("Establishing width={}, and height={}.", viewportWidth, viewportHeight);
 		GL3 gl = (GL3)glDrawable.getGL().getGL2();

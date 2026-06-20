@@ -5,7 +5,7 @@ import java.awt.Color;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.*;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 import org.janelia.model.domain.tiledMicroscope.TmGeoAnnotation;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronEdge;
 import org.janelia.model.domain.tiledMicroscope.TmNeuronMetadata;

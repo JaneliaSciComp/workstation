@@ -1,7 +1,7 @@
 package org.janelia.workstation.controller.tileimagery;
 
-// import javax.media.opengl.GL2;
-import javax.media.opengl.GL2GL3;
+// import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GL2GL3;
 
 import com.jogamp.opengl.util.texture.TextureCoords;
 

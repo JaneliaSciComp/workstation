@@ -1,7 +1,7 @@
 package org.janelia.horta.render;
 
 import java.awt.Color;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.gltools.ColorBackgroundActor;
 import org.janelia.gltools.RenderPass;

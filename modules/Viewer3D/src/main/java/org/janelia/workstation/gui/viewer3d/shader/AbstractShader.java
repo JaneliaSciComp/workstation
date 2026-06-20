@@ -9,7 +9,7 @@ package org.janelia.workstation.gui.viewer3d.shader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;

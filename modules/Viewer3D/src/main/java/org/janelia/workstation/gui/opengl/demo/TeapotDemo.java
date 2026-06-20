@@ -4,11 +4,11 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLProfile;
-import javax.media.opengl.awt.GLCanvas;
+import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLProfile;
+import com.jogamp.opengl.awt.GLCanvas;
 // GLJPanel won't work with hardware stereo 3d
-// import javax.media.opengl.awt.GLJPanel;
+// import com.jogamp.opengl.awt.GLJPanel;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 

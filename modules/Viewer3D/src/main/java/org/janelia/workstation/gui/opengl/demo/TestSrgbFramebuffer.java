@@ -1,12 +1,12 @@
 package org.janelia.workstation.gui.opengl.demo;
 
 import java.awt.Dimension;
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
-import javax.media.opengl.awt.GLCanvas;
-import javax.media.opengl.awt.GLJPanel;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLEventListener;
+import com.jogamp.opengl.awt.GLCanvas;
+import com.jogamp.opengl.awt.GLJPanel;
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;

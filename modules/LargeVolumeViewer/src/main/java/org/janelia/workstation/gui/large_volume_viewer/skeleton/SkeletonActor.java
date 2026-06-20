@@ -10,10 +10,10 @@ import java.nio.IntBuffer;
 import java.util.List;
 import java.util.Map;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.GLAutoDrawable;
 import javax.swing.ImageIcon;
 
 import org.janelia.workstation.controller.model.TmModelManager;
@@ -293,7 +293,7 @@ public class SkeletonActor implements GLActor {
             gl.glBufferData(GL.GL_ELEMENT_ARRAY_BUFFER, model.getCummulativeLineOffset(), model.getLineBuffer(), GL.GL_DYNAMIC_DRAW);
         }
 
-        gl.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+        gl2.glEnableClientState(GL2.GL_VERTEX_ARRAY);
         lineShader.load(gl2);
         lineShader.setUniform(gl, "zThickness", getZoomedZThicknessInPixels());
         float focus[] = {
@@ -303,7 +303,7 @@ public class SkeletonActor implements GLActor {
         lineShader.setUniform3v(gl, "focus", 1, focus);
         gl.glEnable(GL2.GL_LINE_SMOOTH);
         gl.glHint(GL2.GL_LINE_SMOOTH_HINT, GL2.GL_NICEST);
-        gl.glEnableClientState(GL2.GL_COLOR_ARRAY);
+        gl2.glEnableClientState(GL2.GL_COLOR_ARRAY);
 
         List<ElementDataOffset> lineOffsets = model.getLineOffsets();
         List<ElementDataOffset> vertexOffsets = model.getVertexOffsets();
@@ -343,8 +343,8 @@ public class SkeletonActor implements GLActor {
 
         //log.info("displayLines2 Check4");
 
-        gl.glDisableClientState(GL2.GL_VERTEX_ARRAY);
-        gl.glDisableClientState(GL2.GL_COLOR_ARRAY);
+        gl2.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+        gl2.glDisableClientState(GL2.GL_COLOR_ARRAY);
         gl.glBindBuffer(GL2.GL_ARRAY_BUFFER, 0);
         gl.glBindBuffer(GL2.GL_ELEMENT_ARRAY_BUFFER, 0);
         transparencyDepthMode(gl, false);

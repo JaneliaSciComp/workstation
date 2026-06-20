@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 import org.janelia.geometry3d.ConstVector3;
 import org.janelia.geometry3d.MeshGeometry;
 import org.janelia.geometry3d.Vector3;

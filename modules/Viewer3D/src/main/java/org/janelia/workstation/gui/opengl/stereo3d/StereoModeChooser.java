@@ -4,7 +4,7 @@ import java.awt.event.ActionEvent;
 import java.util.List;
 import java.util.Vector;
 
-import javax.media.opengl.GLDrawable;
+import com.jogamp.opengl.GLDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ButtonGroup;

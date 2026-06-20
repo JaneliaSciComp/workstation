@@ -5,10 +5,10 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.glu.GLU;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.glu.GLU;
 
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.geom.BoundingBox3d;
@@ -215,8 +215,8 @@ implements GL3Actor
         if (vertexNormalVbo < 1) // first time?
             initializeVbos(gl2);
         checkGlError(gl, "display mesh using vbos 211");
-        gl2gl3.glEnableClientState(GL2.GL_VERTEX_ARRAY);
-        gl2gl3.glEnableClientState(GL2.GL_NORMAL_ARRAY);
+        gl2.glEnableClientState(GL2.GL_VERTEX_ARRAY);
+        gl2.glEnableClientState(GL2.GL_NORMAL_ARRAY);
 
         checkGlError(gl, "display mesh using vbos 214");
         final int bytesPerVertexNormal = (floatsPerVertex + floatsPerNormal)*bytesPerFloat;
@@ -228,8 +228,8 @@ implements GL3Actor
         gl2.glEnable(GL2.GL_LIGHTING);
         gl2gl3.glDrawElements(GL.GL_TRIANGLES, indexCount, GL.GL_UNSIGNED_INT, 0);
 
-        gl2gl3.glDisableClientState(GL2.GL_NORMAL_ARRAY);
-        gl2gl3.glDisableClientState(GL2.GL_VERTEX_ARRAY);
+        gl2.glDisableClientState(GL2.GL_NORMAL_ARRAY);
+        gl2.glDisableClientState(GL2.GL_VERTEX_ARRAY);
         checkGlError(gl, "display mesh using vbos");
     }
 

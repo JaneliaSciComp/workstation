@@ -3,9 +3,9 @@ package org.janelia.gltools.material;
 
 import java.awt.Color;
 import java.io.IOException;
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2ES2;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2ES2;
+import com.jogamp.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicShaderProgram;

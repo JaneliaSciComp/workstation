@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.opengl;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 
 import org.janelia.workstation.geom.Rotation3d;
 import org.janelia.workstation.geom.Quaternion.AngleAxis;

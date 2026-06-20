@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 import org.apache.commons.io.IOUtils;
 import org.janelia.workstation.gui.viewer3d.OpenGLUtils;
 import org.slf4j.Logger;

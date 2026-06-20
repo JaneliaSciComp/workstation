@@ -1,7 +1,7 @@
 package org.janelia.workstation.gui.large_volume_viewer.shader;
 
 import java.awt.Color;
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 import org.janelia.workstation.controller.model.color.ChannelColorModel;
 import org.janelia.workstation.controller.model.color.ImageColorModel;
 

@@ -15,8 +15,8 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2GL3;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2GL3;
 
 public abstract class BasicShader
 {

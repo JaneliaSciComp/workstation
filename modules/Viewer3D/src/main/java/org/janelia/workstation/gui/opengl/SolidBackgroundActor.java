@@ -5,8 +5,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2GL3;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2GL3;
 
 import org.janelia.workstation.gui.opengl.shader.BasicShader;
 import org.janelia.workstation.gui.opengl.shader.SolidColor120Shader;

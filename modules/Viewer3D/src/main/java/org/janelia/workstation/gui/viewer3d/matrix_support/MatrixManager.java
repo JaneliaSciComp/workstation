@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.viewer3d.matrix_support;
 
-import javax.media.opengl.GL2GL3;
+import com.jogamp.opengl.GL2GL3;
 import org.janelia.workstation.geom.Rotation3d;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.viewer3d.MeshViewContext;

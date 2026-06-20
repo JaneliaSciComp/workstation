@@ -1,7 +1,7 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
 
 import org.janelia.workstation.geom.Rotation3d;
 import org.janelia.workstation.gui.camera.Camera3d;

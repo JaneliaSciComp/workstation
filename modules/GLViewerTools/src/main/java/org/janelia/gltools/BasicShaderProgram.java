@@ -5,8 +5,8 @@ import com.jogamp.opengl.util.glsl.ShaderUtil;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import javax.media.opengl.GL3;
-import javax.media.opengl.GLException;
+import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GLException;
 
 /**
  * Represents an OpenGL shader

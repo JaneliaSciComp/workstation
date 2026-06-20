@@ -12,8 +12,8 @@ import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL3;
-import javax.media.opengl.GL4;
+import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GL4;
 
 import java.util.ArrayList;
 import java.util.Collections;

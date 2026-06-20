@@ -2,11 +2,11 @@ package org.janelia.workstation.gui.viewer3d;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import javax.media.opengl.DebugGL2;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLProfile;
+import com.jogamp.opengl.DebugGL2;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLProfile;
 
 import org.janelia.workstation.geom.BoundingBox3d;
 import org.janelia.workstation.geom.Rotation3d;
@@ -55,8 +55,8 @@ public class OcclusiveRenderer
         this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
 	    super.display(glDrawable); // fills background
         
-        setWidthInPixels(glDrawable.getWidth());
-        setHeightInPixels(glDrawable.getHeight());
+        setWidthInPixels(glDrawable.getSurfaceWidth());
+        setHeightInPixels(glDrawable.getSurfaceHeight());
         resetOnFirstRedraw();
 
         //final GL2 gl = glDrawable.getGL().getGL2();
@@ -72,7 +72,7 @@ public class OcclusiveRenderer
         gl.glPushMatrix();
         gl.glLoadIdentity();
 
-        glDrawable.getWidth();
+        glDrawable.getSurfaceWidth();
         Vec3 f = getVolumeModel().getCamera3d().getFocus();    // This is what allows (follows) drag in X and Y.
         Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
         Vec3 u = rotation.times( UP_IN_CAMERA );

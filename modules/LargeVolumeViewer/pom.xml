@@ -41,10 +41,10 @@
             <artifactId>common-gui</artifactId>
         </dependency>
 
-        <!-- JOGL213 -->
+        <!-- JOGL -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
-            <artifactId>jogl213lib</artifactId>
+            <artifactId>jogl260lib</artifactId>
         </dependency>
 
         <!-- Viewer Controller -->

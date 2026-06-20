@@ -7,7 +7,7 @@ import org.janelia.workstation.gui.viewer3d.OpenGLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
 import java.util.HashMap;
@@ -660,9 +660,9 @@ public class TextureMediator {
             glConstantToName.put( GL2.GL_UNSIGNED_SHORT, "GL2.GL_UNSIGNED_SHORT" );
             glConstantToName.put( GL2.GL_LUMINANCE16_ALPHA16, "GL2.GL_LUMINANCE16_ALPHA16");
 
-            glConstantToName.put( javax.media.opengl.GL2GL3.GL_BGRA, "GL2GL3.GL_BGRA" );
-            glConstantToName.put( javax.media.opengl.GL2GL3.GL_RGB, "GL2GL3.GL_RGB" );
-            glConstantToName.put( javax.media.opengl.GL2GL3.GL_UNSIGNED_SHORT, "GL2GL3.GL_UNSIGNED_SHORT" );
+            glConstantToName.put( com.jogamp.opengl.GL2GL3.GL_BGRA, "GL2GL3.GL_BGRA" );
+            glConstantToName.put( com.jogamp.opengl.GL2GL3.GL_RGB, "GL2GL3.GL_RGB" );
+            glConstantToName.put( com.jogamp.opengl.GL2GL3.GL_UNSIGNED_SHORT, "GL2GL3.GL_UNSIGNED_SHORT" );
 
         }
         rtnVal = glConstantToName.get( openGlEnumConstant );

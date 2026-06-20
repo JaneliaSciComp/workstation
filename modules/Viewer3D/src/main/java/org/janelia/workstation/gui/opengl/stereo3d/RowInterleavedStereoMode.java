@@ -4,13 +4,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
-import javax.media.nativewindow.NativeSurface;
-import javax.media.nativewindow.NativeWindow;
-import javax.media.nativewindow.util.Point;
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLDrawable;
+import com.jogamp.nativewindow.NativeSurface;
+import com.jogamp.nativewindow.NativeWindow;
+import com.jogamp.nativewindow.util.Point;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLDrawable;
 
 import org.janelia.workstation.gui.opengl.GL2Adapter;
 import org.janelia.workstation.gui.opengl.GLActorContext;
@@ -53,8 +53,8 @@ public class RowInterleavedStereoMode extends BasicStereoMode
     
     protected void init(GLActorContext context) {
     	GLDrawable g = context.getGLAutoDrawable();
-    	int w = g.getWidth();
-    	int h = g.getHeight();
+    	int w = g.getSurfaceWidth();
+    	int h = g.getSurfaceHeight();
     	int top = 0;
     	int left = 0;
     	NativeSurface ns = g.getNativeSurface();

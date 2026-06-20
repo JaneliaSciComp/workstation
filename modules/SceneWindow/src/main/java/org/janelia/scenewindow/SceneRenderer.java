@@ -8,10 +8,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-import javax.media.opengl.DebugGL3;
-import javax.media.opengl.GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
+import com.jogamp.opengl.DebugGL3;
+import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLEventListener;
 
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.LateralOffsetCamera;

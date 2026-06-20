@@ -1,6 +1,6 @@
 package org.janelia.workstation.controller.tileimagery;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 
 /*
  * Note the subtle distinction between Tile2d and TileTexture

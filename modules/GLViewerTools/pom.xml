@@ -35,10 +35,10 @@
             <artifactId>integration</artifactId>
         </dependency>
 
-        <!-- JOGL224 -->
+        <!-- JOGL -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
-            <artifactId>jogl224lib</artifactId>
+            <artifactId>jogl260lib</artifactId>
         </dependency>
 
         <!-- Geometry 3D --> 

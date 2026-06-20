@@ -46,7 +46,7 @@ import java.util.concurrent.Executors;
 import java.util.prefs.Preferences;
 
 import javax.imageio.ImageIO;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLAutoDrawable;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.ActionMap;

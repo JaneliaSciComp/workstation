@@ -15,7 +15,7 @@ import org.janelia.workstation.gui.viewer3d.renderable.RenderableBean;
 import org.janelia.workstation.gui.viewer3d.volume_builder.VolumeDataBean;
 import org.janelia.workstation.gui.viewer3d.VolumeDataAcceptor;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.IntBuffer;

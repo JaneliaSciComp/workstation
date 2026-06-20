@@ -1,14 +1,14 @@
 package org.janelia.workstation.gui.large_volume_viewer;
 
-import javax.media.opengl.DefaultGLCapabilitiesChooser;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLCapabilitiesChooser;
-import javax.media.opengl.GLContext;
-import javax.media.opengl.GLDrawableFactory;
-import javax.media.opengl.GLEventListener;
-import javax.media.opengl.GLOffscreenAutoDrawable;
-import javax.media.opengl.GLProfile;
+import com.jogamp.opengl.DefaultGLCapabilitiesChooser;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLCapabilitiesChooser;
+import com.jogamp.opengl.GLContext;
+import com.jogamp.opengl.GLDrawableFactory;
+import com.jogamp.opengl.GLEventListener;
+import com.jogamp.opengl.GLOffscreenAutoDrawable;
+import com.jogamp.opengl.GLProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,8 +60,7 @@ implements GLEventListener
 					factory.getDefaultDevice(),
 					capabilities,
 					chooser,
-					1, 1, // Small size that never changes
-					null); // null means create a new context
+					1, 1); // Small size that never changes
 			masterContextPbuffer.addGLEventListener(this);
 			masterContextPbuffer.display(); // Attempt render, to force context creation.
 		}		

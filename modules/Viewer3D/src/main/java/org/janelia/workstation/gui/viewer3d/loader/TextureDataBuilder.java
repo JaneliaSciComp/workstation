@@ -5,7 +5,7 @@ import org.janelia.workstation.img_3d_loader.AbstractVolumeFileLoader;
 import org.janelia.workstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.workstation.gui.viewer3d.texture.TextureDataI;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 
 /**
  * Created with IntelliJ IDEA.

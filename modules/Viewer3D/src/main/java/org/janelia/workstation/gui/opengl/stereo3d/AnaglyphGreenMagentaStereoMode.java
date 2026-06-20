@@ -3,8 +3,8 @@ package org.janelia.workstation.gui.opengl.stereo3d;
 import org.janelia.workstation.gui.opengl.GLActorContext;
 import org.janelia.workstation.gui.opengl.GLSceneComposer;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GLAutoDrawable;
 
 public class AnaglyphGreenMagentaStereoMode extends BasicStereoMode
 {

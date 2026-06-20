@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.viewer3d.error_trap;
 
-import javax.media.opengl.*;
+import com.jogamp.opengl.*;
 
 /**
  * Created with IntelliJ IDEA.

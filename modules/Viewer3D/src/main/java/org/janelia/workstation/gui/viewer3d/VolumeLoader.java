@@ -16,7 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 import org.janelia.workstation.img_3d_loader.H265FileLoader;
 import org.janelia.workstation.gui.viewer3d.loader.LociTextureBuilder;
 import org.janelia.workstation.img_3d_loader.TifVolumeFileLoader;

@@ -1,7 +1,7 @@
 
 package org.janelia.gltools.material;
 
-import javax.media.opengl.GL2ES2;
+import com.jogamp.opengl.GL2ES2;
 import org.janelia.gltools.BasicShaderProgram;
 import org.janelia.gltools.ShaderStep;
 

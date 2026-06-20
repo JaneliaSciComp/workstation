@@ -3,7 +3,7 @@ package org.janelia.horta.blocks;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 import org.janelia.horta.actors.SortableBlockActor;
 
 /**

@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.viewer3d.mesh.actor;
 
-import javax.media.opengl.GL2GL3;
+import com.jogamp.opengl.GL2GL3;
 
 /**
  * Implement this to take on capability of pushing buffers to GPU.

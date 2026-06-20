@@ -1,6 +1,6 @@
 package org.janelia.gltools.scenegraph;
 
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 
 /**
  *

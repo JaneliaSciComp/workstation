@@ -9,8 +9,8 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
 
 import org.janelia.workstation.integration.util.FrameworkAccess;
 import org.janelia.workstation.geom.Vec3;

@@ -2,7 +2,7 @@
 package org.janelia.gltools;
 
 import java.util.Collection;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.BasicObject3D;
 import org.janelia.geometry3d.Matrix4;

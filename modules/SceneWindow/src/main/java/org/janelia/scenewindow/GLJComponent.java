@@ -3,7 +3,7 @@ package org.janelia.scenewindow;
 
 import java.awt.Component;
 import java.awt.event.ActionListener;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLAutoDrawable;
 import javax.swing.JComponent;
 
 /**

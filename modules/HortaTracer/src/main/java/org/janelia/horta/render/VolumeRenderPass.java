@@ -1,7 +1,7 @@
 package org.janelia.horta.render;
 
-import javax.media.opengl.GL3;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GLAutoDrawable;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.gltools.Framebuffer;
 import org.janelia.gltools.GL3Actor;

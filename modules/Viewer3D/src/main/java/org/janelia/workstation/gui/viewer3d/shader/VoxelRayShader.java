@@ -1,7 +1,7 @@
 package org.janelia.workstation.gui.viewer3d.shader;
 
 import java.nio.IntBuffer;
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 
 public class VoxelRayShader extends AbstractShader {
     public static final String VERTEX_SHADER = "VoxelRayVtx.glsl";

@@ -2,7 +2,7 @@ package org.janelia.horta.neuronvbo;
 
 import java.util.Collection;
 import java.util.Iterator;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.geometry3d.Object3d;

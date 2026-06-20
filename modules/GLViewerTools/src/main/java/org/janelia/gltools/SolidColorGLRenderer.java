@@ -2,9 +2,9 @@
 package org.janelia.gltools;
 
 import java.awt.Color;
-import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLEventListener;
 
 /**
  * Renderer that paints the entire viewport a single color.

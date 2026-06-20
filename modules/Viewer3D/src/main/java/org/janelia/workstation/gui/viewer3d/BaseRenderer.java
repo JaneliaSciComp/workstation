@@ -3,11 +3,11 @@ package org.janelia.workstation.gui.viewer3d;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
-import javax.media.opengl.GL2;
-// import javax.media.opengl.GL2GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
-import javax.media.opengl.glu.GLU;
+import com.jogamp.opengl.GL2;
+// import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLEventListener;
+import com.jogamp.opengl.glu.GLU;
 
 import org.janelia.workstation.gui.camera.Camera3d;
 import org.janelia.workstation.gui.opengl.GLActor;

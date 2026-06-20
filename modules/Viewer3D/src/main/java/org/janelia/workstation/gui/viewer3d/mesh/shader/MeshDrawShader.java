@@ -2,8 +2,8 @@ package org.janelia.workstation.gui.viewer3d.mesh.shader;
 
 import org.janelia.workstation.gui.viewer3d.shader.AbstractShader;
 
-import javax.media.opengl.GL2;
-import javax.media.opengl.GL2GL3;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GL2GL3;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

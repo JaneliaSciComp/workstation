@@ -1,7 +1,7 @@
 
 package org.janelia.gltools;
 
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 
 /**
  *

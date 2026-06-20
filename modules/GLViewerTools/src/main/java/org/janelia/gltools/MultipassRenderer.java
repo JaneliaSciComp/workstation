@@ -1,7 +1,7 @@
 package org.janelia.gltools;
 
 import java.util.ArrayList;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 
 /**

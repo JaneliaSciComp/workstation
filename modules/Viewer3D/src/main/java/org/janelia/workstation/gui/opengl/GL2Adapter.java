@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.opengl;
 
-import javax.media.opengl.GL2GL3;
+import com.jogamp.opengl.GL2GL3;
 
 /**
  * Allow some parts of GL2 to be faked up in GL3

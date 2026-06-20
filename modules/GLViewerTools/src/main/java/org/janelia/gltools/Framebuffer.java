@@ -3,11 +3,11 @@ package org.janelia.gltools;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.media.opengl.DebugGL3;
-import javax.media.opengl.GL;
-import javax.media.opengl.GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
+import com.jogamp.opengl.DebugGL3;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLEventListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

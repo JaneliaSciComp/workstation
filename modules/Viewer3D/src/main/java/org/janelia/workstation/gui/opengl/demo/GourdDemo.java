@@ -4,9 +4,9 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.io.IOException;
 
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLProfile;
-import javax.media.opengl.awt.GLCanvas;
+import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLProfile;
+import com.jogamp.opengl.awt.GLCanvas;
 // GLJPanel won't work with GL3!
 import javax.swing.JFrame;
 import javax.swing.JMenu;

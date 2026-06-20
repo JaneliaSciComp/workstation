@@ -2,8 +2,8 @@ package org.janelia.workstation.gui.viewer3d;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import javax.media.opengl.DebugGL2;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.DebugGL2;
+import com.jogamp.opengl.GLAutoDrawable;
 import org.janelia.workstation.geom.Rotation3d;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.opengl.GL2Adapter;
@@ -26,8 +26,8 @@ class MipRenderer
         this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
 	    super.display(glDrawable); // fills background
         
-        setWidthInPixels(glDrawable.getWidth());
-        setHeightInPixels(glDrawable.getHeight());
+        setWidthInPixels(glDrawable.getSurfaceWidth());
+        setHeightInPixels(glDrawable.getSurfaceHeight());
         resetOnFirstRedraw();
 
         //final GL2 gl = glDrawable.getGL().getGL2();
@@ -39,7 +39,7 @@ class MipRenderer
         gl.glPushMatrix();
         gl.glLoadIdentity();
 
-        glDrawable.getWidth();
+        glDrawable.getSurfaceWidth();
         Vec3 f = getVolumeModel().getCamera3d().getFocus();    // This is what allows (follows) drag in X and Y.
         Rotation3d rotation = getVolumeModel().getCamera3d().getRotation();
         Vec3 u = rotation.times( UP_IN_CAMERA );

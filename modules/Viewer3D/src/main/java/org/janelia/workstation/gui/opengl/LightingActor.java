@@ -2,8 +2,8 @@ package org.janelia.workstation.gui.opengl;
 
 import org.janelia.workstation.geom.BoundingBox3d;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2;
 
 public class LightingActor implements GL3Actor {
 

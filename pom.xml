@@ -267,17 +267,10 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <!-- JOGL213 -->
+            <!-- JOGL260 -->
             <dependency>
                 <groupId>org.janelia.workstation</groupId>
-                <artifactId>jogl213lib</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- JOGL224 -->
-            <dependency>
-                <groupId>org.janelia.workstation</groupId>
-                <artifactId>jogl224lib</artifactId>
+                <artifactId>jogl260lib</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -1262,8 +1255,7 @@
         <module>modules/GLViewerTools</module>
         <module>modules/Geometry3d</module>
         <module>modules/SceneWindow</module>
-        <module>modules/Jogl213Lib</module>
-        <module>modules/Jogl224Lib</module>
+        <module>modules/Jogl260Lib</module>
         <module>modules/branding</module>
         <module>modules/N5Viewer</module>
     </modules>

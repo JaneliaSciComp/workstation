@@ -2,7 +2,7 @@ package org.janelia.gltools;
 
 import java.io.IOException;
 import java.io.InputStream;
-import javax.media.opengl.GL2ES2;
+import com.jogamp.opengl.GL2ES2;
 import org.janelia.gltools.material.BasicMaterial;
 import org.janelia.gltools.material.Material;
 import org.janelia.gltools.texture.Texture2d;

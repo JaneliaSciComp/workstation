@@ -3,7 +3,7 @@ package org.janelia.workstation.gui.viewer3d.mesh.actor;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Map;
-import javax.media.opengl.GL2GL3;
+import com.jogamp.opengl.GL2GL3;
 import org.janelia.workstation.mesh_loader.RenderBuffersBean;
 import org.janelia.workstation.gui.viewer3d.OpenGLUtils;
 

@@ -2,7 +2,7 @@ package org.janelia.workstation.controller.tileimagery;
 
 import org.janelia.workstation.controller.tileimagery.PyramidTexture;
 
-import javax.media.opengl.GL2GL3;
+import com.jogamp.opengl.GL2GL3;
 
 public interface TextureDataI {
 	public PyramidTexture createTexture(GL2GL3 gl);

@@ -4,9 +4,9 @@ import static org.janelia.workstation.gui.viewer3d.OpenGLUtils.reportError;
 
 import java.nio.IntBuffer;
 
-import javax.media.opengl.GL2;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.GLAutoDrawable;
 
 import org.janelia.workstation.gui.opengl.GLActor;
 import org.janelia.workstation.gui.viewer3d.MeshViewContext;
@@ -213,12 +213,12 @@ public class MeshDrawActor implements GLActor {
         MatrixManager.WindowDef windowDef = new MatrixManager.WindowDef() {
             @Override
             public int getWidthInPixels() {
-                return glDrawable.getWidth();
+                return glDrawable.getSurfaceWidth();
             }
 
             @Override
             public int getHeightInPixels() {
-                return glDrawable.getHeight();
+                return glDrawable.getSurfaceHeight();
             }
             
         };        

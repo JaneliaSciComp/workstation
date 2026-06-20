@@ -1,7 +1,7 @@
 package org.janelia.workstation.gui.opengl;
 
-// import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
+// import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
 
 public interface GLResource {
 	public void init(GLAutoDrawable glDrawable);

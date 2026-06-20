@@ -41,10 +41,10 @@
             <artifactId>core</artifactId>
         </dependency>
 
-        <!-- JOGL213 -->
+        <!-- JOGL260 -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
-            <artifactId>jogl213lib</artifactId>
+            <artifactId>jogl260lib</artifactId>
         </dependency>
 
         <!-- Viewer3D --> 

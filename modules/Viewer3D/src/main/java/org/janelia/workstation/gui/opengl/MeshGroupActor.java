@@ -9,8 +9,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Vector;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2GL3;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2GL3;
 
 /**
  * Parent actor so multiple mesh actors can share a single shader

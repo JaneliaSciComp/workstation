@@ -1,7 +1,7 @@
 package org.janelia.workstation.gui.opengl.stereo3d;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GLAutoDrawable;
 import org.janelia.workstation.gui.opengl.GLActorContext;
 import org.janelia.workstation.gui.opengl.GLSceneComposer;
 

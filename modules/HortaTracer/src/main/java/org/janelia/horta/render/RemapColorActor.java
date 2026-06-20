@@ -2,8 +2,8 @@
 package org.janelia.horta.render;
 
 import java.io.IOException;
-import javax.media.opengl.GL2ES2;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL2ES2;
+import com.jogamp.opengl.GL3;
 import org.janelia.workstation.controller.model.color.ChannelColorModel;
 import org.janelia.workstation.controller.model.color.ImageColorModel;
 import org.janelia.geometry3d.AbstractCamera;

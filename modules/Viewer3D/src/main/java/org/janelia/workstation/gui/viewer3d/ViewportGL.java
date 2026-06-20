@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.viewer3d;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 
 import org.janelia.workstation.gui.viewer3d.interfaces.Viewport;
 

@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.large_volume_viewer.shader;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 
 public class AnchorShader extends PassThroughTextureShader {
 

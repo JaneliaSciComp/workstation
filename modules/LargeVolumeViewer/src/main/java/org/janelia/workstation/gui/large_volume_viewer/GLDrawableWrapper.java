@@ -2,7 +2,7 @@ package org.janelia.workstation.gui.large_volume_viewer;
 
 import java.awt.Component;
 import java.awt.Graphics;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLAutoDrawable;
 import javax.swing.JComponent;
 
 /**

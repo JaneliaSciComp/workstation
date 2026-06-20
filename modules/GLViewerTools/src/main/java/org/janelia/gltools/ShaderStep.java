@@ -5,9 +5,9 @@ import com.jogamp.opengl.util.glsl.ShaderUtil;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.IntBuffer;
-import javax.media.opengl.GL2ES2;
-import javax.media.opengl.GL3;
-import javax.media.opengl.GLException;
+import com.jogamp.opengl.GL2ES2;
+import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GLException;
 import org.apache.commons.io.IOUtils;
 
 /**

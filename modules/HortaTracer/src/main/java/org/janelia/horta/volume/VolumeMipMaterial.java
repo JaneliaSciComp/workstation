@@ -2,8 +2,8 @@
 package org.janelia.horta.volume;
 
 import java.io.IOException;
-import javax.media.opengl.GL2ES2;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL2ES2;
+import com.jogamp.opengl.GL3;
 import org.apache.commons.io.IOUtils;
 import org.janelia.geometry3d.*;
 import org.janelia.workstation.controller.model.color.ChannelColorModel;

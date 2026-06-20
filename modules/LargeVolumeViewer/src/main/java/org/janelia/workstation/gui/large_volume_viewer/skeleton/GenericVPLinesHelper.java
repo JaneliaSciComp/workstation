@@ -1,8 +1,8 @@
 package org.janelia.workstation.gui.large_volume_viewer.skeleton;
 
 import java.nio.IntBuffer;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
 import org.janelia.workstation.gui.viewer3d.MeshViewContext;
 import static org.janelia.workstation.gui.viewer3d.OpenGLUtils.reportError;
 import org.janelia.workstation.gui.viewer3d.matrix_support.MatrixManager;

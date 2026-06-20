@@ -5,8 +5,8 @@ import org.janelia.workstation.gui.viewer3d.VolumeModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
 
 /**
  * VolumeTexture class draws a transparent rectangular volume with a 3D opengl texture

@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;

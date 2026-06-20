@@ -2,13 +2,13 @@ package org.janelia.workstation.gui.large_volume_viewer.shader;
 
 import java.nio.IntBuffer;
 
-// import javax.media.opengl.GL2;
+// import com.jogamp.opengl.GL2;
 
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.glu.GLU;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.glu.GLU;
 
 import org.janelia.workstation.gui.viewer3d.shader.AbstractShader;
 import org.slf4j.Logger;

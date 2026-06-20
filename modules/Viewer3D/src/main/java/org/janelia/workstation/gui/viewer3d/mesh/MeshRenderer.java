@@ -2,9 +2,9 @@ package org.janelia.workstation.gui.viewer3d.mesh;
 
 import java.awt.Color;
 import java.util.ArrayList;
-import javax.media.opengl.DebugGL2;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.DebugGL2;
+import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.GLAutoDrawable;
 import org.janelia.workstation.geom.Rotation3d;
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.gui.opengl.GL2Adapter;
@@ -49,8 +49,8 @@ public class MeshRenderer extends ActorRenderer {
         float[] backgroundClrArr = getVolumeModel().getBackgroundColorFArr();
         this.backgroundColor = new Color( backgroundClrArr[ 0 ], backgroundClrArr[ 1 ], backgroundClrArr[ 2 ] );
         
-        setWidthInPixels(glDrawable.getWidth());
-        setHeightInPixels(glDrawable.getHeight());
+        setWidthInPixels(glDrawable.getSurfaceWidth());
+        setHeightInPixels(glDrawable.getSurfaceHeight());
         resetOnFirstRedraw();
 
         final GL2Adapter gl = GL2AdapterFactory.createGL2Adapter( glDrawable );

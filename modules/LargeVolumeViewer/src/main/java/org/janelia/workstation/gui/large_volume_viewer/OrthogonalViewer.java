@@ -12,9 +12,9 @@ import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.Vector;
 
-import javax.media.opengl.GLCapabilities;
-import javax.media.opengl.GLCapabilitiesChooser;
-import javax.media.opengl.GLContext;
+import com.jogamp.opengl.GLCapabilities;
+import com.jogamp.opengl.GLCapabilitiesChooser;
+import com.jogamp.opengl.GLContext;
 import javax.swing.AbstractAction;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;

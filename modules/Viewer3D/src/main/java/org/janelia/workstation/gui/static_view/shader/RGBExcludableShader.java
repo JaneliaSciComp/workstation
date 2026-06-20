@@ -6,7 +6,7 @@ package org.janelia.workstation.gui.static_view.shader;
 
 import org.janelia.workstation.gui.viewer3d.texture.TextureMediator;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 import java.nio.IntBuffer;
 import org.janelia.workstation.gui.viewer3d.shader.TexturedShader;
 

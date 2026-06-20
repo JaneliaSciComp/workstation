@@ -1,6 +1,6 @@
 package org.janelia.workstation.gui.opengl;
 
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLAutoDrawable;
 
 // TODO - use GLActorContext as the parameter sent to GLActors
 public class GLActorContext {

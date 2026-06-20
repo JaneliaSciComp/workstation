@@ -1,11 +1,11 @@
 package org.janelia.workstation.gui.opengl;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLCapabilitiesImmutable;
-import javax.media.opengl.GLEventListener;
-import javax.media.opengl.glu.GLU;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2GL3;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLCapabilitiesImmutable;
+import com.jogamp.opengl.GLEventListener;
+import com.jogamp.opengl.glu.GLU;
 
 import org.janelia.workstation.geom.Rotation3d;
 import org.janelia.workstation.geom.Vec3;
@@ -268,7 +268,7 @@ implements GLEventListener
 	    if (this.stereoMode != mode) {
 	        stereoMode = mode;
 	        stereoModeNeedsCleanup = true;
-	        mode.reshape(glComponent.getWidth(), glComponent.getHeight());
+	        mode.reshape(glComponent.getSurfaceWidth(), glComponent.getSurfaceHeight());
 	    }
 		viewChangedSignal.emit();
 	}

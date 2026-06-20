@@ -1,7 +1,7 @@
 package org.janelia.horta.actors;
 
 import java.awt.Color;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 import org.janelia.workstation.controller.model.DefaultNeuron;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;

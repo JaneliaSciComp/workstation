@@ -5,7 +5,7 @@ import org.janelia.workstation.geom.BoundingBox3d;
 import java.util.List;
 import java.util.Vector;
 
-import javax.media.opengl.GL;
+import com.jogamp.opengl.GL;
 
 
 public class CompositeGLActor 

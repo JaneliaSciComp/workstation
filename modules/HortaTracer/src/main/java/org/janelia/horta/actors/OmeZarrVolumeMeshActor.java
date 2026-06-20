@@ -16,7 +16,7 @@ import org.janelia.horta.blocks.OmeZarrBlockTileSource;
 import org.janelia.horta.volume.VolumeMipMaterial;
 import org.janelia.workstation.controller.model.color.ImageColorModel;
 
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;

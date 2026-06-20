@@ -7,9 +7,9 @@ import java.nio.FloatBuffer;
 import java.nio.ShortBuffer;
 import java.util.Date;
 
-import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
 
 import org.janelia.workstation.geom.Vec3;
 import org.janelia.workstation.geom.BoundingBox3d;

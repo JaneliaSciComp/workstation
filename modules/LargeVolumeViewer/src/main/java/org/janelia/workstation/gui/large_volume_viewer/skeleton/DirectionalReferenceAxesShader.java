@@ -1,7 +1,7 @@
 package org.janelia.workstation.gui.large_volume_viewer.skeleton;
 
-import javax.media.opengl.GL2;
-import javax.media.opengl.GL2GL3;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GL2GL3;
 import org.janelia.workstation.gui.viewer3d.OpenGLUtils;
 import org.janelia.workstation.gui.viewer3d.shader.AbstractShader;
 

@@ -4,8 +4,8 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.media.opengl.GL2;
-import javax.media.opengl.GL2GL3;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GL2GL3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

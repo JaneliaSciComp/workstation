@@ -6,7 +6,7 @@ import org.janelia.workstation.gui.viewer3d.OpenGLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;

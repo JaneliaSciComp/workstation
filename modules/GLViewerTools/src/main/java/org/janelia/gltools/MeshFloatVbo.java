@@ -5,7 +5,7 @@ import com.jogamp.common.nio.Buffers;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

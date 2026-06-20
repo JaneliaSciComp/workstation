@@ -6,7 +6,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.media.opengl.GL2;
+import com.jogamp.opengl.GL2;
 
 import org.janelia.workstation.gui.viewer3d.VolumeDataAcceptor;
 import org.janelia.workstation.gui.viewer3d.VolumeModel;

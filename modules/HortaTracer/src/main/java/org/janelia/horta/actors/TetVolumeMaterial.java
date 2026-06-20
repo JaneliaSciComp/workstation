@@ -6,7 +6,7 @@ import java.nio.ByteOrder;
 import java.nio.IntBuffer;
 import java.util.HashSet;
 import java.util.Set;
-import javax.media.opengl.GL3;
+import com.jogamp.opengl.GL3;
 import org.janelia.geometry3d.AbstractCamera;
 import org.janelia.geometry3d.Matrix4;
 import org.janelia.gltools.BasicShaderProgram;

@@ -5,10 +5,10 @@ import org.janelia.gltools.texture.Texture2d;
 import com.jogamp.common.nio.Buffers;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import javax.media.opengl.DebugGL3;
-import javax.media.opengl.GL3;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLContext;
+import com.jogamp.opengl.DebugGL3;
+import com.jogamp.opengl.GL3;
+import com.jogamp.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GLContext;
 
 /**
  * One (of possibly many) textures used as render targets in a FrameBuffer

@@ -2,8 +2,8 @@ package org.janelia.workstation.controller.tileimagery;
 
 import java.awt.geom.Point2D;
 
-import javax.media.opengl.GL2;
-import javax.media.opengl.GLAutoDrawable;
+import com.jogamp.opengl.GL2;
+import com.jogamp.opengl.GLAutoDrawable;
 
 import com.google.common.base.Preconditions;
 import com.jogamp.opengl.util.texture.TextureCoords;
