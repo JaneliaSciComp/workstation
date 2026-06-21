@@ -47,6 +47,7 @@
                         <publicPackage>com.jogamp.nativewindow.util</publicPackage>
                         <publicPackage>com.jogamp.newt.event</publicPackage>
                         <publicPackage>com.jogamp.opengl</publicPackage>
+                        <publicPackage>com.jogamp.opengl.awt</publicPackage>
                         <publicPackage>com.jogamp.opengl.fixedfunc</publicPackage>
                         <publicPackage>com.jogamp.opengl.glu</publicPackage>
                         <publicPackage>com.jogamp.opengl.util</publicPackage>

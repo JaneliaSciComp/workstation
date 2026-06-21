@@ -2,6 +2,12 @@
 
 The Janelia Workstation is built on top of the [Apache NetBeans Platform](https://netbeans.apache.org/kb/docs/platform/). It is recommended for developers to get familiar with the concepts used in this framework before diving into Workstation development. The best starting point is _The Definitive Guide to NetBeans Platform_ by Heiko Bock. 
 
+## Requirements
+
+Use JDK 21 or newer to build, run, and package the Workstation. The project is built against Apache NetBeans Platform RELEASE300 and compiles with `--release 21`, so generated classes target the Java 21 runtime level.
+
+The Maven enforcer accepts JDK 21 or newer. If multiple JDKs are installed, set `JAVA_HOME` to the JDK version you want Maven and `jpackage` to use.
+
 ## Building
 
 To build the Janelia Workstation application for Janelia Research Campus, use the `janeliaws` profile:
@@ -22,6 +28,12 @@ mvn -DskipTests compile
 ### Packaging
 
 Native application images and installers are built with `jpackage`.
+
+Run package builds with JDK 21 or newer. For example, on macOS, to select JDK 21 explicitly:
+
+```
+JAVA_HOME=$(/usr/libexec/java_home -v 21)
+```
 
 To build the Janelia Workstation application image:
 ```

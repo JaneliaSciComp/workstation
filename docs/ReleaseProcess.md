@@ -4,6 +4,8 @@ The Workstation client is built and distributed using the [Apache NetBeans Platf
 
     ./release.sh <version>
 
+Release builds should be run with JDK 21 or newer. The client is built against Apache NetBeans Platform RELEASE300 and compiles with `--release 21`.
+
 The version number should be in [Semantic Versioning](https://semver.org/) style. This release process automatically increments all module versions, and sets the overall Workstation version. You can then proceed over to the [jacs-cm](https://github.com/JaneliaSciComp/jacs-cm) repository to rebuild the workstation-site container using your newly released Workstation version.
 
 ## Docker Build

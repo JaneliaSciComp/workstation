@@ -41,7 +41,7 @@
             <artifactId>common-gui</artifactId>
         </dependency>
 
-        <!-- JOGL -->
+        <!-- JOGL260 -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
             <artifactId>jogl260lib</artifactId>
@@ -132,14 +132,6 @@
             <groupId>com.rabbitmq</groupId>
             <artifactId>amqp-client</artifactId>
             <version>5.5.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewercontroller</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewercontroller</artifactId>
         </dependency>
     </dependencies>
 

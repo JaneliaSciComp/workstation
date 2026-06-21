@@ -41,11 +41,6 @@
             <artifactId>core</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewer3d</artifactId>
-        </dependency>
-
         <!-- JOGL -->
         <dependency>
             <groupId>org.janelia.workstation</groupId>
@@ -140,18 +135,6 @@
             <groupId>org.netbeans.api</groupId>
             <artifactId>org-netbeans-libs-junit4</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewer3d</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewer3d</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.janelia.workstation</groupId>
-            <artifactId>viewer3d</artifactId>
         </dependency>
         <dependency>
             <groupId>org.janelia.workstation</groupId>
