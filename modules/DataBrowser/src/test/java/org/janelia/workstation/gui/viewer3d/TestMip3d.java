@@ -32,7 +32,7 @@ public class TestMip3d {
                 Mip3d mipWidget = new Mip3d();
                 mipWidget.clear();
                 try {
-                	// mipWidget.loadVolume("/Users/brunsc/smallRefTest.tif");
+                    // mipWidget.loadVolume("/Users/brunsc/smallRefTest.tif");
 
                     // This load-up works perfectly.
                     //      String fn = "/Volumes/jacsData/brunsTest/3d_test_images/ConsolidatedSignal2_25.v3dpbd";
