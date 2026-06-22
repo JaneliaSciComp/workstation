@@ -7,10 +7,7 @@ public class FreehandRoi extends PolygonRoi {
 
 	public FreehandRoi(int sx, int sy, ImagePlus imp) {
 		super(sx, sy, imp);
-//		if (Toolbar.getToolId()==Toolbar.FREEROI)
-			type = FREEROI;
-//		else
-//			type = FREELINE;
+		type = FREEROI;
 		if (nPoints==2) nPoints--;
 	}
 
@@ -29,8 +26,6 @@ public class FreehandRoi extends PolygonRoi {
 			xp[nPoints] = ox-x;
 			yp[nPoints] = oy-y;
 			nPoints++;
-//			if (IJ.altKeyDown())
-//				wipeBack();
 			if (nPoints==xp.length)
 				enlargeArrays();
 			drawLine();
@@ -76,12 +71,6 @@ public class FreehandRoi extends PolygonRoi {
 		int margin = 4;
 		if (lineWidth>margin && isLine())
 			margin = lineWidth;
-//		if (ic!=null) {
-//			double mag = ic.getMagnification();
-//			if (mag<1.0) margin = (int)(margin/mag);
-//		}
-//		if (IJ.altKeyDown())
-//			margin += 20; // for wipeBack
 		imp.draw(xmin-margin, ymin-margin, (xmax-xmin)+margin*2, (ymax-ymin)+margin*2);
 	}
 

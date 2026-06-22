@@ -547,44 +547,14 @@ public class ShapeRoi extends Roi {
 			xPoints[i] = ((Integer)xCoords.elementAt(i)).intValue() + x;
 			yPoints[i] = ((Integer)yCoords.elementAt(i)).intValue() + y;
 		}
-
-		int startX = 0;
-		int startY = 0;
-		int width = 0;
-		int height = 0;
-		switch(roiType) {
-			//case NO_TYPE: roi = this; break;
-//			case Roi.COMPOSITE: roi = this; break; // hmmm.....!!!???
-//			case Roi.OVAL:
-//				startX = xPoints[xPoints.length-4];
-//				startY = yPoints[yPoints.length-3];
-//				width = max(xPoints)-min(xPoints);
-//				height = max(yPoints)-min(yPoints);
-//				roi = new OvalRoi(startX, startY, width, height);
-//				break;
-//			case Roi.RECTANGLE:
-//				startX = xPoints[0];
-//				startY = yPoints[0];
-//				width = max(xPoints)-min(xPoints);
-//				height = max(yPoints)-min(yPoints);
-//				roi = new Roi(startX, startY, width, height);
-//				break;
-//			case Roi.LINE: roi = new ij.gui.Line(xPoints[0],yPoints[0],xPoints[1],yPoints[1]); break;
-			default:
-				int n = xPoints.length;
-				roi = new PolygonRoi(xPoints, yPoints, n, roiType);
-				if (roiType==FREEROI) {
-					double length = roi.getLength();
-//					double mag = ic!=null?ic.getMagnification():1.0;
-//					length *= mag;
-					//IJ.log("createRoi: "+length/n+" "+mag);
-					if (length/n>=15.0) {
-						roi = new PolygonRoi(xPoints, yPoints, n, POLYGON);
-					}
-				}
-				break;
+		int n = xPoints.length;
+		roi = new PolygonRoi(xPoints, yPoints, n, roiType);
+		if (roiType==FREEROI) {
+			double length = roi.getLength();
+			if (length/n>=15.0) {
+				roi = new PolygonRoi(xPoints, yPoints, n, POLYGON);
+			}
 		}
-		//if(roi!=null && imp!=null) roi.setImage(imp);
 		return roi;
 	}
 
@@ -598,175 +568,6 @@ public class ShapeRoi extends Roi {
 		return shape.contains(x-this.x, y-this.y);
 	}
 
-//	/** Caculates "Feret" (maximum caliper width) and "MinFeret" (minimum caliper width). */
-//	public double[] getFeretValues() {
-//		Roi[] rois = getRois();
-//		if (rois!=null && rois.length==1) {
-//			rois[0].setImage(imp);
-//			return rois[0].getFeretValues();
-//		}
-//		double min=Double.MAX_VALUE, diameter=0.0, angle=0.0;
-//		int p1=0, p2=0;
-//		double pw=1.0, ph=1.0;
-//		if (imp!=null) {
-//			Calibration cal = imp.getCalibration();
-//			pw = cal.pixelWidth;
-//			ph = cal.pixelHeight;
-//		}
-//		Shape shape = getShape();
-//		Shape s = null;
-//		Rectangle2D r = shape.getBounds2D();
-//		double cx = r.getX() + r.getWidth()/2;
-//		double cy = r.getY() + r.getHeight()/2;
-//		AffineTransform at = new AffineTransform();
-//		at.translate(cx, cy);
-//		for (int i=0; i<181; i++) {
-//			at.rotate(Math.PI/180.0);
-//			s = at.createTransformedShape(shape);
-//			r = s.getBounds2D();
-//			double max2 = Math.max(r.getWidth(), r.getHeight());
-//			if (max2>diameter) {
-//				diameter = max2*pw;
-//				//angle = i;
-//			}
-//			double min2 = Math.min(r.getWidth(), r.getHeight());
-//			min = Math.min(min, min2);
-//		}
-//		if (pw!=ph) {
-//			diameter = 0.0;
-//			angle = 0.0;
-//		}
-//		if (pw==ph)
-//			min *= pw;
-//		else {
-//			min = 0.0;
-//			angle = 0.0;
-//		}
-//		double[] a = new double[5];
-//		a[0] = diameter;
-//		a[1] = angle;
-//		a[2] = min;
-//		a[3] = 0.0; // FeretX
-//		a[4] = 0.0; // FeretY
-//		return a;
-//	}
-
-//	/**Returns the perimeter if this ShapeRoi can be decomposed
-//		into simple ROIs, otherwise returns zero. */
-//	public double getLength() {
-//		if (width==0 && height==0)
-//			return 0.0;
-//		double length = 0.0;
-//		Roi[] rois = getRois();
-//		ImagePlus imp2 = getImage();
-//		if (rois!=null) {
-//			for (int i=0; i<rois.length; i++) {
-//				Roi roi = rois[i];
-//				if (roi instanceof ShapeRoi)
-//					return 0.0;
-//				roi.setImage(imp2);
-//				length += roi.getLength();
-//				roi.setImage(null);
-//			}
-//		}
-//		return length;
-//	}
-
-//	/**Returns a flattened version of the path iterator for this ROi's shape*/
-//	FlatteningPathIterator getFlatteningPathIterator(Shape s, double fl) {
-//		return (FlatteningPathIterator)s.getPathIterator(new AffineTransform(),fl);
-//	}
-//
-//	/**Length of the control polygon of the cubic B&eacute;zier curve argument, in double precision.*/
-//	double cplength(CubicCurve2D.Double c) {
-//		double result = Math.sqrt(Math.pow((c.ctrlx1-c.x1),2.0)+Math.pow((c.ctrly1-c.y1),2.0));
-//		result += Math.sqrt(Math.pow((c.ctrlx2-c.ctrlx1),2.0)+Math.pow((c.ctrly2-c.ctrly1),2.0));
-//		result += Math.sqrt(Math.pow((c.x2-c.ctrlx2),2.0)+Math.pow((c.y2-c.ctrly2),2.0));
-//		return result;
-//	}
-//
-//	/**Length of the control polygon of the quadratic B&eacute;zier curve argument, in double precision.*/
-//	double qplength(QuadCurve2D.Double c) {
-//		double result = Math.sqrt(Math.pow((c.ctrlx-c.x1),2.0)+Math.pow((c.ctrly-c.y1),2.0));
-//		result += Math.sqrt(Math.pow((c.x2-c.ctrlx),2.0)+Math.pow((c.y2-c.ctrly),2.0));
-//		return result;
-//	}
-//
-//	/**Length of the chord of the arc of the cubic B&eacute;zier curve argument, in double precision.*/
-//	double cclength(CubicCurve2D.Double c)
-//	{ return Math.sqrt(Math.pow((c.x2-c.x1),2.0) + Math.pow((c.y2-c.y1),2.0)); }
-//
-//	/**Length of the chord of the arc of the quadratic B&eacute;zier curve argument, in double precision.*/
-//	double qclength(QuadCurve2D.Double c)
-//	{ return Math.sqrt(Math.pow((c.x2-c.x1),2.0) + Math.pow((c.y2-c.y1),2.0)); }
-//
-//	/**Calculates the length of a cubic B&eacute;zier curve specified in double precision.
-//	 * The algorithm is based on the theory presented in paper <br>
-//	 * &quot;Jens Gravesen. Adaptive subdivision and the length and energy of B&eacute;zier curves. Computational Geometry <strong>8:</strong><em>13-31</em> (1997)&quot;
-//	 * implemented using <code>java.awt.geom.CubicCurve2D.Double</code>.
-//	 * Please visit {@link <a href="http://www.graphicsgems.org/gems.html#gemsiv">Graphics Gems IV</a>} for
-//	 * examples of other possible implementations in C and C++.
-//	 */
-//	double cBezLength(CubicCurve2D.Double c) {
-//		double l = 0.0;
-//		double cl = cclength(c);
-//		double pl = cplength(c);
-//		if((pl-cl)/2.0 > maxerror)
-//		{
-//			CubicCurve2D.Double[] cc = cBezSplit(c);
-//			for(int i=0; i<2; i++) l+=cBezLength(cc[i]);
-//			return l;
-//		}
-//		l = 0.5*pl+0.5*cl;
-//		return l;
-//	}
-//
-//	/**Calculates the length of a quadratic B&eacute;zier curve specified in double precision.
-//	 * The algorithm is based on the theory presented in paper <br>
-//	 * &quot;Jens Gravesen. Adaptive subdivision and the length and energy of B&eacute;zier curves. Computational Geometry <strong>8:</strong><em>13-31</em> (1997)&quot;
-//	 * implemented using <code>java.awt.geom.CubicCurve2D.Double</code>.
-//	 * Please visit {@link <a href="http://www.graphicsgems.org/gems.html#gemsiv">Graphics Gems IV</a>} for
-//	 * examples of other possible implementations in C and C++.
-//	 */
-//	double qBezLength(QuadCurve2D.Double c) {
-//		double l = 0.0;
-//		double cl = qclength(c);
-//		double pl = qplength(c);
-//		if((pl-cl)/2.0 > maxerror)
-//		{
-//			QuadCurve2D.Double[] cc = qBezSplit(c);
-//			for(int i=0; i<2; i++) l+=qBezLength(cc[i]);
-//			return l;
-//		}
-//		l = (2.0*pl+cl)/3.0;
-//		return l;
-//	}
-//
-// /**Splits a cubic B&eacute;zier curve in half.
-//  * @param c A cubic B&eacute;zier curve to be divided
-//  * @return an array with the left and right cubic B&eacute;zier subcurves
-//  *
-//	*/
-//	CubicCurve2D.Double[] cBezSplit(CubicCurve2D.Double c) {
-//		CubicCurve2D.Double[] cc = new CubicCurve2D.Double[2];
-//		for (int i=0; i<2 ; i++) cc[i] = new CubicCurve2D.Double();
-//		c.subdivide(cc[0],cc[1]);
-//		return cc;
-//	}
-//
-// /**Splits a quadratic B&eacute;zier curve in half.
-//  * @param c A quadratic B&eacute;zier curve to be divided
-//  * @return an array with the left and right quadratic B&eacute;zier subcurves
-//  *
-//	*/
-//	QuadCurve2D.Double[] qBezSplit(QuadCurve2D.Double c) {
-//		QuadCurve2D.Double[] cc = new QuadCurve2D.Double[2];
-//		for(int i=0; i<2; i++) cc[i] = new QuadCurve2D.Double();
-//		c.subdivide(cc[0],cc[1]);
-//		return cc;
-//	}
-
-	// c is an array of even length with x0, y0, x1, y1, ... ,xn, yn coordinate pairs
 	/**Scales a coordinate array with the size calibration of a 2D image.
 	 * The array is modified in place.
 	 * @param c Array of coordinates in double precision with a <strong>fixed</strong> structure:<br>
@@ -784,65 +585,6 @@ public class ShapeRoi extends Roi {
 			c[i+1]*=ph;
 		}
 	}
-
-//	Vector parseSegments(PathIterator pI) {
-//		Vector v = new Vector();
-//		if (parsePath(pI, null, v, null, null)) return v;
-//		return null;
-//	}
-//
-//	/** Retrieves the end points and control points of the path as a float array. The array
-//		contains a sequence of variable length segments that use from from one to seven elements.
-//		The first element of a segment is the type as defined in the PathIterator interface. SEG_MOVETO
-//		and SEG_LINETO segments also include two coordinates, SEG_QUADTO segments include four
-//		coordinates and SEG_CUBICTO segments include six coordinates. */
-//	public float[] getShapeAsArray() {
-//		if(shape==null) return null;
-//		//if (savedRois!=null)
-//		//	return getSavedRoisAsArray();
-//		PathIterator pIt = shape.getPathIterator(new AffineTransform());
-//		Vector h = new Vector(); // handles
-//		Vector s = new Vector(); // segment types
-//		if (!(parsePath(pIt, null, s, null, h))) return null;
-//		float[] result = new float[7*s.size()];
-//		Point2D.Double p;
-//		int segType;
-//		int k=0, j=0;
-//		int index = 0;
-//		for (int i=0; i<s.size(); i++) {
-//			segType = ((Integer)s.elementAt(i)).intValue();
-//			switch(segType) {
-//				case PathIterator.SEG_MOVETO: case PathIterator.SEG_LINETO:
-//					result[index++] = segType;
-//					p = (Point2D.Double)h.elementAt(j++);
-//					result[index++]=(float)p.getX()+x; result[index++]=(float)p.getY()+y;
-//					break;
-//				case PathIterator.SEG_QUADTO:
-//					result[index++] = segType;
-//					p = (Point2D.Double)h.elementAt(j++);
-//					result[index++]=(float)p.getX()+x; result[index++]=(float)p.getY()+y;
-//					p = (Point2D.Double)h.elementAt(j++);
-//					result[index++]=(float)p.getX()+x; result[index++]=(float)p.getY()+y;
-//					break;
-//				case PathIterator.SEG_CUBICTO:
-//					result[index++] = segType;
-//					p = (Point2D.Double)h.elementAt(j++);
-//					result[index++]=(float)p.getX()+x; result[index++]=(float)p.getY()+y;
-//					p = (Point2D.Double)h.elementAt(j++);
-//					result[index++]=(float)p.getX()+x; result[index++]=(float)p.getY()+y;
-//					p = (Point2D.Double)h.elementAt(j++);
-//					result[index++]=(float)p.getX()+x; result[index++]=(float)p.getY()+y;
-//					break;
-//				case PathIterator.SEG_CLOSE:
-//					result[index++] = segType;
-//					break;
-//				default: break;
-//			}
-//		}
-//		float[] result2 = new float[index];
-//		System.arraycopy(result, 0, result2, 0, result2.length);
-//		return result2;
-//	}
 
 	/**Parses the geometry of this ROI's shape by means of the shape's PathIterator 
 	 * and returns several convenience parameters in the arguments.
@@ -864,11 +606,6 @@ public class ShapeRoi extends Roi {
 			return false;
 		boolean result = true;
 		double pw = 1.0, ph = 1.0;
-//		if (imp!=null) {
-//			Calibration cal = imp.getCalibration();
-//			pw = cal.pixelWidth;
-//			ph = cal.pixelHeight;
-//		}
 		Vector xCoords = new Vector();
 		Vector yCoords = new Vector();
 		if (segments==null) segments = new Vector();
@@ -901,7 +638,7 @@ public class ShapeRoi extends Roi {
 			coords = new double[6];
 			ucoords = new double[6];
 			segType = pIter.currentSegment(coords);
-			segments.add(new Integer(segType));
+			segments.add(Integer.valueOf(segType));
 			count++;
 			System.arraycopy(coords,0,ucoords,0,coords.length);
 			scaleCoords(coords,pw,ph);
@@ -910,8 +647,8 @@ public class ShapeRoi extends Roi {
 					if (subPaths>0) {
 						closed = ((int)ux0==(int)usX && (int)uy0==(int)usY);
 						if (closed && (int)ux0!=(int)usX && (int)uy0!=(int)usY) { // this may only happen after a SEG_CLOSE
-							xCoords.add(new Integer(((Integer)xCoords.elementAt(0)).intValue()));
-							yCoords.add(new Integer(((Integer)yCoords.elementAt(0)).intValue()));
+							xCoords.add(Integer.valueOf(((Integer)xCoords.elementAt(0)).intValue()));
+							yCoords.add(Integer.valueOf(((Integer)yCoords.elementAt(0)).intValue()));
 						}
 						if (rois!=null) {
 							roiType = guessType(count, linesOnly, curvesOnly, closed);
@@ -933,8 +670,8 @@ public class ShapeRoi extends Roi {
 					x0 = coords[0];
 					y0 = coords[1];
 					handles.add(new Point2D.Double(ucoords[0],ucoords[1]));
-					xCoords.add(new Integer((int)ucoords[0]));
-					yCoords.add(new Integer((int)ucoords[1]));
+					xCoords.add(Integer.valueOf((int)ucoords[0]));
+					yCoords.add(Integer.valueOf((int)ucoords[1]));
 					closed = false;
 					break;
 				case PathIterator.SEG_LINETO:
@@ -946,41 +683,10 @@ public class ShapeRoi extends Roi {
 					x0 = coords[0];
 					y0 = coords[1];
 					handles.add(new Point2D.Double(ucoords[0],ucoords[1]));
-					xCoords.add(new Integer((int)ucoords[0]));
-					yCoords.add(new Integer((int)ucoords[1]));
+					xCoords.add(Integer.valueOf((int)ucoords[0]));
+					yCoords.add(Integer.valueOf((int)ucoords[1]));
 					closed = ((int)ux0==(int)usX && (int)uy0==(int)usY);
 					break;
-//				case PathIterator.SEG_QUADTO:
-//					linesOnly = linesOnly & false;
-//					curvesOnly = curvesOnly & true;
-//					curve = new QuadCurve2D.Double(x0,y0,coords[0],coords[2],coords[2],coords[3]);
-//					pathLength += qBezLength((QuadCurve2D.Double)curve);
-//					ux0 = ucoords[2];
-//					uy0 = ucoords[3];
-//					x0 = coords[2];
-//					y0 = coords[3];
-//					handles.add(new Point2D.Double(ucoords[0],ucoords[1]));
-//					handles.add(new Point2D.Double(ucoords[2],ucoords[3]));
-//					xCoords.add(new Integer((int)ucoords[2]));
-//					yCoords.add(new Integer((int)ucoords[3]));
-//					closed = ((int)ux0==(int)usX && (int)uy0==(int)usY);
-//					break;
-//				case PathIterator.SEG_CUBICTO:
-//					linesOnly = linesOnly & false;
-//					curvesOnly  = curvesOnly & true;
-//					curve = new CubicCurve2D.Double(x0,y0,coords[0],coords[1],coords[2],coords[3],coords[4],coords[5]);
-//					pathLength += cBezLength((CubicCurve2D.Double)curve);
-//					ux0 = ucoords[4];
-//					uy0 = ucoords[5];
-//					x0 = coords[4];
-//					y0 = coords[5];
-//					handles.add(new Point2D.Double(ucoords[0],ucoords[1]));
-//					handles.add(new Point2D.Double(ucoords[2],ucoords[3]));
-//					handles.add(new Point2D.Double(ucoords[4],ucoords[5]));
-//					xCoords.add(new Integer((int)ucoords[4]));
-//					yCoords.add(new Integer((int)ucoords[5]));
-//					closed = ((int)ux0==(int)usX && (int)uy0==(int)usY);
-//					break;
 				case PathIterator.SEG_CLOSE:
 					if((int)ux0 != (int)usX && (int)uy0 != (int)usY) pathLength += Math.sqrt(Math.pow((x0-sX),2.0) + Math.pow((y0-sY),2.0));
 					closed = true;
@@ -992,8 +698,8 @@ public class ShapeRoi extends Roi {
 			done = pIter.isDone() || (shapeToRoi&&rois!=null&&rois.size()==1);
 			if (done) {
 				if(closed && (int)x0!=(int)sX && (int)y0!=(int)sY) { // this may only happen after a SEG_CLOSE
-					xCoords.add(new Integer(((Integer)xCoords.elementAt(0)).intValue()));
-					yCoords.add(new Integer(((Integer)yCoords.elementAt(0)).intValue()));
+					xCoords.add(Integer.valueOf(((Integer)xCoords.elementAt(0)).intValue()));
+					yCoords.add(Integer.valueOf(((Integer)yCoords.elementAt(0)).intValue()));
 				}
 				if (rois!=null) {
 					roiType = shapeToRoi?TRACED_ROI:guessType(count+1, linesOnly, curvesOnly, closed);
@@ -1011,15 +717,12 @@ public class ShapeRoi extends Roi {
 	public void draw(Graphics g) {
 		Color color =  strokeColor!=null? strokeColor:ROIColor;
 		boolean isActiveOverlayRoi = !overlay && isActiveOverlayRoi();
-		//IJ.log("draw: "+overlay+"  "+isActiveOverlayRoi);
 		if (isActiveOverlayRoi)
 			color = Color.cyan;
-		if (fillColor!=null) color = fillColor;
+		if (fillColor != null) color = fillColor;
 		g.setColor(color);
 		AffineTransform aTx = (((Graphics2D)g).getDeviceConfiguration()).getDefaultTransform();
 		Graphics2D g2d = (Graphics2D)g;
-//		if (stroke!=null && !isActiveOverlayRoi)
-//			g2d.setStroke((ic!=null&&ic.getCustomRoi())||isCursor()?stroke:getScaledStroke());
 		mag = getMagnification();
 		int basex=0, basey=0;
 		if (ic!=null) {
@@ -1028,64 +731,11 @@ public class ShapeRoi extends Roi {
 		}
 		aTx.setTransform(mag, 0.0, 0.0, mag, -basex*mag, -basey*mag);
 		aTx.translate(x, y);
-		if (fillColor!=null) {
-//			if (isActiveOverlayRoi) {
-//				g2d.setColor(Color.cyan);
-//				g2d.draw(aTx.createTransformedShape(shape));
-//			} else
-//				g2d.fill(aTx.createTransformedShape(shape));
-		} else
+		if (fillColor == null) {
 			g2d.draw(aTx.createTransformedShape(shape));
+		}
 		if (stroke!=null) g2d.setStroke(defaultStroke);
-//		if (Toolbar.getToolId()==Toolbar.OVAL)
-//			drawRoiBrush(g);
-//		if (state!=NORMAL && imp!=null && imp.getRoi()!=null)
-//			showStatus();
-//		if (updateFullWindow)
-//			{updateFullWindow = false; imp.draw();}
 	}
-
-//	public void drawRoiBrush(Graphics g) {
-//		g.setColor(ROIColor);
-//		int size = Toolbar.getBrushSize();
-//		if (size==0 || ic==null)
-//			return;
-//		int flags = ic.getModifiers();
-//		if ((flags&16)==0) return; // exit if mouse button up
-//		size = (int)(size*mag);
-//		Point p = ic.getCursorLoc();
-//		int sx = ic.screenX(p.x);
-//		int sy = ic.screenY(p.y);
-//		g.drawOval(sx-size/2, sy-size/2, size, size);
-//	}
-
-//	/**Draws the shape of this object onto the specified ImageProcessor.
-//	 * <br> This method will always draw a flattened version of the actual shape
-//	 * (i.e., all curve segments will be approximated by line segments).
-//	 */
-//	public void drawPixels(ImageProcessor ip) {
-//		PathIterator pIter = shape.getPathIterator(new AffineTransform(), flatness);
-//		float[] coords = new float[6];
-//		float sx=0f, sy=0f;
-//		while (!pIter.isDone()) {
-//			int segType = pIter.currentSegment(coords);
-//			switch(segType) {
-//				case PathIterator.SEG_MOVETO:
-//					sx = coords[0];
-//					sy = coords[1];
-//					ip.moveTo(x+(int)sx, y+(int)sy);
-//					break;
-//				case PathIterator.SEG_LINETO:
-//					ip.lineTo(x+(int)coords[0], y+(int)coords[1]);
-//					break;
-//				case PathIterator.SEG_CLOSE:
-//					ip.lineTo(x+(int)sx, y+(int)sy);
-//					break;
-//				default: break;
-//			}
-//			pIter.next();
-//		}
-//	}
 
 	/** Returns this ROI's mask pixels as a ByteProcessor with pixels "in" the mask
 		set to white (255) and pixels "outside" the mask set to black (0). */
