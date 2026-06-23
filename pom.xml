@@ -1245,7 +1245,7 @@
         <module>modules/IntegrationAPIs</module>
         <module>modules/Core</module>
         <module>modules/CommonGUI</module>
-<module>modules/DataBrowser</module>
+        <module>modules/DataBrowser</module>
         <module>modules/LMDataBrowser</module>
         <module>modules/ColorDepthSearch</module>
         <module>modules/HortaTracer</module>
