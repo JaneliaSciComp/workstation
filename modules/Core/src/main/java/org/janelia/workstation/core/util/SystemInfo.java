@@ -1,10 +1,13 @@
 package org.janelia.workstation.core.util;
 
+import java.io.File;
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
+
 import org.openide.modules.InstalledFileLocator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.File;
 
 /**
  * Adapted from IDEA code base.
@@ -140,41 +143,24 @@ public class SystemInfo {
         return cp.substring(0,cp.indexOf("JaneliaWorkstation")+"JaneliaWorkstation".length());
     }
 
-    private static java.lang.management.OperatingSystemMXBean getOSMXBean() {
-        return java.lang.management.ManagementFactory.getOperatingSystemMXBean();
-    }
-
     public static Long getTotalSystemMemory() {
         try {
-            java.lang.management.OperatingSystemMXBean mxbean = getOSMXBean();
-            // JDK 14+ public API: getTotalMemorySize(); earlier public alias is getTotalPhysicalMemorySize on com.sun.
-            // Use reflection so the code compiles cleanly against the standard API on both JDK 14+ and earlier.
-            try {
-                return (Long) mxbean.getClass().getMethod("getTotalMemorySize").invoke(mxbean);
-            } catch (NoSuchMethodException e2) {
-                // Fallback for JDK < 14 (should not happen on JDK 21)
-                return (Long) mxbean.getClass().getMethod("getTotalPhysicalMemorySize").invoke(mxbean);
-            }
+            MemoryMXBean memXBean = ManagementFactory.getMemoryMXBean();
+            return memXBean.getHeapMemoryUsage().getInit();
         }
-        catch (Throwable e) {
-            log.error("Could not retrieve total system memory", e);
-            return null;
+        catch (Exception e) {
+            throw new IllegalStateException("Could not retrieve total system memory", e);
         }
     }
 
     public static Long getFreeSystemMemory() {
         try {
-            java.lang.management.OperatingSystemMXBean mxbean = getOSMXBean();
-            try {
-                return (Long) mxbean.getClass().getMethod("getFreeMemorySize").invoke(mxbean);
-            } catch (NoSuchMethodException e2) {
-                // Fallback for JDK < 14
-                return (Long) mxbean.getClass().getMethod("getFreePhysicalMemorySize").invoke(mxbean);
-            }
+            MemoryMXBean memXBean = ManagementFactory.getMemoryMXBean();
+            MemoryUsage memUsage = memXBean.getHeapMemoryUsage();
+            return memUsage.getInit() - memUsage.getUsed();
         }
         catch (Throwable e) {
-            log.error("Could not retrieve free system memory", e);
-            return null;
+            throw new IllegalStateException("Could not retrieve free system memory", e);
         }
     }
 
