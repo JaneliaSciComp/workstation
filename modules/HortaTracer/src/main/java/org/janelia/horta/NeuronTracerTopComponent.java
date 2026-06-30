@@ -1123,6 +1123,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                             if (!haveSetBoundingBox[0] && !source.getResolutions().isEmpty()) {
                                 haveSetBoundingBox[0] = true;
 
+                                // Metadata is loaded, so the channel count is known: size the
+                                // shared color model to match and rebuild the slider UI.
+                                if (getImageColorModel().getChannelCount() != source.getChannelCount()) {
+                                    getImageColorModel().reset(65535, source.getChannelCount());
+                                    initColorModel();
+                                }
+
                                 TmModelManager.getInstance().setSampleBoundingBox(source.getBoundingBox3d());
                                 TmModelManager.getInstance().setVoxelCenter(source.getVoxelCenter());
 

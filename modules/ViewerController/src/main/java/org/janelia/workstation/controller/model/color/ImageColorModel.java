@@ -81,6 +81,50 @@ public class ImageColorModel
     public void setUnmixParameters(float[] unmixParameters) {
         this.unmix = unmixParameters;
     }
+
+    // Optional per-channel unmixing weights, for combining an arbitrary number of channels into the
+    // synthetic tracing channel. When unset (null), they are derived from the legacy 2-channel
+    // unmix vec4 so existing behavior is unchanged. See getUnmixChannel*() below.
+    private float[] unmixChannelMin = null;
+    private float[] unmixChannelScale = null;
+
+    /**
+     * Per-channel black levels for unmixing, sized to channelCount. Falls back to the legacy
+     * {@code unmix} parameters (min on channels 0/1, zero elsewhere) when not explicitly set.
+     */
+    @JsonIgnore
+    public float[] getUnmixChannelMinimums(int channelCount) {
+        float[] result = new float[channelCount];
+        for (int c = 0; c < channelCount; c++) {
+            if (unmixChannelMin != null && c < unmixChannelMin.length)
+                result[c] = unmixChannelMin[c];
+            else if (c < 2 && unmix != null && unmix.length >= 2)
+                result[c] = unmix[c]; // legacy min0, min1
+        }
+        return result;
+    }
+
+    /**
+     * Per-channel unmixing weights, sized to channelCount. Falls back to the legacy {@code unmix}
+     * parameters (scale on channels 0/1, zero elsewhere) when not explicitly set.
+     */
+    @JsonIgnore
+    public float[] getUnmixChannelScales(int channelCount) {
+        float[] result = new float[channelCount];
+        for (int c = 0; c < channelCount; c++) {
+            if (unmixChannelScale != null && c < unmixChannelScale.length)
+                result[c] = unmixChannelScale[c];
+            else if (c < 2 && unmix != null && unmix.length >= 4)
+                result[c] = unmix[c + 2]; // legacy scale0, scale1
+        }
+        return result;
+    }
+
+    public void setUnmixChannelParameters(float[] mins, float[] scales) {
+        this.unmixChannelMin = mins;
+        this.unmixChannelScale = scales;
+        fireUnmixingParametersChanged();
+    }
     
     /**
      * return a string that represents the user-adjustable state of

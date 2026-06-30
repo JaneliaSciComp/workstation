@@ -47,10 +47,6 @@ public class SliderPanel extends JPanel {
     private static final String IMAGES_LOCK = "lock.png";
     private static final String IMAGES_LOCK_UNLOCK = "lock_unlock.png";
 
-    private ColorChannelWidget colorChannelWidget_0;
-	private ColorChannelWidget colorChannelWidget_1;
-	private ColorChannelWidget colorChannelWidget_2;
-	private ColorChannelWidget colorChannelWidget_3;
 	private ColorChannelWidget[] colorWidgets;
     private JToggleButton lockBlackButton;
     private JToggleButton lockGrayButton;
@@ -101,16 +97,11 @@ public class SliderPanel extends JPanel {
                 this.remove( ccw );
             }
         }
-        colorChannelWidget_0 = new ColorChannelWidget(0, imageColorModel);
-        colorChannelWidget_1 = new ColorChannelWidget(1, imageColorModel);
-        colorChannelWidget_2 = new ColorChannelWidget(2, imageColorModel);
-        colorChannelWidget_3 = new ColorChannelWidget(3, imageColorModel);
-        colorWidgets = new ColorChannelWidget[] {
-            colorChannelWidget_0, 
-            colorChannelWidget_1, 
-            colorChannelWidget_2, 
-            colorChannelWidget_3
-        };
+        int channelCount = imageColorModel.getChannelCount();
+        colorWidgets = new ColorChannelWidget[channelCount];
+        for (int i = 0; i < channelCount; i++) {
+            colorWidgets[i] = new ColorChannelWidget(i, imageColorModel);
+        }
         if ( visibilityListener != null && imageColorModel != null ) {
             imageColorModel.removeColorModelListener(visibilityListener);
         }

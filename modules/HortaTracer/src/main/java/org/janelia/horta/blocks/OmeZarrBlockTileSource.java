@@ -41,6 +41,8 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
     private final ArrayList<OmeZarrBlockResolution> resolutions = new ArrayList<>();
     private OmeZarrBlockResolution maximumResolution = null;
 
+    private int channelCount = 1;
+
     private final ImageColorModel imageColorModel;
 
     private final boolean useAutoContrast;
@@ -127,6 +129,9 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
                         Vector3 outerCorner = new Vector3(shapeIndex.getX() * res.getX(), shapeIndex.getY() * res.getY(), shapeIndex.getZ() * res.getZ());
                         boundingBox3d = new BoundingBox3d(new Vec3(origin.getX(), origin.getY(), origin.getZ()), new Vec3(outerCorner.getX(), outerCorner.getY(), outerCorner.getZ()));
                         voxelCenter = boundingBox3d.getCenter();
+
+                        // TCZYX: channel count is the C dimension; constant across resolution levels.
+                        channelCount = Math.max(1, shapeIndex.getC());
 
                         haveExtents = true;
                     }
@@ -239,13 +244,16 @@ public class OmeZarrBlockTileSource implements BlockTileSource<OmeZarrBlockTileK
                 resolution.getChunkSize()[2] * resolution.getResolutionMicrometers());
     }
 
+    public int getChannelCount() {
+        return channelCount;
+    }
+
     public Texture3d loadBrick(OmeZarrBlockTileKey tile, int colorChannel) {
-        // setColorChannelIndex(colorChannel);
-        return loadBrick(tile);
+        return tile.loadBrick(useAutoContrast ? autoContrastParameters : null, colorChannel);
     }
 
     public Texture3d loadBrick(OmeZarrBlockTileKey tile) {
-        return tile.loadBrick(useAutoContrast ? autoContrastParameters : null);
+        return loadBrick(tile, 0);
     }
 /*
     private void createTileKeysForDataset(OmeZarrDataset dataset, OmeZarrReaderProgressObserver progressReceiver) {

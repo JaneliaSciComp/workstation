@@ -138,6 +138,14 @@ public class ViewLoader {
                     if (!haveFirstDataset[0] && !source.getResolutions().isEmpty()) {
                         haveFirstDataset[0] = true;
                         try {
+                            // OME-Zarr metadata is now loaded, so the channel count is known.
+                            // Size the shared color model to match, then re-apply the
+                            // persisted/workspace color model at the correct channel count
+                            // (this also rebuilds the slider UI via ColorModelUpdateEvent).
+                            if (nttc.getImageColorModel().getChannelCount() != source.getChannelCount()) {
+                                nttc.getImageColorModel().reset(65535, source.getChannelCount());
+                                nttc.initColorModel();
+                            }
                             if (nttc.doesUpdateVolumeCache()) {
                                 loader.loadTransientOmeZarrTileAtCurrentFocus(nttc.getOmeZarrSource());
                             } else {
