@@ -249,6 +249,26 @@ public class OmeZarrVolumeMipMaterial extends BasicMaterial
             visible[c] = chan.isVisible() ? 1f : 0f;
         }
 
+        // Synthetic tracing/unmix channel display parameters, in the slot right after the real
+        // channels (mirrors the legacy TetVolumeActor convention of a dedicated channel-index-2
+        // slider for the unmixed channel). The shader combines it alongside the real channels
+        // (see combineChannels()/integrate_intensity() in OmeZarrVolumeMipFrag.glsl).
+        if (n < MAX_CHANNELS) {
+            if (n < modelChannels) {
+                ChannelColorModel tracingChan = colorMap.getChannel(n);
+                colors[n * 3] = tracingChan.getColor().getRed() / 255.0f;
+                colors[n * 3 + 1] = tracingChan.getColor().getGreen() / 255.0f;
+                colors[n * 3 + 2] = tracingChan.getColor().getBlue() / 255.0f;
+                mins[n] = (float) tracingChan.getNormalizedMinimum();
+                maxes[n] = (float) tracingChan.getNormalizedMaximum();
+                gammas[n] = (float) tracingChan.getGamma();
+                visible[n] = tracingChan.isVisible() ? 1f : 0f;
+            } else {
+                maxes[n] = 1f;
+                gammas[n] = 1f;
+            }
+        }
+
         gl.glUniform3fv(channelColorIndex, MAX_CHANNELS, colors, 0);
         gl.glUniform1fv(channelMinIndex, MAX_CHANNELS, mins, 0);
         gl.glUniform1fv(channelMaxIndex, MAX_CHANNELS, maxes, 0);

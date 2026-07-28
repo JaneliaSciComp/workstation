@@ -165,10 +165,15 @@ float rescaleChannel(int c, float raw) {
 
 // Combine all channels into a display color (screen combine of each channel's color) and an
 // aggregate opacity (1 - product of per-channel transparencies), mirroring TetVolumeFrag330.
+// Also includes the synthetic tracing/unmix channel at index channelCount (see
+// tracingChannelFromRaw()), so it gets its own color/contrast/visibility and can contribute to
+// opacity on its own, exactly like a real channel -- mirrors the legacy TetVolumeActor behavior
+// where the unmixed channel was jointly rescaled and combined with the real channels.
 vec4 combineChannels(in float raw[MAX_CHANNELS]) {
     vec3 transparency = vec3(1.0);
     float opacityTransparency = 1.0;
-    for (int c = 0; c < channelCount; ++c) {
+    int totalChannels = min(channelCount + 1, MAX_CHANNELS);
+    for (int c = 0; c < totalChannels; ++c) {
         float r = rescaleChannel(c, raw[c]);
         transparency *= (vec3(1.0) - clamp(r * channelColor[c], 0.0, 1.0));
         opacityTransparency *= (1.0 - r);
@@ -413,7 +418,9 @@ void integrate_intensity(
 
     #if PROJECTION_MODE == PROJECTION_MAXIMUM
         // Maximum intensity projection: keep each channel's brightest value independently.
-        for (int c = 0; c < channelCount; ++c)
+        // Includes the synthetic tracing channel at index channelCount (see cast_volume_ray()).
+        int totalChannelsMax = min(channelCount + 1, MAX_CHANNELS);
+        for (int c = 0; c < totalChannelsMax; ++c)
             integratedIntensity.channel[c] = max(integratedIntensity.channel[c], localRaw[c]);
         integratedIntensity.opacity = max(integratedIntensity.opacity, localOpacity);
     #elif PROJECTION_MODE == PROJECTION_OCCLUDING
@@ -432,7 +439,9 @@ void integrate_intensity(
         float a_dest = integratedIntensity.opacity; // already-integrated (in front) values
         float a_out = 1.0 - (1.0 - a_src)*(1.0 - a_dest);
         float kFront = (a_out > 0.0) ? a_dest / a_out : 0.0;
-        for (int c = 0; c < channelCount; ++c) {
+        // Includes the synthetic tracing channel at index channelCount (see cast_volume_ray()).
+        int totalChannelsOcc = min(channelCount + 1, MAX_CHANNELS);
+        for (int c = 0; c < totalChannelsOcc; ++c) {
             float blended = integratedIntensity.channel[c]*kFront + localRaw[c]*(1.0 - kFront);
             integratedIntensity.channel[c] = clamp(blended, 0.0, 1.0);
         }
@@ -489,8 +498,14 @@ IntegratedIntensity cast_volume_ray(in RayParameters rayParameters, in ViewSlab 
         float raw[MAX_CHANNELS];
         fetchChannels(texelPos, rayParameters.textureScale, raw);
 
-        float localOpacity = combineChannels(raw).a;
         float tracingIntensity = tracingChannelFromRaw(raw);
+        // Feed the synthetic tracing channel into the shared per-channel array (at the slot right
+        // after the real channels) so it gets its own color/contrast/visibility and can
+        // contribute to opacity, mirroring the legacy TetVolumeActor behavior.
+        if (channelCount < MAX_CHANNELS)
+            raw[channelCount] = tracingIntensity;
+
+        float localOpacity = combineChannels(raw).a;
 
         integrate_intensity(
                 raw,

@@ -1124,9 +1124,13 @@ public final class NeuronTracerTopComponent extends TopComponent
                                 haveSetBoundingBox[0] = true;
 
                                 // Metadata is loaded, so the channel count is known: size the
-                                // shared color model to match and rebuild the slider UI.
-                                if (getImageColorModel().getChannelCount() != source.getChannelCount()) {
-                                    getImageColorModel().reset(65535, source.getChannelCount());
+                                // shared color model to match, plus one extra slot for the
+                                // synthetic tracing/unmix channel (mirrors the legacy 2-channel
+                                // TetVolumeActor convention), and rebuild the slider UI.
+                                if (getImageColorModel().getChannelCount() != source.getChannelCount() + 1) {
+                                    getImageColorModel().reset(65535, source.getChannelCount() + 1);
+                                    getImageColorModel().getChannel(source.getChannelCount())
+                                            .setColor(new Color(0f, 0.5f, 1.0f)); // unmixed channel in Economo blue
                                     initColorModel();
                                 }
 

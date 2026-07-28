@@ -1,5 +1,6 @@
 package org.janelia.horta;
 
+import java.awt.Color;
 import java.io.IOException;
 import java.net.URL;
 
@@ -139,11 +140,15 @@ public class ViewLoader {
                         haveFirstDataset[0] = true;
                         try {
                             // OME-Zarr metadata is now loaded, so the channel count is known.
-                            // Size the shared color model to match, then re-apply the
-                            // persisted/workspace color model at the correct channel count
-                            // (this also rebuilds the slider UI via ColorModelUpdateEvent).
-                            if (nttc.getImageColorModel().getChannelCount() != source.getChannelCount()) {
-                                nttc.getImageColorModel().reset(65535, source.getChannelCount());
+                            // Size the shared color model to match, plus one extra slot for the
+                            // synthetic tracing/unmix channel (mirrors the legacy 2-channel
+                            // TetVolumeActor convention of a dedicated slider for that channel),
+                            // then re-apply the persisted/workspace color model at the correct
+                            // channel count (this also rebuilds the slider UI via ColorModelUpdateEvent).
+                            if (nttc.getImageColorModel().getChannelCount() != source.getChannelCount() + 1) {
+                                nttc.getImageColorModel().reset(65535, source.getChannelCount() + 1);
+                                nttc.getImageColorModel().getChannel(source.getChannelCount())
+                                        .setColor(new Color(0f, 0.5f, 1.0f)); // unmixed channel in Economo blue
                                 nttc.initColorModel();
                             }
                             if (nttc.doesUpdateVolumeCache()) {
