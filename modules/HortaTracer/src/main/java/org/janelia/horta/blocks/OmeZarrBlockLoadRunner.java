@@ -44,7 +44,7 @@ public class OmeZarrBlockLoadRunner extends ComposableObservable implements Runn
         try {
             state = OmeZarrBlockLoadRunner.State.LOADING;
             OmeZarrVolumeActor parentActor = OmeZarrVolumeActor.getInstance();
-            blockActor = new OmeZarrVolumeMeshActor(omeZarrBlockTileSource, omeZarrOctreeBlockTileKey, parentActor.getVolumeState(), 0);
+            blockActor = new OmeZarrVolumeMeshActor(omeZarrBlockTileSource, omeZarrOctreeBlockTileKey, parentActor.getVolumeState());
             state = OmeZarrBlockLoadRunner.State.LOADED;
             setChanged();
             long endTime = System.currentTimeMillis();

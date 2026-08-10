@@ -1123,6 +1123,17 @@ public final class NeuronTracerTopComponent extends TopComponent
                             if (!haveSetBoundingBox[0] && !source.getResolutions().isEmpty()) {
                                 haveSetBoundingBox[0] = true;
 
+                                // Metadata is loaded, so the channel count is known: size the
+                                // shared color model to match, plus one extra slot for the
+                                // synthetic tracing/unmix channel (mirrors the legacy 2-channel
+                                // TetVolumeActor convention), and rebuild the slider UI.
+                                if (getImageColorModel().getChannelCount() != source.getChannelCount() + 1) {
+                                    getImageColorModel().reset(65535, source.getChannelCount() + 1);
+                                    getImageColorModel().getChannel(source.getChannelCount())
+                                            .setColor(new Color(0f, 0.5f, 1.0f)); // unmixed channel in Economo blue
+                                    initColorModel();
+                                }
+
                                 TmModelManager.getInstance().setSampleBoundingBox(source.getBoundingBox3d());
                                 TmModelManager.getInstance().setVoxelCenter(source.getVoxelCenter());
 
@@ -2370,6 +2381,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         if (ktxSource != null) {
             omeZarrSource = null;
             setVolumeSource(null);
+            // TetVolumeActor only supports exactly 3 channels; reset the shared color
+            // model in case a previous OME-Zarr multichannel session resized it larger,
+            // otherwise TetVolumeActor.display() throws UnsupportedOperationException.
+            if (getImageColorModel().getChannelCount() != 3) {
+                getImageColorModel().reset(65535, 3);
+                initColorModel();
+            }
         }
     }
 

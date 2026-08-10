@@ -167,10 +167,19 @@ public class OmeZarrBlockTileKey implements BlockTileKey {
     private static final ColorModel colorModel = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_GRAY), false, true, Transparency.OPAQUE, DataBuffer.TYPE_USHORT);
 
     public Texture3d loadBrick(AutoContrastParameters parameters) {
+        return loadBrick(parameters, 0);
+    }
+
+    public Texture3d loadBrick(AutoContrastParameters parameters, int channel) {
         Texture3d texture = new Texture3d();
 
         try {
-            WritableRaster[] slices = TCZYXRasterZStack.fromDataset(dataset, readShape, readOffset, 1, parameters != null, parameters, null);
+            // readShape/readOffset are TCZYX; index 1 is the channel. Read one channel at a time
+            // into a single-component texture, leaving the key itself channel-agnostic.
+            int[] channelOffset = readOffset.clone();
+            channelOffset[1] = channel;
+
+            WritableRaster[] slices = TCZYXRasterZStack.fromDataset(dataset, readShape, channelOffset, 1, parameters != null, parameters, null);
 
             texture.loadRasterSlices(slices, colorModel);
 

@@ -13,6 +13,7 @@ import org.janelia.horta.blocks.BlockTileResolution;
 import org.janelia.horta.blocks.OmeZarrBlockResolution;
 import org.janelia.horta.blocks.OmeZarrBlockTileKey;
 import org.janelia.horta.blocks.OmeZarrBlockTileSource;
+import org.janelia.horta.volume.OmeZarrVolumeMipMaterial;
 import org.janelia.horta.volume.VolumeMipMaterial;
 import org.janelia.workstation.controller.model.color.ImageColorModel;
 
@@ -36,8 +37,8 @@ public class OmeZarrVolumeMeshActor extends MeshActor implements SortableBlockAc
 
     private double distance;
 
-    public OmeZarrVolumeMeshActor(OmeZarrBlockTileSource source, OmeZarrBlockTileKey tile, VolumeMipMaterial.VolumeState volumeState, int colorChannel) throws IOException {
-        super(new OmeZarrMesh(tile), new OmeZarrVolumeMeshActor.MeshMaterial(source, tile, source.getColorModel(), volumeState, colorChannel), null);
+    public OmeZarrVolumeMeshActor(OmeZarrBlockTileSource source, OmeZarrBlockTileKey tile, VolumeMipMaterial.VolumeState volumeState) throws IOException {
+        super(new OmeZarrMesh(tile), new OmeZarrVolumeMeshActor.MeshMaterial(source, tile, source.getColorModel(), volumeState), null);
 
         this.meshMaterial = (OmeZarrVolumeMeshActor.MeshMaterial) getMaterial();
 
@@ -99,18 +100,25 @@ public class OmeZarrVolumeMeshActor extends MeshActor implements SortableBlockAc
         return resolution;
     }
 
-    private static class MeshMaterial extends VolumeMipMaterial {
-        private MeshMaterial(OmeZarrBlockTileSource source, OmeZarrBlockTileKey tile, ImageColorModel imageColorModel, VolumeState volumeState, int colorChannel) throws IOException {
-            super(safeLoadData(source, tile, colorChannel), imageColorModel);
+    private static class MeshMaterial extends OmeZarrVolumeMipMaterial {
+        private MeshMaterial(OmeZarrBlockTileSource source, OmeZarrBlockTileKey tile, ImageColorModel imageColorModel, VolumeMipMaterial.VolumeState volumeState) throws IOException {
+            super(safeLoadData(source, tile), imageColorModel);
             setVolumeState(volumeState);
         }
 
-        private static Texture3d safeLoadData(OmeZarrBlockTileSource source, OmeZarrBlockTileKey tile, int colorChannel) throws IOException {
-            Texture3d brick = source.loadBrick(tile, colorChannel);
-            if (brick == null) {
-                throw new IOException("Load was interrupted");
+        // Load every channel of the block into its own single-component texture, preserving
+        // OME-Zarr's per-channel separation; the shader combines them at render time.
+        private static Texture3d[] safeLoadData(OmeZarrBlockTileSource source, OmeZarrBlockTileKey tile) throws IOException {
+            int channelCount = Math.max(1, Math.min(source.getChannelCount(), OmeZarrVolumeMipMaterial.MAX_CHANNELS));
+            Texture3d[] textures = new Texture3d[channelCount];
+            for (int c = 0; c < channelCount; ++c) {
+                Texture3d brick = source.loadBrick(tile, c);
+                if (brick == null) {
+                    throw new IOException("Load was interrupted");
+                }
+                textures[c] = brick;
             }
-            return brick;
+            return textures;
         }
     }
 }
