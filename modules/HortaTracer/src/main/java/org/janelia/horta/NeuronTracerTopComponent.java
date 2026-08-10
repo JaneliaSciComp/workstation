@@ -2381,6 +2381,13 @@ public final class NeuronTracerTopComponent extends TopComponent
         if (ktxSource != null) {
             omeZarrSource = null;
             setVolumeSource(null);
+            // TetVolumeActor only supports exactly 3 channels; reset the shared color
+            // model in case a previous OME-Zarr multichannel session resized it larger,
+            // otherwise TetVolumeActor.display() throws UnsupportedOperationException.
+            if (getImageColorModel().getChannelCount() != 3) {
+                getImageColorModel().reset(65535, 3);
+                initColorModel();
+            }
         }
     }
 
