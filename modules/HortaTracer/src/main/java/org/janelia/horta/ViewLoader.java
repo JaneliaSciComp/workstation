@@ -145,9 +145,13 @@ public class ViewLoader {
                             // TetVolumeActor convention of a dedicated slider for that channel),
                             // then re-apply the persisted/workspace color model at the correct
                             // channel count (this also rebuilds the slider UI via ColorModelUpdateEvent).
-                            if (nttc.getImageColorModel().getChannelCount() != source.getChannelCount() + 1) {
-                                nttc.getImageColorModel().reset(65535, source.getChannelCount() + 1);
-                                nttc.getImageColorModel().getChannel(source.getChannelCount())
+                            // Floor at 3 total channels: RemapColorActor always reads channels
+                            // 0/1/2 to remap the composited RGB screen texture, so a 1-channel
+                            // source (2 total) would otherwise throw ArrayIndexOutOfBoundsException.
+                            int totalChannels = Math.max(3, source.getChannelCount() + 1);
+                            if (nttc.getImageColorModel().getChannelCount() != totalChannels) {
+                                nttc.getImageColorModel().reset(65535, totalChannels);
+                                nttc.getImageColorModel().getChannel(totalChannels - 1)
                                         .setColor(new Color(0f, 0.5f, 1.0f)); // unmixed channel in Economo blue
                                 nttc.initColorModel();
                             }
