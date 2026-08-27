@@ -168,6 +168,12 @@
     </properties>
 
     <repositories>
+        <!-- Central hosts the vast majority of dependencies and is fast; check it first so the
+             slower/custom repos below are only hit for the artifacts Central doesn't have. -->
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
         <!-- Janelia repo contains NetBeans 8.2, and other things which are not found in Maven Central -->
         <repository>
             <id>janelia-releases</id>
