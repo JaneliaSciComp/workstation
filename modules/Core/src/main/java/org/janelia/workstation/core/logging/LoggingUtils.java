@@ -8,7 +8,7 @@ import org.janelia.workstation.core.util.SystemInfo;
  */
 public class LoggingUtils {
 
-    public static String getReportEmailSubject(boolean isAutoReport) {
+    public static String getErrorReportSubject(boolean isAutoReport) {
 
         AccessManager accessManager = AccessManager.getAccessManager();
 
