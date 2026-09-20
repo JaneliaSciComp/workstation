@@ -179,7 +179,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.9</version>
+            <version>3.18.0</version>
         </dependency>
         <!-- TODO: We should move everything to lang3 to eliminate this dependency -->
         <dependency>
