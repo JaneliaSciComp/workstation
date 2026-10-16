@@ -165,6 +165,9 @@
 
         <janeliaws.maven-enforcer-plugin.version>3.0.0-M2</janeliaws.maven-enforcer-plugin.version>
 
+        <!-- Temporary: remove once janelia-jhdf5 is released (then use the release version). -->
+        <janelia-jhdf5.version>22.03.01-SNAPSHOT</janelia-jhdf5.version>
+
     </properties>
 
     <repositories>
@@ -182,6 +185,14 @@
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
+        </repository>
+        <!-- Temporary: remove once janelia-jhdf5 is released.
+             org.bytedeco snapshots (javacpp, hdf5) needed by janelia-jhdf5 until they are released. -->
+        <repository>
+            <id>central-portal-snapshots</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
+            <releases><enabled>false</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
         </repository>
     </repositories>
 
