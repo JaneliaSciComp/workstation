@@ -18,6 +18,7 @@
     <properties>
         <jarGoalPhase>package</jarGoalPhase>
         <jpackage.type>APP_IMAGE</jpackage.type>
+        <jpackage.skip>false</jpackage.skip>
         <jpackage.icon>${basedir}/src/main/app-resources/horta128.png</jpackage.icon>
         <jpackage.max.heap>-Xmx40960m</jpackage.max.heap>
     </properties>
@@ -490,6 +491,7 @@
                                     <destination>${project.build.directory}/jpackage</destination>
                                     <removeDestination>true</removeDestination>
                                     <type>${jpackage.type}</type>
+                                    <skip>${jpackage.skip}</skip>
                                     <input>${project.build.directory}/jpackage-input</input>
                                     <mainJar>${project.build.finalName}-launcher.jar</mainJar>
                                     <mainClass>org.janelia.workstation.application.NetBeansJPackageLauncher</mainClass>
